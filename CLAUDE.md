@@ -13,7 +13,8 @@ Godot 4.7, GDScript. Projet perso d'Alex, fait pour le plaisir avec l'IA : Claud
 
 - v0.1 écrite : machine 1×5, sac de départ (15 symboles), combos 3/4/5 n'importe où sur la ligne (×1/×2/×4), écran de test `scenes/machine_test.tscn`.
 - v0.1 : 16 tests en ligne de commande passent ; pas encore confirmée en jeu par Alex (premier test F5 à faire).
-- Git initialisé (branche `main`), premier commit fait.
+- Git initialisé (branche `main`), dépôt public : https://github.com/alexandrefelmy-dev/jackpot-donjon (`git push` suffit, `gh` est installé : `C:\Program Files\GitHub CLI\gh.exe`).
+- `README.md` à la racine : à garder à jour (jalon atteint, comment lancer le jeu et les tests).
 - Prochaine étape : v0.2, premier combat (voir « Périmètre et jalons » dans le cahier des charges).
 
 ## Conventions
