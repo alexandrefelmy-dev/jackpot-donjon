@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SymbolData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/symbol_data.gd" id="1_symbol"]
+
+[resource]
+script = ExtResource("1_symbol")
+id = &"epee"
+nom = "Épée"
+couleur = Color(0.76, 0.79, 0.86, 1)
+effet_base = {
+"degats": 3
+}
+effet_combo = {
+"degats": 15
+}

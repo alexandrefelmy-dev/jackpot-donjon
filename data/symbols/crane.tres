@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SymbolData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/symbol_data.gd" id="1_symbol"]
+
+[resource]
+script = ExtResource("1_symbol")
+id = &"crane"
+nom = "Crâne"
+couleur = Color(0.42, 0.37, 0.48, 1)
+effet_base = {
+"malus_ennemi": 1
+}
+effet_combo = {
+"perte_pv": 6
+}

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SymbolData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/symbol_data.gd" id="1_symbol"]
+
+[resource]
+script = ExtResource("1_symbol")
+id = &"potion"
+nom = "Potion"
+couleur = Color(0.86, 0.32, 0.46, 1)
+effet_base = {
+"soin": 3
+}
+effet_combo = {
+"soin": 12
+}
