@@ -9,12 +9,13 @@ Godot 4.7, GDScript. Projet perso d'Alex, fait pour le plaisir avec l'IA : Claud
   La version de référence est en ligne : https://claude.ai/artifact/7T7o7Bod8SKvpvXNtsJpef
   Lire la section concernée avant de toucher à une règle. Si une règle change, mettre à jour la copie locale et prévenir Alex de reporter le changement en ligne.
 
-## État actuel (à mettre à jour à la fin de chaque session)
+## État actuel
+
+IMPORTANT : dès qu'une étape est terminée (ou avant qu'Alex quitte la session), mettre à jour cette section : ce qui est fait, ce qui reste à tester, la prochaine étape.
 
 - v0.1 écrite : machine 1×5, sac de départ (15 symboles), combos 3/4/5 n'importe où sur la ligne (×1/×2/×4), écran de test `scenes/machine_test.tscn`.
 - v0.1 terminée : 16 tests en ligne de commande passent et Alex a confirmé que ça marche en jeu (F5).
-- Git initialisé (branche `main`), dépôt public : https://github.com/alexandrefelmy-dev/jackpot-donjon (`git push` suffit, `gh` est installé : `C:\Program Files\GitHub CLI\gh.exe`).
-- `README.md` à la racine : à garder à jour (jalon atteint, comment lancer le jeu et les tests).
+- Dépôt GitHub public : https://github.com/alexandrefelmy-dev/jackpot-donjon (branche `main`, `git push` suffit).
 - Prochaine étape : v0.2, premier combat (voir « Périmètre et jalons » dans le cahier des charges).
 
 ## Conventions
@@ -46,4 +47,3 @@ Godot 4.7, GDScript. Projet perso d'Alex, fait pour le plaisir avec l'IA : Claud
 - Alex est étudiant en informatique (bases en Python et Ada) : expliquer en quelques lignes ce qui a changé et comment le tester.
 - Une version jouable à la fois : ne pas commencer la suivante tant que la précédente ne marche pas en jeu.
 - Faire un commit git après chaque étape qui marche.
-- Mettre à jour ce fichier sans qu'Alex le demande dès qu'il devient faux ou incomplet (état actuel, chemins, conventions, structure, commandes).
