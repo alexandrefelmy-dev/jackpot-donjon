@@ -6,7 +6,7 @@ Une ligne de 5 rouleaux, tirés au hasard dans le « sac » de symboles du joueu
 
 Inspirations : Luck be a Landlord, Slay the Spire, Balatro.
 
-**Statut : en développement, version 0.1** (la machine à sous et ses combos). Projet personnel, développé avec l'aide de l'IA.
+**Statut : en développement, version 0.1 terminée** (la machine à sous et ses combos) ; prochaine étape : v0.2, le premier combat. Projet personnel, développé avec l'aide de l'IA.
 
 ## Lancer le jeu
 
