@@ -12,7 +12,8 @@ Godot 4.7, GDScript. Projet perso d'Alex, fait pour le plaisir avec l'IA : Claud
 ## État actuel (à mettre à jour à la fin de chaque session)
 
 - v0.1 écrite : machine 1×5, sac de départ (15 symboles), combos 3/4/5 n'importe où sur la ligne (×1/×2/×4), écran de test `scenes/machine_test.tscn`.
-- v0.1 pas encore confirmée en jeu par Alex (premier test F5 à faire).
+- v0.1 : 16 tests en ligne de commande passent ; pas encore confirmée en jeu par Alex (premier test F5 à faire).
+- Git initialisé (branche `main`), premier commit fait.
 - Prochaine étape : v0.2, premier combat (voir « Périmètre et jalons » dans le cahier des charges).
 
 ## Conventions
@@ -35,7 +36,7 @@ Godot 4.7, GDScript. Projet perso d'Alex, fait pour le plaisir avec l'IA : Claud
 ## Vérifier son travail
 
 - Tests : `godot --headless --path . -s res://tests/test_machine.gd` (affiche ok / ÉCHEC, code de sortie 1 en cas d'échec).
-- Sous Windows, utiliser l'exécutable console de Godot (`Godot_v4.7-stable_win64_console.exe`). S'il n'est pas dans le PATH, demander son chemin à Alex.
+- Sous Windows, utiliser l'exécutable console de Godot (`Godot_v4.7-stable_win64_console.exe`). Il n'est pas dans le PATH ; chemin sur le PC d'Alex : `C:\Users\felmy\Downloads\Godot_v4.7.2-stable_win64.exe\Godot_v4.7.2-stable_win64_console.exe` (version 4.7.2). S'il a changé, demander le nouveau chemin à Alex.
 - Après avoir créé un fichier avec `class_name`, lancer d'abord `godot --headless --path . --import` pour mettre à jour le cache des classes.
 - Chaque nouvelle règle de calcul a son test dans `tests/`.
 
@@ -44,3 +45,4 @@ Godot 4.7, GDScript. Projet perso d'Alex, fait pour le plaisir avec l'IA : Claud
 - Alex est étudiant en informatique (bases en Python et Ada) : expliquer en quelques lignes ce qui a changé et comment le tester.
 - Une version jouable à la fois : ne pas commencer la suivante tant que la précédente ne marche pas en jeu.
 - Faire un commit git après chaque étape qui marche.
+- Mettre à jour ce fichier sans qu'Alex le demande dès qu'il devient faux ou incomplet (état actuel, chemins, conventions, structure, commandes).
