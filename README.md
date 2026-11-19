@@ -6,7 +6,7 @@ Une ligne de 5 rouleaux, tirés au hasard dans le « sac » de symboles du joueu
 
 Inspirations : Luck be a Landlord, Slay the Spire, Balatro.
 
-**Statut : en développement, version 0.5 écrite** (mises, 9 reliques, relances, 6e rouleau), en cours de test en jeu ; prochaine étape : v0.6, le donjon (3 étages, portes, coffres). Projet personnel, développé avec l'aide de l'IA.
+**Statut : en développement, version 0.5 terminée** (mises, 9 reliques, relances, 6e rouleau) ; prochaine étape : v0.6, le donjon (3 étages, portes, coffres). Projet personnel, développé avec l'aide de l'IA.
 
 ## Lancer le jeu
 
