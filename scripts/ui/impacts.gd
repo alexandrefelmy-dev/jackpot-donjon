@@ -168,9 +168,8 @@ static func chiffres_du_tour(resultat: ResultatTirage, pv_joueur_avant: int, pv_
 ## La force de la secousse d'un tour (0 = aucune) : un jackpot claque, un gros combo ou un gros coup reçu secouent.
 static func force_de_secousse(resultat: ResultatTirage, pv_joueur_avant: int, pv_joueur_apres: int) -> float:
 	var force := 0.0
-	for combo in resultat.combos:
-		if combo.est_jackpot():
-			return 0.9
+	if resultat.a_un_jackpot():
+		return 0.9
 	if resultat.total("degats") >= 15:
 		force = maxf(force, 0.5)
 	elif resultat.total("degats") >= 8:

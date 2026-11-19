@@ -105,6 +105,12 @@ static func vers_le_comptoir() -> void:
 	aller_a(SCENE_COMPTOIR)
 
 
+## Retourne au menu principal (hors partie).
+static func vers_le_menu() -> void:
+	en_partie = false
+	aller_a(SCENE_MENU)
+
+
 ## La sauvegarde du profil n'existe que dans le jeu lui-même : jamais en mode sans fenêtre (tests,
 ## simulations). Avec le droit d'écrire (voir _ecriture_permise), c'est ce qui protège le vrai fichier du joueur.
 static func _sauvegarde_active() -> bool:

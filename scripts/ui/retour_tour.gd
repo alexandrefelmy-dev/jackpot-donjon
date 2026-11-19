@@ -9,11 +9,7 @@ extends RefCounted
 static func sons(resultat: ResultatTirage, pv_joueur_avant: int, pv_joueur_apres: int) -> Array[StringName]:
 	var liste: Array[StringName] = []
 	if not resultat.combos.is_empty():
-		var jackpot := false
-		for combo in resultat.combos:
-			if combo.est_jackpot():
-				jackpot = true
-		liste.append(&"jackpot" if jackpot else &"ding")
+		liste.append(&"jackpot" if resultat.a_un_jackpot() else &"ding")
 	for symbole in resultat.grille:
 		if symbole != null and symbole.usage_unique:
 			liste.append(&"bombe")

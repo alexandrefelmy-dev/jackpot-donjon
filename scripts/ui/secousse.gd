@@ -16,8 +16,6 @@ var _phase: float = 0.0
 
 ## Un impact de force `montant` (0 à 1). Sans effet si le joueur a réduit les tremblements.
 func ajouter(montant: float) -> void:
-	if Impacts.tremblements_reduits():
-		return
 	trauma = clampf(trauma + montant, 0.0, 1.0)
 
 

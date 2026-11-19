@@ -22,6 +22,11 @@ static func piste_pour(etage: int, boss: bool) -> StringName:
 	return StringName("etage_%d" % clampi(etage, 1, 3))
 
 
+## La musique du menu, des options et du Comptoir : celle de l'étage 1.
+static func jouer_menu() -> void:
+	jouer(piste_pour(1, false))
+
+
 ## La musique de la partie en cours : la piste de son étage, ou celle du boss pendant un combat de boss.
 static func jouer_pour(partie: Partie) -> void:
 	jouer(piste_pour(partie.etage, partie.est_combat_de_boss()))

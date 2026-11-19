@@ -149,6 +149,18 @@ static func ajouter_fond(parent: Control, couleur: Color) -> void:
 		parent.add_child(sol)
 
 
+## Un bouton d'écran : texte, taille minimale, pas de focus (Espace tire le levier, jamais un bouton), action.
+static func creer_bouton(texte: String, taille: Vector2, action: Callable, taille_police: int = 0) -> Button:
+	var bouton := Button.new()
+	bouton.text = texte
+	bouton.custom_minimum_size = taille
+	bouton.focus_mode = Control.FOCUS_NONE
+	if taille_police > 0:
+		bouton.add_theme_font_size_override("font_size", taille_police)
+	bouton.pressed.connect(action)
+	return bouton
+
+
 ## Donne à un contrôle (titre, étiquette) la lumière pulsante d'un néon. Le pulsement est coupé si le joueur
 ## a demandé de réduire les flashs. Le shader est chargé une fois ; chaque contrôle a son propre matériau.
 static func neon(controle: CanvasItem, couleur_halo: Color = Color("ffd34d")) -> void:

@@ -21,10 +21,13 @@ func _init() -> void:
 func definir(images: Array[Texture2D], duree_par_image: float = 0.2) -> void:
 	cadres = images
 	duree = duree_par_image
-	_indice = randi() % cadres.size() if not cadres.is_empty() else 0
-	texture = cadres[_indice] if not cadres.is_empty() else null
-	if not cadres.is_empty():
-		custom_minimum_size = cadres[0].get_size()
+	set_process(cadres.size() >= 2)  # une seule image : rien à animer
+	if cadres.is_empty():
+		texture = null
+		return
+	_indice = randi() % cadres.size()
+	texture = cadres[_indice]
+	custom_minimum_size = cadres[0].get_size()
 
 
 func _process(delta: float) -> void:

@@ -18,7 +18,7 @@ func _ready() -> void:
 	GameState.demarrer()
 	GameState.charger_profil()
 	GameState.en_partie = false
-	Musique.jouer(Musique.piste_pour(1, false))
+	Musique.jouer_menu()
 	_construire_interface()
 
 
@@ -95,11 +95,6 @@ func _construire_interface() -> void:
 
 
 func _creer_bouton(texte: String, action: Callable) -> Button:
-	var bouton := Button.new()
-	bouton.text = texte
-	bouton.custom_minimum_size = Vector2(360, 56)
+	var bouton := Cartes.creer_bouton(texte, Vector2(360, 56), action, 22)
 	bouton.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	bouton.add_theme_font_size_override("font_size", 22)
-	bouton.focus_mode = Control.FOCUS_NONE
-	bouton.pressed.connect(action)
 	return bouton

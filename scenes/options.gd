@@ -17,15 +17,20 @@ var bouton_retour: Button
 var texte_credits: Label
 var texte_message: Label
 const DELAI_SAUVEGARDE := 0.5
-var _sauvegarde_demandee: bool = false
-var _id_sauvegarde: int = 0
+## Écrit le fichier une demi-seconde après le dernier changement (relancé à chaque cran de curseur).
+var _minuteur_sauvegarde: Timer
 
 
 func _ready() -> void:
 	GameState.demarrer()
 	GameState.charger_options()
 	options = GameState.options
-	Musique.jouer(Musique.piste_pour(1, false))
+	_minuteur_sauvegarde = Timer.new()
+	_minuteur_sauvegarde.one_shot = true
+	_minuteur_sauvegarde.wait_time = DELAI_SAUVEGARDE
+	_minuteur_sauvegarde.timeout.connect(_sauvegarder_maintenant)
+	add_child(_minuteur_sauvegarde)
+	Musique.jouer_menu()
 	_construire_interface()
 	_rafraichir()
 
@@ -48,31 +53,17 @@ func _changer() -> void:
 	options.reduire_tremblements = case_tremblements.button_pressed
 	options.reduire_flashs = case_flashs.button_pressed
 	GameState.appliquer_options()
-	_sauvegarde_demandee = true
-	_planifier_sauvegarde()
+	_minuteur_sauvegarde.start()
 	_rafraichir()
 
 
-## Un glissement de curseur change la valeur à chaque cran : on n'écrit le fichier qu'une demi-seconde après
-## le dernier changement (et, au plus tard, en quittant l'écran).
-func _planifier_sauvegarde() -> void:
-	_id_sauvegarde += 1
-	var mon_id := _id_sauvegarde
-	await get_tree().create_timer(DELAI_SAUVEGARDE, true, false, true).timeout
-	if mon_id == _id_sauvegarde:
-		_sauvegarder_maintenant()
-
-
 func _sauvegarder_maintenant() -> void:
-	if not _sauvegarde_demandee:
-		return
-	_sauvegarde_demandee = false
 	texte_message.text = "" if GameState.sauver_options() else tr("Les options n'ont pas pu être enregistrées.")
 
 
+## Un changement encore en attente d'écriture quand on quitte l'écran est écrit tout de suite.
 func _exit_tree() -> void:
-	if _sauvegarde_demandee:
-		_sauvegarde_demandee = false
+	if _minuteur_sauvegarde != null and not _minuteur_sauvegarde.is_stopped():
 		GameState.sauver_options()
 
 
@@ -176,15 +167,11 @@ func _creer_case(texte: String, cochee: bool) -> Button:
 	var mettre_a_jour := func(active: bool) -> void:
 		case.text = "%s : %s" % [texte, tr("oui") if active else tr("non")]
 	mettre_a_jour.call(cochee)
-	case.toggled.connect(mettre_a_jour)
-	case.toggled.connect(func(_v: bool) -> void: _changer())
+	case.toggled.connect(func(active: bool) -> void:
+		mettre_a_jour.call(active)
+		_changer())
 	return case
 
 
 func _creer_bouton(texte: String, action: Callable) -> Button:
-	var bouton := Button.new()
-	bouton.text = texte
-	bouton.custom_minimum_size = Vector2(200, 48)
-	bouton.focus_mode = Control.FOCUS_NONE
-	bouton.pressed.connect(action)
-	return bouton
+	return Cartes.creer_bouton(texte, Vector2(200, 48), action)

@@ -208,11 +208,9 @@ func _lancer_les_effets(resultat: ResultatTirage, pv_avant: int) -> void:
 			Impacts.arret_sur_image()
 	if resultat.total("degats") > 0:
 		Impacts.flash(panneau_ennemi)
-	for combo in resultat.combos:
-		if combo.est_jackpot():
-			Impacts.banniere(self, tr("JACKPOT !"))
-			Impacts.pluie_de_pieces(self)
-			break
+	if resultat.a_un_jackpot():
+		Impacts.banniere(self, tr("JACKPOT !"))
+		Impacts.pluie_de_pieces(self)
 
 
 ## Les rouleaux, un par un : d'abord tous « en train de tourner », puis chacun s'arrête à son tour de gauche à

@@ -28,7 +28,7 @@ var bouton_debug_reset: Button
 
 func _ready() -> void:
 	GameState.demarrer()
-	Musique.jouer(Musique.piste_pour(1, false))
+	Musique.jouer_menu()
 	GameState.charger_profil()
 	GameState.en_partie = false
 	comptoir = Comptoir.creer(GameState.profil)
@@ -47,7 +47,7 @@ func _unhandled_input(evenement: InputEvent) -> void:
 
 func _menu() -> void:
 	Son.jouer(&"clic")
-	GameState.aller_a(GameState.SCENE_MENU)
+	GameState.vers_le_menu()
 
 
 func _acheter(achat: Comptoir.Achat) -> void:

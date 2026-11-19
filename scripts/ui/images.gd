@@ -30,6 +30,7 @@ static func icone(nom: String, case_px: int) -> Texture2D:
 		return _cache[cle]
 	var brute := texture(nom)
 	if brute == null:
+		_cache[cle] = null  # on ne cherche pas deux fois une image absente
 		return null
 	var image := brute.get_image()
 	var facteur := maxi(1, mini(case_px / image.get_width(), case_px / image.get_height()))

@@ -31,8 +31,7 @@ func _rejouer() -> void:
 
 
 func _aller_au_menu() -> void:
-	GameState.en_partie = false
-	GameState.aller_a(GameState.SCENE_MENU)
+	GameState.vers_le_menu()
 
 
 func _aller_au_comptoir() -> void:
@@ -121,9 +120,4 @@ func _construire_interface() -> void:
 
 
 func _creer_bouton(texte: String, action: Callable) -> Button:
-	var bouton := Button.new()
-	bouton.text = texte
-	bouton.custom_minimum_size = Vector2(240, 56)
-	bouton.focus_mode = Control.FOCUS_NONE
-	bouton.pressed.connect(action)
-	return bouton
+	return Cartes.creer_bouton(texte, Vector2(240, 56), action)
