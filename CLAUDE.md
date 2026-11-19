@@ -27,7 +27,7 @@ IMPORTANT : dès qu'une étape est terminée (ou avant qu'Alex quitte la session
 - Les journaux du jeu (y compris celui d'un jeu lancé par Alex depuis l'éditeur) sont dans `%APPDATA%\Godot\app_userdata\jackpot donjon\logs\` ; Godot n'en garde que 5 : lancer des tests en ligne de commande les fait tourner et efface celui d'Alex. Quand Alex rapporte un bug, lire ce dossier AVANT de lancer quoi que ce soit.
 - v0.5 terminée (Alex a confirmé en jeu, F5, mises, reliques et relances) : mises (`Mise` : or 5/10/20 gagnée = 3× la mise, quitte ou double à 5 PV), 9 reliques (`RelicData`, `data/relics/*.tres`, effets = paramètres du `.tres` ; `Reliques`, `Modificateurs`, `Partie.ajouter_relique`), tour en deux temps dans `Combat` (`tirer` / `relancer_tout` / `relancer_en_gardant` / `valider`, `jouer_tour(resultat, mise)` reste la fonction de règles), machine à 6 rouleaux (Sixième rouleau), relique offerte après le combat 3 (`scenes/relique.tscn`), 2 reliques en boutique. Ordre des écrans : combat → récompense → [relique après le combat 3] → boutique → combat. Tests : 30 (machine) + 78 (combat) + 54 (partie) + 67 (boutique) + 103 (reliques) + 122 (mises) + 131 (interface) = 585, tous ok ; 50 parties jouées à travers les vraies scènes (mises, relances, reliques, boutique) sans erreur ; de vrais clics de souris dans une vraie fenêtre vérifiés (mise, Cinquième as, Dé pipé, Valider). Règles v0.5 reportées dans le cahier des charges local ET en ligne (2026-11-19).
 - Équilibrage v0.5 : valeurs des ennemis inchangées (rat 8, squelette 13, gobelin 9, boss 14) ; robot sans réflexion : environ 55 % de victoires sans relique, 56 à 61 % avec reliques offertes/achetées. À régler dans les `.tres` après les essais d'Alex.
-- Prochaine étape : v0.6 (le donjon : 3 étages, choix entre 2 portes, coffres et repos, tous les ennemis et boss), Plan à rédiger avec Alex avant de coder.
+- Prochaine étape : v0.6 (le donjon : 3 étages, choix entre 2 portes, coffres et repos, tous les ennemis et boss). Plan à faire approuver par Alex avant de coder (voir « Plan avant chaque étape »).
 
 ## Conventions
 
@@ -70,11 +70,23 @@ IMPORTANT : dès qu'une étape est terminée (ou avant qu'Alex quitte la session
 - Une version jouable à la fois : ne pas commencer la suivante tant que la précédente ne marche pas en jeu.
 - Faire un commit git après chaque étape qui marche.
 
+## Plan avant chaque étape
+
+Avant de coder une étape de jeu (une version du cahier des charges, ex. v0.6), toujours passer par un plan, approuvé par Alex. Rien n'est modifié pendant la planification : le plan se fait avant de créer la branche.
+
+1. Relire la section concernée du cahier des charges et le code que l'étape touche.
+2. Poser à Alex les choix qui dépendent de lui (règles que le cahier des charges ne fixe pas, périmètre, contenu) : une question à la fois par sujet, avec une recommandation.
+3. Rédiger le plan : contexte, règles précisées (à reporter ensuite dans le cahier des charges local ET en ligne), architecture, fichiers à créer et à modifier, tests, étapes dans l'ordre (chacune laisse un jeu qui se lance), vérification, risques.
+4. Présenter le plan à Alex et attendre son accord. Le jeu n'est codé qu'ensuite.
+5. Si, en codant, il faut s'écarter du plan, le dire à Alex et le noter dans le résumé de fin d'étape.
+
+Pas de plan pour les petites corrections (un bug, un texte coupé, une valeur à régler) ni pour l'outillage et la documentation : les expliquer en quelques lignes, puis les faire.
+
 ## Git : une branche par étape
 
 `main` ne contient que des versions confirmées en jeu par Alex : il doit toujours marcher.
 
-- **Début d'étape** : partir de `main` à jour (`git switch main`, puis `git switch -c <branche>`). Nom de la branche : la version et un sujet court (`v0.6-donjon`) ; pour une correction hors étape : `fix/<sujet>` ; pour de la documentation ou de l'outillage : `chore/<sujet>`. Ne jamais coder directement sur `main`. Pour une étape de jeu : changer `Version.NUMERO` (`scripts/version.gd`) tout de suite.
+- **Début d'étape** : une fois le plan approuvé (voir « Plan avant chaque étape »), partir de `main` à jour (`git switch main`, puis `git switch -c <branche>`). Nom de la branche : la version et un sujet court (`v0.6-donjon`) ; pour une correction hors étape : `fix/<sujet>` ; pour de la documentation ou de l'outillage : `chore/<sujet>`. Ne jamais coder directement sur `main`. Pour une étape de jeu : changer `Version.NUMERO` (`scripts/version.gd`) tout de suite.
 - **Pendant l'étape** : des commits sur la branche, tests verts avant chaque commit (messages courts, en français, avec la ligne `Co-Authored-By`). Alex teste avec F5 sur la branche (le dossier de travail est celui de la branche).
 - **Avant la fusion** : lancer `/code-review` sur la branche (niveau `medium`) et corriger les problèmes confirmés ; relancer les tests.
 - **Fin d'étape**, seulement quand Alex a confirmé que ça marche en jeu : mettre à jour l'« État actuel » de `CLAUDE.md` et le `README` sur la branche (commit « vX confirmée »), puis `git switch main`, `git merge --no-ff <branche>` (le commit de fusion garde l'étape visible dans l'historique), poser l'étiquette de version (`git tag -a vX.Y -m "vX.Y : <sujet>"`), `git push --follow-tags`, et supprimer la branche (`git branch -d <branche>`). Les étiquettes `v0.1` à `v0.5` existent déjà.
@@ -83,6 +95,7 @@ IMPORTANT : dès qu'une étape est terminée (ou avant qu'Alex quitte la session
 
 À parcourir dans l'ordre avant de dire « l'étape est finie » à Alex (cocher mentalement, ne rien sauter) :
 
+0. Ce qui a été codé correspond au plan approuvé par Alex ; les écarts lui ont été signalés.
 1. Tous les tests de `tests/` passent (`test_machine`, `test_combat`, `test_partie`, `test_boutique`, `test_reliques`, `test_mises`, `test_interface`) et le jeu se lance comme avec F5 (`godot --headless --path . --quit-after 60`) sans erreur.
 2. `outils/simulation_parties.gd` : aucune erreur ; `outils/equilibrage.gd` relancé si des valeurs ont changé (cible 50 à 60 %).
 3. `outils/capture_ecrans.gd` : chaque écran nouveau ou modifié a été regardé en vrai (texte coupé, débordement, lisibilité) ; `outils/clics_reels.gd` si des boutons ont changé.
