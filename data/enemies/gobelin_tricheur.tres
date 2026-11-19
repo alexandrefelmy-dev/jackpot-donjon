@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1_enemy"]
+
+[resource]
+script = ExtResource("1_enemy")
+id = &"gobelin_tricheur"
+nom = "Gobelin tricheur"
+couleur = Color(0.4, 0.7, 0.35, 1)
+pv_max = 18
+or_victoire = 8
+intentions = Array[Dictionary]([{
+"type": "attaque",
+"valeur": 7
+}, {
+"type": "protection",
+"valeur": 4
+}])

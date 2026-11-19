@@ -7,6 +7,7 @@ script = ExtResource("1_enemy")
 id = &"golem_jetons"
 nom = "Golem de jetons"
 couleur = Color(0.8, 0.62, 0.2, 1)
+etage = 2
 pv_max = 40
 or_victoire = 15
 intentions = Array[Dictionary]([{

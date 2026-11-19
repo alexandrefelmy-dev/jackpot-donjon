@@ -5,11 +5,14 @@ extends RefCounted
 
 const ATTAQUE := "attaque"
 const PROTECTION := "protection"
+## Bloque des rouleaux (la valeur = leur nombre) au prochain tirage du joueur.
+const BLOCAGE := "blocage"
 
 ## Texte affiché pour chaque type (%d = la valeur).
 const FORMATS: Dictionary = {
 	ATTAQUE: "Attaque %d",
 	PROTECTION: "Se protège (+%d armure)",
+	BLOCAGE: "Bloque %d rouleau au prochain tirage",
 }
 
 

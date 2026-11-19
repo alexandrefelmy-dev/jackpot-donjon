@@ -30,13 +30,24 @@ var numero_tour: int = 1
 var etat: Etat = Etat.EN_COURS
 ## Or gagné pendant ce combat : pièces tirées, puis or de la victoire.
 var or_gagne: int = 0
+## Rouleaux (index de cases) bloqués pour le prochain tirage du joueur.
+## La scène les lit avant de tirer ; jouer_tour() les vide ensuite.
+var rouleaux_bloques: Array[int] = []
+
+var _hasard: RandomNumberGenerator
+var _nb_rouleaux: int
 
 
-func _init(donnees: EnemyData, pv_depart: int = PV_JOUEUR_DEPART, pv_max: int = PV_JOUEUR_DEPART) -> void:
+## `hasard` sert à choisir les rouleaux bloqués : on passe le générateur de la partie
+## pour garder un seul hasard rejouable. `nb_rouleaux` = nombre de cases de la machine.
+func _init(donnees: EnemyData, pv_depart: int = PV_JOUEUR_DEPART, pv_max: int = PV_JOUEUR_DEPART,
+		hasard: RandomNumberGenerator = null, nb_rouleaux: int = 5) -> void:
 	ennemi = donnees
 	pv_ennemi = donnees.pv_max
 	pv_joueur = pv_depart
 	pv_max_joueur = pv_max
+	_hasard = hasard if hasard != null else RandomNumberGenerator.new()
+	_nb_rouleaux = nb_rouleaux
 
 
 func est_fini() -> bool:
@@ -56,6 +67,9 @@ func jouer_tour(resultat: ResultatTirage) -> Array[String]:
 	var journal: Array[String] = []
 	if est_fini():
 		return journal
+
+	# Les rouleaux bloqués ont servi pour ce tirage : ils sont libres à nouveau.
+	rouleaux_bloques = []
 
 	# 1. Effets du tirage, dans l'ordre de Effets.ORDRE.
 	var degats := resultat.total("degats")
@@ -132,3 +146,13 @@ func _jouer_intention(bonus_attaque: int, journal: Array[String]) -> void:
 		Intentions.PROTECTION:
 			armure_ennemi += valeur
 			journal.append(tr("%s se protège (+%d armure)") % [tr(ennemi.nom), valeur])
+		Intentions.BLOCAGE:
+			# Des rouleaux différents, tirés au hasard, restent vides au prochain tirage.
+			var libres: Array[int] = []
+			for i in _nb_rouleaux:
+				libres.append(i)
+			for k in mini(valeur, libres.size()):
+				var choisi := _hasard.randi_range(0, libres.size() - 1)
+				rouleaux_bloques.append(libres[choisi])
+				libres.remove_at(choisi)
+			journal.append(tr("%s bloque %d rouleau au prochain tirage") % [tr(ennemi.nom), valeur])

@@ -64,6 +64,20 @@ func _init() -> void:
 	var g6 := machine.tirer(petit, rng)
 	verifier(g6.count(null) == 3, "2 symboles -> 3 rouleaux vides")
 
+	# Rouleau bloqué : la case reste vide et casse le combo.
+	var bloques: Array[int] = [2]
+	var rng3 := RandomNumberGenerator.new()
+	rng3.seed = 5
+	var sac_epees := Sac.new()
+	sac_epees.ajouter(epee, 10)
+	var g7 := machine.tirer(sac_epees, rng3, bloques)
+	verifier(g7[2] == null and g7.count(null) == 1, "un rouleau bloqué reste vide")
+	var r7 := machine.resoudre(g7)
+	verifier(r7.combos.is_empty(), "le rouleau bloqué casse le combo de 5 épées")
+	verifier(r7.total("degats") == 12, "4 épées séparées par un rouleau vide = 12 dégâts : %d" % r7.total("degats"))
+	var g8 := machine.tirer(sac_epees, rng3, [])
+	verifier(not g8.has(null), "sans blocage, aucun rouleau vide")
+
 	print("TERMINÉ : %d échec(s)" % echecs)
 	quit(1 if echecs > 0 else 0)
 

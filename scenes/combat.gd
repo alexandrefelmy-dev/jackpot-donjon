@@ -1,32 +1,26 @@
 extends Control
-## Écran de combat de la v0.2 : un ennemi avec son intention, la machine à sous,
-## les PV et l'armure du joueur. Victoire et défaite arrêtent le combat ; on peut rejouer.
-## L'interface est construite en code (comme machine_test), les vrais décors viendront en v0.8.
-
-## Les ennemis proposés dans le sélecteur (pour tester victoire et défaite).
-const ENNEMIS: Array[String] = [
-	"res://data/enemies/rat_egout.tres",
-	"res://data/enemies/squelette.tres",
-	"res://data/enemies/golem_jetons.tres",
-]
+## Écran de combat : un ennemi avec son intention, la machine à sous, les PV et l'armure
+## du joueur. Les PV, l'or et le sac viennent de la partie en cours (GameState.partie).
+## En fin de combat, « Continuer » mène à la récompense, ou à l'écran de fin.
+## L'interface est construite en code ; les vrais décors viendront en v0.8.
 
 const TAILLE_CASE := Vector2(120, 130)
 const COULEUR_FOND := Color("1b1a24")
 const COULEUR_CASE_VIDE := Color("2c2a38")
+const COULEUR_CASE_BLOQUEE := Color("5a2430")
 const COULEUR_COMBO := Color("ffd34d")
 const COULEUR_VICTOIRE := Color("7ddc7d")
 const COULEUR_DEFAITE := Color("ff6b6b")
+const COULEUR_BOSS := Color("ff9a5c")
 
 var machine := MachineASous.new(5, 1)
-var sac: Sac
+var partie: Partie
 var combat: Combat
-var rng := RandomNumberGenerator.new()
-var ennemis: Array[EnemyData] = []
 
 var cases: Array[PanelContainer] = []
 var etiquettes: Array[Label] = []
 
-var selecteur: OptionButton
+var texte_etage: Label
 var panneau_ennemi: PanelContainer
 var etiquettes_ennemi: Array[Label] = []
 var texte_nom_ennemi: Label
@@ -36,34 +30,21 @@ var texte_intention: Label
 var barre_pv_joueur: ProgressBar
 var texte_pv_joueur: Label
 var texte_or: Label
+var texte_sac: Label
 var texte_fin: Label
 var bouton_levier: Button
-var bouton_rejouer: Button
+var bouton_continuer: Button
 var texte_journal: RichTextLabel
 var texte_graine: Label
 
 
 func _ready() -> void:
-	for chemin in ENNEMIS:
-		ennemis.append(load(chemin) as EnemyData)
+	partie = GameState.partie
+	combat = partie.creer_combat()
 	_construire_interface()
-	_nouveau_combat()
 
-
-func _unhandled_input(event: InputEvent) -> void:
-	var touche := event as InputEventKey
-	if touche and touche.pressed and not touche.echo and touche.keycode == KEY_SPACE:
-		_tirer()
-
-
-## Prépare un combat tout neuf contre l'ennemi choisi dans le sélecteur.
-func _nouveau_combat() -> void:
-	rng.randomize()
-	sac = Sac.creer_sac_de_depart()
-	combat = Combat.new(ennemis[selecteur.selected])
-	texte_graine.text = tr("Graine : %d") % rng.seed
+	texte_graine.text = tr("Graine : %d") % partie.graine
 	texte_journal.text = tr("Tire le levier pour lancer la machine.")
-
 	for i in machine.nb_cases():
 		_dessiner_case(i, null, false)
 
@@ -80,21 +61,40 @@ func _nouveau_combat() -> void:
 	_rafraichir()
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	var touche := event as InputEventKey
+	if touche == null or not touche.pressed or touche.echo:
+		return
+	if touche.keycode == KEY_SPACE:
+		_tirer()
+	elif touche.keycode == KEY_F9 and OS.is_debug_build():
+		# Pour tester le boss sans gagner 5 combats.
+		partie.aller_au_boss()
+		GameState.aller_a(GameState.SCENE_COMBAT)
+
+
 func _tirer() -> void:
 	if combat.est_fini():
 		return
 	var numero_tour := combat.numero_tour
-	var grille := machine.tirer(sac, rng)
+	# Les rouleaux bloqués par l'ennemi restent vides pour ce tirage.
+	var bloques: Array[int] = combat.rouleaux_bloques.duplicate()
+	var grille := machine.tirer(partie.sac, partie.rng, bloques)
 	var resultat := machine.resoudre(grille)
 	for i in grille.size():
-		_dessiner_case(i, grille[i], i in resultat.cases_en_combo)
+		_dessiner_case(i, grille[i], i in resultat.cases_en_combo, i in bloques)
 	var journal_combat := combat.jouer_tour(resultat)
 	_afficher_tour(numero_tour, resultat, journal_combat)
 	_rafraichir()
 
 
-func _on_ennemi_choisi(_index: int) -> void:
-	_nouveau_combat()
+func _continuer() -> void:
+	bouton_continuer.disabled = true
+	partie.terminer_combat(combat)
+	if partie.etat == Partie.Etat.EN_COURS:
+		GameState.aller_a(GameState.SCENE_RECOMPENSE)
+	else:
+		GameState.aller_a(GameState.SCENE_FIN)
 
 
 # --- Affichage -------------------------------------------------------------
@@ -105,6 +105,12 @@ func _couleur_texte(fond: Color) -> Color:
 
 ## Met à jour tout ce qui dépend de l'état du combat.
 func _rafraichir() -> void:
+	if partie.est_combat_de_boss():
+		texte_etage.text = tr("Étage 1 — BOSS")
+		texte_etage.add_theme_color_override("font_color", COULEUR_BOSS)
+	else:
+		texte_etage.text = tr("Étage 1 — Combat %d / %d") % [partie.numero_combat, Partie.NB_COMBATS_NORMAUX]
+
 	texte_nom_ennemi.text = tr(combat.ennemi.nom)
 	barre_pv_ennemi.value = combat.pv_ennemi
 	texte_pv_ennemi.text = tr("PV %d / %d   Armure %d") % [
@@ -118,7 +124,12 @@ func _rafraichir() -> void:
 	barre_pv_joueur.value = combat.pv_joueur
 	texte_pv_joueur.text = tr("Toi : PV %d / %d   Armure %d") % [
 		combat.pv_joueur, combat.pv_max_joueur, combat.armure_joueur]
-	texte_or.text = tr("Or gagné : %d") % combat.or_gagne
+	texte_or.text = tr("Or gagné : %d") % (partie.or_total + combat.or_gagne)
+	texte_sac.text = tr("Sac : %d symboles") % partie.sac.taille()
+
+	# Les rouleaux que l'ennemi vient de bloquer sont déjà marqués pour le prochain tirage.
+	for index in combat.rouleaux_bloques:
+		_dessiner_case(index, null, false, true)
 
 	match combat.etat:
 		Combat.Etat.VICTOIRE:
@@ -130,15 +141,20 @@ func _rafraichir() -> void:
 		_:
 			texte_fin.text = ""
 	bouton_levier.disabled = combat.est_fini()
-	bouton_rejouer.visible = combat.est_fini()
+	bouton_continuer.visible = combat.est_fini()
 
 
-func _dessiner_case(index: int, symbole: SymbolData, en_combo: bool) -> void:
+func _dessiner_case(index: int, symbole: SymbolData, en_combo: bool, bloquee: bool = false) -> void:
 	var style := StyleBoxFlat.new()
 	style.set_corner_radius_all(10)
 	var etiquette := etiquettes[index]
 
-	if symbole == null:
+	if bloquee:
+		style.bg_color = COULEUR_CASE_BLOQUEE
+		etiquette.text = tr("BLOQUÉ")
+		etiquette.add_theme_color_override("font_color", Color.WHITE)
+		cases[index].tooltip_text = tr("Ce rouleau est bloqué : il restera vide au prochain tirage.")
+	elif symbole == null:
 		style.bg_color = COULEUR_CASE_VIDE
 		etiquette.text = tr("vide")
 		etiquette.add_theme_color_override("font_color", Color(1, 1, 1, 0.3))
@@ -186,7 +202,7 @@ func _afficher_tour(numero_tour: int, resultat: ResultatTirage, journal_combat: 
 	texte_journal.text = "\n".join(texte)
 
 
-# --- Construction de l'interface (en code, pour la v0.2) --------------------
+# --- Construction de l'interface (en code) ---------------------------------
 
 func _construire_interface() -> void:
 	var fond := ColorRect.new()
@@ -213,21 +229,10 @@ func _construire_colonne_combat(parent: Control) -> void:
 	colonne.add_theme_constant_override("separation", 12)
 	parent.add_child(colonne)
 
-	# Titre et choix de l'ennemi.
-	var ligne_titre := HBoxContainer.new()
-	ligne_titre.add_theme_constant_override("separation", 16)
-	colonne.add_child(ligne_titre)
-	var titre := Label.new()
-	titre.text = tr("Jackpot Donjon")
-	titre.add_theme_font_size_override("font_size", 26)
-	titre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	ligne_titre.add_child(titre)
-	selecteur = OptionButton.new()
-	selecteur.focus_mode = Control.FOCUS_NONE  # sinon Espace ouvrirait la liste
-	for donnees in ennemis:
-		selecteur.add_item(tr(donnees.nom))
-	selecteur.item_selected.connect(_on_ennemi_choisi)
-	ligne_titre.add_child(selecteur)
+	# Titre : étage et numéro du combat.
+	texte_etage = Label.new()
+	texte_etage.add_theme_font_size_override("font_size", 26)
+	colonne.add_child(texte_etage)
 
 	# L'ennemi : nom, PV, armure, intention.
 	panneau_ennemi = PanelContainer.new()
@@ -271,7 +276,7 @@ func _construire_colonne_combat(parent: Control) -> void:
 	bouton_levier.pressed.connect(_tirer)
 	colonne.add_child(bouton_levier)
 
-	# Le joueur : PV, armure, or.
+	# Le joueur : PV, armure, or, sac.
 	barre_pv_joueur = _creer_barre()
 	colonne.add_child(barre_pv_joueur)
 	texte_pv_joueur = Label.new()
@@ -280,17 +285,20 @@ func _construire_colonne_combat(parent: Control) -> void:
 	texte_or = Label.new()
 	texte_or.add_theme_font_size_override("font_size", 18)
 	colonne.add_child(texte_or)
+	texte_sac = Label.new()
+	texte_sac.add_theme_font_size_override("font_size", 18)
+	colonne.add_child(texte_sac)
 
 	# Fin du combat.
 	texte_fin = Label.new()
 	texte_fin.add_theme_font_size_override("font_size", 26)
 	colonne.add_child(texte_fin)
-	bouton_rejouer = Button.new()
-	bouton_rejouer.text = tr("Rejouer")
-	bouton_rejouer.custom_minimum_size = Vector2(0, 44)
-	bouton_rejouer.focus_mode = Control.FOCUS_NONE
-	bouton_rejouer.pressed.connect(_nouveau_combat)
-	colonne.add_child(bouton_rejouer)
+	bouton_continuer = Button.new()
+	bouton_continuer.text = tr("Continuer")
+	bouton_continuer.custom_minimum_size = Vector2(0, 44)
+	bouton_continuer.focus_mode = Control.FOCUS_NONE
+	bouton_continuer.pressed.connect(_continuer)
+	colonne.add_child(bouton_continuer)
 
 
 func _construire_colonne_journal(parent: Control) -> void:
@@ -314,6 +322,12 @@ func _construire_colonne_journal(parent: Control) -> void:
 	texte_graine = Label.new()
 	texte_graine.add_theme_color_override("font_color", Color(1, 1, 1, 0.4))
 	colonne.add_child(texte_graine)
+
+	if OS.is_debug_build():
+		var aide := Label.new()
+		aide.text = tr("Debug : F9 = aller directement au boss")
+		aide.add_theme_color_override("font_color", Color(1, 1, 1, 0.4))
+		colonne.add_child(aide)
 
 
 func _creer_barre() -> ProgressBar:

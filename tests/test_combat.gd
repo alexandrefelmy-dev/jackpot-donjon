@@ -33,6 +33,8 @@ func _init() -> void:
 	test_combat_fini()
 	test_ennemi_sans_intention()
 	test_descriptions()
+	test_nouveaux_ennemis()
+	test_blocage()
 	test_combats_aleatoires()
 
 	print("TERMINÉ : %d échec(s)" % echecs)
@@ -49,31 +51,58 @@ func tour(combat: Combat, symboles: Array) -> Array[String]:
 	return combat.jouer_tour(machine.resoudre(grille))
 
 
-func ennemi(nom_fichier: String) -> EnemyData:
+## Ennemis de test aux valeurs fixes : les vrais ennemis (data/enemies/*.tres) sont réglés
+## en jouant, ces tests de règles ne doivent pas casser quand on change leurs chiffres.
+func ennemi(nom: String) -> EnemyData:
+	match nom:
+		"rat_egout":
+			return creer_ennemi(12, [{"type": "attaque", "valeur": 3}])
+		"squelette":
+			return creer_ennemi(22, [{"type": "protection", "valeur": 5}, {"type": "attaque", "valeur": 6}])
+		"golem_jetons":
+			return creer_ennemi(40, [{"type": "attaque", "valeur": 14}])
+		"rat_croupier":
+			return creer_ennemi(60, [{"type": "attaque", "valeur": 6}, {"type": "blocage", "valeur": 1}])
+	return null
+
+
+## Les vrais ennemis, chargés depuis leur fichier de données.
+func donnees(nom_fichier: String) -> EnemyData:
 	return load("res://data/enemies/%s.tres" % nom_fichier)
 
 
 func creer_ennemi(pv: int, intentions: Array[Dictionary]) -> EnemyData:
-	var donnees := EnemyData.new()
-	donnees.nom = "Ennemi de test"
-	donnees.pv_max = pv
-	donnees.or_victoire = 5
-	donnees.intentions = intentions
-	return donnees
+	var e := EnemyData.new()
+	e.nom = "Ennemi de test"
+	e.pv_max = pv
+	e.or_victoire = 5
+	e.intentions = intentions
+	return e
 
 
 # --- Tests ------------------------------------------------------------------
 
 func test_donnees_ennemis() -> void:
-	var rat := ennemi("rat_egout")
+	var rat := donnees("rat_egout")
 	verifier(rat != null and rat.pv_max == 12, "le rat d'égout a 12 PV")
 	verifier(rat.intentions.size() == 1 and rat.intentions[0]["type"] == "attaque",
 			"le rat attaque à chaque tour")
-	var squelette := ennemi("squelette")
+	var squelette := donnees("squelette")
 	verifier(squelette != null and squelette.pv_max == 22, "le squelette a 22 PV")
-	verifier(squelette.intentions.size() == 2, "le squelette a 2 intentions")
-	var golem := ennemi("golem_jetons")
+	verifier(squelette.intentions.size() == 2 and squelette.intentions[0]["type"] == "protection"
+			and squelette.intentions[1]["type"] == "attaque", "le squelette se protège puis attaque")
+	var golem := donnees("golem_jetons")
 	verifier(golem != null and golem.pv_max == 40, "le golem a 40 PV")
+	# Les valeurs d'attaque se règlent dans les .tres : on vérifie juste qu'elles sont positives.
+	var valeurs_ok := true
+	for nom in ["rat_egout", "squelette", "gobelin_tricheur", "golem_jetons", "rat_croupier"]:
+		var e := donnees(nom)
+		for intention in e.intentions:
+			if int(intention["valeur"]) <= 0 or not Intentions.FORMATS.has(intention["type"]):
+				valeurs_ok = false
+		if e.pv_max <= 0 or e.or_victoire <= 0 or e.intentions.is_empty():
+			valeurs_ok = false
+	verifier(valeurs_ok, "tous les ennemis ont des PV, de l'or et des intentions valides")
 
 
 func test_degats_a_l_ennemi() -> void:
@@ -93,7 +122,12 @@ func test_victoire() -> void:
 	verifier(combat.pv_ennemi == 0, "PV ennemi à 0 (jamais négatifs) : %d" % combat.pv_ennemi)
 	verifier(combat.pv_joueur == 40, "l'ennemi vaincu n'attaque pas : %d PV" % combat.pv_joueur)
 	verifier(combat.or_gagne == 5, "or de la victoire : %d" % combat.or_gagne)
-	verifier(ennemi("rat_egout").pv_max == 12, "les données de l'ennemi ne sont pas modifiées")
+	var partage := donnees("rat_egout")
+	var pv_avant := partage.pv_max
+	var combat_reel := Combat.new(partage)
+	tour(combat_reel, [epee, epee, epee, epee, epee])
+	verifier(partage.pv_max == pv_avant and combat_reel.pv_ennemi == 0,
+			"les données partagées de l'ennemi ne sont pas modifiées")
 
 
 func test_armure_du_joueur() -> void:
@@ -217,6 +251,95 @@ func test_descriptions() -> void:
 	verifier(Intentions.decrire({"type": "inconnu"}) == "Intention inconnue", "type d'intention inconnu")
 
 
+func test_nouveaux_ennemis() -> void:
+	var gobelin := donnees("gobelin_tricheur")
+	verifier(gobelin != null and gobelin.pv_max == 18 and gobelin.etage == 1 and not gobelin.est_boss,
+			"le gobelin tricheur : 18 PV, étage 1, pas un boss")
+	verifier(gobelin.intentions[0]["type"] == "attaque" and gobelin.intentions[1]["type"] == "protection",
+			"le gobelin alterne attaque et protection")
+	var boss := donnees("rat_croupier")
+	verifier(boss != null and boss.pv_max == 60 and boss.est_boss and boss.etage == 1,
+			"le Rat-Croupier : 60 PV, boss de l'étage 1")
+	verifier(boss.intentions[0]["type"] == "attaque" and boss.intentions[1]["type"] == "blocage",
+			"le Rat-Croupier alterne attaque et blocage")
+	verifier(donnees("golem_jetons").etage == 2, "le golem est un ennemi de l'étage 2")
+	verifier(donnees("rat_egout").etage == 1 and not donnees("rat_egout").est_boss, "le rat : étage 1, pas un boss")
+
+
+func test_blocage() -> void:
+	var boss := ennemi("rat_croupier")
+	var hasard := RandomNumberGenerator.new()
+	hasard.seed = 11
+	var combat := Combat.new(boss, 40, 40, hasard)
+	verifier(combat.rouleaux_bloques.is_empty(), "rien n'est bloqué au début du combat")
+
+	# Tour 1 : le boss attaque, rien n'est bloqué.
+	tour(combat, [])
+	verifier(combat.rouleaux_bloques.is_empty(), "après l'attaque du boss, aucun rouleau bloqué")
+	verifier(combat.intention_actuelle()["type"] == "blocage", "tour 2 : le boss annonce un blocage")
+	verifier("rouleau" in Intentions.decrire(combat.intention_actuelle()), "le texte de l'intention parle d'un rouleau")
+
+	# Tour 2 : le boss agit après le tirage et bloque un rouleau pour le tirage suivant.
+	var journal := tour(combat, [])
+	verifier(combat.rouleaux_bloques.size() == 1, "le boss bloque 1 rouleau")
+	verifier(combat.rouleaux_bloques[0] >= 0 and combat.rouleaux_bloques[0] <= 4, "le rouleau bloqué existe (0 à 4)")
+	verifier(combat.pv_joueur == 34, "le blocage ne fait pas de dégâts : %d PV" % combat.pv_joueur)
+	var parle_de_blocage := false
+	for ligne in journal:
+		if "bloque" in ligne:
+			parle_de_blocage = true
+	verifier(parle_de_blocage, "le journal annonce le rouleau bloqué")
+
+	# Tour 3 : les rouleaux bloqués servent pour ce tirage, puis sont libérés (le boss attaque).
+	tour(combat, [])
+	verifier(combat.rouleaux_bloques.is_empty(), "les rouleaux bloqués sont libérés après le tirage")
+
+	# Même graine : même rouleau bloqué.
+	var hasard2 := RandomNumberGenerator.new()
+	hasard2.seed = 11
+	var combat2 := Combat.new(boss, 40, 40, hasard2)
+	tour(combat2, [])
+	tour(combat2, [])
+	var hasard3 := RandomNumberGenerator.new()
+	hasard3.seed = 11
+	var combat3 := Combat.new(boss, 40, 40, hasard3)
+	tour(combat3, [])
+	tour(combat3, [])
+	verifier(combat2.rouleaux_bloques == combat3.rouleaux_bloques, "même graine, même rouleau bloqué")
+
+	# Plusieurs rouleaux : tous différents.
+	var triple := creer_ennemi(50, [{"type": "blocage", "valeur": 3}])
+	var combat4 := Combat.new(triple, 40, 40, hasard)
+	tour(combat4, [])
+	var distincts := {}
+	for index in combat4.rouleaux_bloques:
+		distincts[index] = true
+	verifier(combat4.rouleaux_bloques.size() == 3 and distincts.size() == 3, "3 rouleaux bloqués, tous différents")
+
+	# Un blocage plus grand que la machine ne dépasse pas 5 rouleaux.
+	var enorme := creer_ennemi(50, [{"type": "blocage", "valeur": 9}])
+	var combat5 := Combat.new(enorme, 40, 40, hasard)
+	tour(combat5, [])
+	verifier(combat5.rouleaux_bloques.size() == 5, "au plus 5 rouleaux bloqués : %d" % combat5.rouleaux_bloques.size())
+
+	# Les combats au hasard continuent de se terminer avec le boss.
+	var sac := Sac.creer_sac_de_depart()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 3
+	var finis := 0
+	var vrai_boss := donnees("rat_croupier")
+	for essai in 50:
+		var c := Combat.new(vrai_boss, 40, 40, rng)
+		var n := 0
+		while not c.est_fini() and n < 300:
+			var grille := machine.tirer(sac, rng, c.rouleaux_bloques)
+			c.jouer_tour(machine.resoudre(grille))
+			n += 1
+		if c.est_fini():
+			finis += 1
+	verifier(finis == 50, "50 combats contre le boss se terminent : %d" % finis)
+
+
 ## Des centaines de combats au hasard : ils se terminent tous, PV toujours cohérents.
 func test_combats_aleatoires() -> void:
 	var rng := RandomNumberGenerator.new()
@@ -226,7 +349,7 @@ func test_combats_aleatoires() -> void:
 	for nom_ennemi in ["rat_egout", "squelette", "golem_jetons"]:
 		for essai in 100:
 			var sac := Sac.creer_sac_de_depart()
-			var combat := Combat.new(ennemi(nom_ennemi))
+			var combat := Combat.new(donnees(nom_ennemi))
 			var tours := 0
 			while not combat.est_fini() and tours < 200:
 				combat.jouer_tour(machine.resoudre(machine.tirer(sac, rng)))

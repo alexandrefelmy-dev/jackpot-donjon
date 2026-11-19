@@ -105,6 +105,16 @@ Un combat oppose le joueur à un seul ennemi, au tour par tour : un tirage du jo
 - Si l'ennemi et le joueur tombent à 0 PV dans le même tirage, c'est la victoire. Si l'ennemi est vaincu, il n'agit pas ; si le joueur tombe à 0 PV avant son action, il n'agit pas non plus.
 - Les intentions d'un ennemi sont une liste jouée en boucle, une par tour (définie dans son fichier de données).
 
+**Précisions de règles (v0.3)**
+
+- Une partie v0.3 = 5 combats contre des ennemis de l'étage 1 (tirés au hasard, jamais le même deux fois de suite), puis le boss de l'étage. Boss vaincu = victoire (un seul étage pour l'instant ; les 3 étages arrivent en v0.6).
+- Entre deux combats, les PV ne remontent pas (sauf soins), l'armure retombe, l'or gagné et le sac sont conservés. L'or n'est que compté et affiché (la boutique arrive en v0.4).
+- Après chaque combat normal, 3 symboles différents sont proposés parmi épée, bouclier, potion et pièce (jamais le crâne) : on en prend 1 pour l'ajouter au sac, ou on passe. Pas de récompense après le boss (une relique est prévue en v0.5).
+- Intention « Blocage » : à son action du tour N, l'ennemi bloque un rouleau tiré au hasard, qui reste vide au tirage du tour N+1 (un rouleau vide casse les combos). Le joueur voit « bloque un rouleau » dans l'intention dès le tour N.
+- Gobelin tricheur (simplifié) : alterne attaque et protection ; son vol d'or viendra avec la boutique (v0.4). Rat-Croupier : 60 PV, alterne attaque et blocage.
+- À 0 PV dans un combat : game over. Rejouer lance une nouvelle partie (nouveau sac, PV pleins, nouvelle graine).
+- Attaques de départ : Rat d'égout 6, Squelette 10 (après sa protection de 5), Gobelin tricheur 7 (puis protection de 4), Rat-Croupier 11. Réglées avec 200 parties jouées automatiquement sans réfléchir : environ 53 % de victoires, donc plus facile pour un joueur qui choisit ses récompenses.
+
 **Fin du combat**
 
 - Ennemi à 0 PV : victoire. Le joueur gagne de l'or et choisit **1 symbole parmi 3** à ajouter à son sac (ou passe).
@@ -292,6 +302,7 @@ Le jeu se construit par versions jouables : la version 0.3 est le MVP, une parti
    - Réalisé : intentions « Attaque » et « Protection » ; 3 ennemis au choix pour tester (Rat d'égout, Squelette, Golem de jetons) ; bouton Rejouer. L'or n'est que compté et affiché (pas encore conservé : v0.3).
 3. **v0.3 – MVP** : 5 combats à la suite puis un boss, récompense « 1 symbole parmi 3 », écran de fin et Rejouer.
    - Fini quand : une partie entière se joue du début à la fin.
+   - Réalisé : 5 combats d'étage 1 (Rat d'égout, Squelette, Gobelin tricheur simplifié) puis le boss Rat-Croupier qui bloque un rouleau ; PV, or et sac conservés d'un combat à l'autre ; écran de récompense (1 symbole parmi 3, ou passer) ; écran de victoire / game over avec Rejouer.
 4. **v0.4 – Économie** : or, boutique, retrait et amélioration de symboles.
 5. **v0.5 – Gambling** : mises, reliques.
 6. **v0.6 – Le donjon** : 3 étages, choix entre 2 portes, coffres et repos, tous les ennemis et boss.

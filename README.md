@@ -6,13 +6,13 @@ Une ligne de 5 rouleaux, tirés au hasard dans le « sac » de symboles du joueu
 
 Inspirations : Luck be a Landlord, Slay the Spire, Balatro.
 
-**Statut : en développement, version 0.2 terminée** (la machine à sous, ses combos et un premier combat) ; prochaine étape : v0.3, une partie complète minimale. Projet personnel, développé avec l'aide de l'IA.
+**Statut : en développement, version 0.3 écrite** (une partie complète : 5 combats, un boss, récompenses, écran de fin), en cours de test en jeu ; prochaine étape : v0.4, l'économie (or et boutique). Projet personnel, développé avec l'aide de l'IA.
 
 ## Lancer le jeu
 
 1. Installer [Godot 4.7](https://godotengine.org/download) (version standard, GDScript).
 2. Ouvrir le dossier du projet dans Godot (`project.godot`).
-3. Appuyer sur F5 : l'écran de combat s'ouvre (l'écran de test de la machine est `scenes/machine_test.tscn`).
+3. Appuyer sur F5 : la partie commence sur l'écran de combat (touche F9 en jeu : aller directement au boss, pour les tests). L'écran de test de la machine est `scenes/machine_test.tscn`.
 
 ## Lancer les tests
 
@@ -20,6 +20,7 @@ Inspirations : Luck be a Landlord, Slay the Spire, Balatro.
 godot --headless --path . --import
 godot --headless --path . -s res://tests/test_machine.gd
 godot --headless --path . -s res://tests/test_combat.gd
+godot --headless --path . -s res://tests/test_partie.gd
 ```
 
 Sous Windows, utiliser l'exécutable `..._console.exe` de Godot. Le script affiche `ok` ou `ÉCHEC` pour chaque test et se termine avec le code 1 en cas d'échec.
@@ -32,8 +33,8 @@ Les règles, les valeurs et les jalons (v0.1 à v1.1) sont dans [`docs/cahier-de
 
 | Dossier | Contenu |
 | --- | --- |
-| `scenes/` | scènes et leur script (écran de combat, écran de test de la machine) |
-| `scripts/` | logique : sac, tirage, combos, effets, combat |
+| `scenes/` | scènes et leur script (combat, récompense, fin de partie, test de la machine) |
+| `scripts/` | logique : sac, tirage, combos, effets, combat, partie |
 | `data/` | symboles et ennemis, un fichier `.tres` chacun |
 | `tests/` | tests en ligne de commande |
 | `docs/` | cahier des charges |

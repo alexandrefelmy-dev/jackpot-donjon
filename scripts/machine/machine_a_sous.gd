@@ -26,8 +26,13 @@ static func multiplicateur(longueur: int) -> int:
 
 
 ## Remplit les rouleaux avec des symboles piochés dans le sac.
-func tirer(sac: Sac, rng: RandomNumberGenerator) -> Array[SymbolData]:
-	return sac.tirer(nb_cases(), rng)
+## Les rouleaux bloqués (index de cases, ex. par le Rat-Croupier) restent vides.
+func tirer(sac: Sac, rng: RandomNumberGenerator, cases_bloquees: Array[int] = []) -> Array[SymbolData]:
+	var grille := sac.tirer(nb_cases(), rng)
+	for index in cases_bloquees:
+		if index >= 0 and index < grille.size():
+			grille[index] = null
+	return grille
 
 
 ## Calcule les effets d'un tirage :
