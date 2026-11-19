@@ -26,9 +26,10 @@ static var en_partie: bool = false
 static var profil: Profil
 ## Un message sur le profil à montrer au Comptoir (profil abîmé, version plus récente...).
 static var message_profil: String = ""
-## Mis à faux par les outils qui ouvrent une vraie fenêtre : ils ne touchent jamais au vrai profil du joueur.
-static var sauvegarde_autorisee: bool = true
-static var _ecriture_permise: bool = true
+## Le droit d'écrire le profil sur le disque : FAUX par défaut, accordé seulement par charger_profil() après
+## une vraie lecture du fichier du joueur. Un test ou un outil qui prépare son propre profil ne passe jamais
+## par cette lecture : il n'écrit donc jamais dans le vrai profil.
+static var _ecriture_permise: bool = false
 static var _hasard_du_profil: RandomNumberGenerator
 
 
@@ -51,10 +52,9 @@ static func vers_le_comptoir() -> void:
 
 
 ## La sauvegarde du profil n'existe que dans le jeu lui-même : jamais en mode sans fenêtre (tests,
-## simulations) ni pour les outils qui ont mis `sauvegarde_autorisee` à faux. C'est le SEUL endroit
-## qui décide d'écrire ou non dans le vrai fichier du joueur.
+## simulations). Avec le droit d'écrire (voir _ecriture_permise), c'est ce qui protège le vrai fichier du joueur.
 static func _sauvegarde_active() -> bool:
-	return sauvegarde_autorisee and DisplayServer.get_name() != "headless"
+	return DisplayServer.get_name() != "headless"
 
 
 ## Charge le profil (une seule fois). Sans sauvegarde possible, un profil neuf en mémoire.

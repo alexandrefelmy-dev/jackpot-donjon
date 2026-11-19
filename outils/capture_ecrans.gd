@@ -24,8 +24,8 @@ var _erreurs := 0
 
 
 func _initialize() -> void:
-	# Cet outil ouvre une vraie fenêtre : il ne doit JAMAIS lire ni écrire le vrai profil du joueur.
-	GameState.sauvegarde_autorisee = false
+	# Cet outil ouvre une vraie fenêtre : il prépare son propre profil, sans jamais lire ni écrire le vrai
+	# (GameState n'écrit que si le profil a été chargé depuis le fichier du joueur).
 	GameState.profil = Profil.nouveau()
 	DirAccess.make_dir_recursive_absolute(DOSSIER)
 	print("Captures écrites dans : ", ProjectSettings.globalize_path(DOSSIER))

@@ -100,7 +100,7 @@ func _appliquer_profil(profil_du_joueur: Profil) -> void:
 	or_total = profil_du_joueur.or_bonus()
 	sac.ajouter(Sac.CRANE, Maledictions.cranes_en_plus(maledictions))
 	if profil_du_joueur.trefle_au_depart:
-		sac.ajouter(load("res://data/symbols/trefle.tres") as SymbolData)
+		sac.ajouter(Sac.TREFLE)
 	relances_de_partie = 1 if profil_du_joueur.relance_de_partie else 0
 
 
@@ -112,8 +112,9 @@ func prix_ajuste(prix: int) -> int:
 ## Le combat qui commence est-il le premier de son étage ? (Croupier rancunier : l'ennemi a +20 % de PV.)
 ## Noté quand l'ennemi devient courant, donc sans effet si l'écran est rechargé.
 func _preparer_renfort() -> void:
-	_ennemi_renforce = Maledictions.renforce_le_premier_ennemi(maledictions) and not (etage in _etages_combattus)
-	if not (etage in _etages_combattus):
+	var premier := not (etage in _etages_combattus)
+	_ennemi_renforce = premier and Maledictions.renforce_le_premier_ennemi(maledictions)
+	if premier:
 		_etages_combattus.append(etage)
 
 

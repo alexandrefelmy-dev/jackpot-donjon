@@ -13,8 +13,7 @@ var _combat: Control
 
 
 func _initialize() -> void:
-	# Vraie fenêtre : jamais le vrai profil du joueur.
-	GameState.sauvegarde_autorisee = false
+	# Vraie fenêtre : son propre profil, jamais le vrai (voir capture_ecrans.gd).
 	GameState.profil = Profil.nouveau()
 	var partie := Partie.creer(77)
 	partie.or_total = 30

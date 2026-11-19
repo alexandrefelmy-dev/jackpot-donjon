@@ -100,11 +100,11 @@ func en_dictionnaire() -> Dictionary:
 static func depuis_dictionnaire(donnees: Dictionary) -> Profil:
 	var profil := Profil.nouveau()
 	# JSON rend tous les nombres en flottants : on les convertit en entiers (en refusant les décimaux).
-	var jetons_lus: Variant = _entier(donnees.get("jetons"))
-	var niveau_pv_lu: Variant = _entier(donnees.get("niveau_pv"))
-	var niveau_or_lu: Variant = _entier(donnees.get("niveau_or"))
-	var parties_lues: Variant = _entier(donnees.get("parties_jouees"))
-	var victoires_lues: Variant = _entier(donnees.get("victoires"))
+	var jetons_lus: Variant = entier_ou_null(donnees.get("jetons"))
+	var niveau_pv_lu: Variant = entier_ou_null(donnees.get("niveau_pv"))
+	var niveau_or_lu: Variant = entier_ou_null(donnees.get("niveau_or"))
+	var parties_lues: Variant = entier_ou_null(donnees.get("parties_jouees"))
+	var victoires_lues: Variant = entier_ou_null(donnees.get("victoires"))
 	if jetons_lus == null or jetons_lus < 0 or niveau_pv_lu == null or niveau_pv_lu < 0 or niveau_pv_lu > NIVEAU_MAX \
 			or niveau_or_lu == null or niveau_or_lu < 0 or niveau_or_lu > NIVEAU_MAX \
 			or parties_lues == null or parties_lues < 0 or victoires_lues == null or victoires_lues < 0 \
@@ -143,7 +143,7 @@ static func _en_textes(ids: Array[StringName]) -> Array:
 
 
 ## Un nombre entier lu dans un JSON (entier ou flottant sans décimale), ou null.
-static func _entier(valeur: Variant) -> Variant:
+static func entier_ou_null(valeur: Variant) -> Variant:
 	if valeur is int:
 		return valeur
 	if valeur is float and is_equal_approx(valeur, roundf(valeur)) and absf(valeur) < 1.0e15:

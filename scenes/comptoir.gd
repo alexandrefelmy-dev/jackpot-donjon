@@ -3,8 +3,6 @@ extends Control
 ## on y dépense ses jetons d'âme en avantages permanents, on voit ses malédictions, puis on joue.
 
 const COULEUR_FOND := Color("1b1a24")
-const COULEUR_JETONS := Color("b9a4ff")
-const COULEUR_MALEDICTION := Color("ff8a8a")
 const TAILLE_CARTE := Vector2(330, 112)
 ## Couleur de chaque achat (en attendant les vrais graphismes).
 const COULEURS: Dictionary = {
@@ -79,9 +77,8 @@ func _reinitialiser_debug() -> void:
 # --- Affichage ---------------------------------------------------------------
 
 func _nom_deblocage(id: StringName) -> String:
-	var chemin := "res://data/symbols/%s.tres" % id
-	if ResourceLoader.exists(chemin):
-		return tr((load(chemin) as SymbolData).nom)
+	if id in Profil.SYMBOLES_A_DEBLOQUER:
+		return tr((load("res://data/symbols/%s.tres" % id) as SymbolData).nom)
 	var relique := Reliques.charger(id)
 	return tr(relique.nom) if relique != null else String(id)
 
@@ -141,7 +138,7 @@ func _construire_interface() -> void:
 
 	texte_jetons = Label.new()
 	texte_jetons.add_theme_font_size_override("font_size", 20)
-	texte_jetons.add_theme_color_override("font_color", COULEUR_JETONS)
+	texte_jetons.add_theme_color_override("font_color", Cartes.COULEUR_JETONS)
 	page.add_child(texte_jetons)
 
 	var corps := HBoxContainer.new()
@@ -170,7 +167,7 @@ func _construire_interface() -> void:
 	droite.add_child(titre_maledictions)
 	texte_maledictions = Label.new()
 	texte_maledictions.add_theme_font_size_override("font_size", 17)
-	texte_maledictions.add_theme_color_override("font_color", COULEUR_MALEDICTION)
+	texte_maledictions.add_theme_color_override("font_color", Cartes.COULEUR_MALEDICTION)
 	texte_maledictions.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	droite.add_child(texte_maledictions)
 	var titre_debloques := Label.new()

@@ -59,16 +59,16 @@ static func tirer(actives: Array[StringName], hasard: RandomNumberGenerator, exc
 	if actives.size() >= MAX:
 		return &""
 	var possibles: Array[StringName] = []
+	var preferees: Array[StringName] = []
 	for id in TOUTES:
-		if not (id in actives) and not (id in exclues):
+		if not (id in actives):
 			possibles.append(id)
-	if possibles.is_empty():
-		for id in TOUTES:
-			if not (id in actives):
-				possibles.append(id)
-	if possibles.is_empty():
+			if not (id in exclues):
+				preferees.append(id)
+	var choix := preferees if not preferees.is_empty() else possibles
+	if choix.is_empty():
 		return &""
-	return possibles[hasard.randi_range(0, possibles.size() - 1)]
+	return choix[hasard.randi_range(0, choix.size() - 1)]
 
 
 # --- Ce que chaque malédiction change ------------------------------------------

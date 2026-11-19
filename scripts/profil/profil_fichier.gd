@@ -104,8 +104,5 @@ static func _lire_json(chemin: String) -> Dictionary:
 
 
 static func _entier_ou(valeur: Variant, par_defaut: int) -> int:
-	if valeur is int:
-		return valeur
-	if valeur is float and is_equal_approx(valeur, roundf(valeur)):
-		return int(valeur)
-	return par_defaut
+	var entier: Variant = Profil.entier_ou_null(valeur)
+	return entier if entier != null else par_defaut

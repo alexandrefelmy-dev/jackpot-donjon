@@ -46,11 +46,10 @@ func transformer_craniens(grille: Array[SymbolData], chance: float, rng: RandomN
 	var resultat: Array[SymbolData] = grille.duplicate()
 	if chance <= 0.0:
 		return resultat
-	var piece := load("res://data/symbols/piece.tres") as SymbolData
 	for i in resultat.size():
 		var symbole := resultat[i]
 		if symbole != null and symbole.id == &"crane" and (chance >= 1.0 or rng.randf() < chance):
-			resultat[i] = piece
+			resultat[i] = Sac.PIECE
 	return resultat
 
 
@@ -58,16 +57,13 @@ func transformer_craniens(grille: Array[SymbolData], chance: float, rng: RandomN
 ## Un crâne ne devient pièce qu'une fois. Se fait AVANT le calcul des combos.
 func transformer_voisins(grille: Array[SymbolData]) -> Array[SymbolData]:
 	var resultat: Array[SymbolData] = grille.duplicate()
-	var piece: SymbolData = null
 	for i in grille.size():
 		var symbole := grille[i]
 		if symbole == null or symbole.id != &"trefle":
 			continue
 		for voisin in [i - 1, i + 1]:
 			if voisin >= 0 and voisin < resultat.size() and resultat[voisin] != null and resultat[voisin].id == &"crane":
-				if piece == null:
-					piece = load("res://data/symbols/piece.tres") as SymbolData
-				resultat[voisin] = piece
+				resultat[voisin] = Sac.PIECE
 				break
 	return resultat
 

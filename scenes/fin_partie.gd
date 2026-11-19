@@ -6,8 +6,6 @@ const COULEUR_FOND := Color("1b1a24")
 const COULEUR_VICTOIRE := Color("7ddc7d")
 const COULEUR_DEFAITE := Color("ff6b6b")
 
-const COULEUR_MALEDICTION := Color("ff8a8a")
-const COULEUR_JETONS := Color("b9a4ff")
 
 var partie: Partie
 var texte_jetons: Label
@@ -81,7 +79,7 @@ func _construire_interface() -> void:
 		texte_jetons = Label.new()
 		texte_jetons.text = tr("Jetons d'âme gagnés : %d   (total : %d)") % [int(partie.bilan["jetons"]), GameState.profil.jetons]
 		texte_jetons.add_theme_font_size_override("font_size", 22)
-		texte_jetons.add_theme_color_override("font_color", COULEUR_JETONS)
+		texte_jetons.add_theme_color_override("font_color", Cartes.COULEUR_JETONS)
 		texte_jetons.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		colonne.add_child(texte_jetons)
 		var lignes := PackedStringArray()
@@ -98,7 +96,7 @@ func _construire_interface() -> void:
 			texte_malediction = Label.new()
 			texte_malediction.text = "\n".join(lignes)
 			texte_malediction.add_theme_font_size_override("font_size", 18)
-			texte_malediction.add_theme_color_override("font_color", COULEUR_MALEDICTION)
+			texte_malediction.add_theme_color_override("font_color", Cartes.COULEUR_MALEDICTION)
 			texte_malediction.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			colonne.add_child(texte_malediction)
 

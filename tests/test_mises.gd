@@ -382,7 +382,7 @@ func test_de_pipe() -> void:
 	var journal := combat.valider()
 	var parle := false
 	for ligne in journal:
-		if "Dé pipé" in ligne:
+		if "Relance gratuite" in ligne:
 			parle = true
 	verifier(parle, "le journal du tour annonce la relance")
 

@@ -4,6 +4,9 @@ extends RefCounted
 ## boutons colorés façon « carte » en attendant les vrais graphismes.
 
 const COULEUR_SURVOL := Color("ffd34d")
+## Jetons d'âme et malédictions (Comptoir, écran de fin).
+const COULEUR_JETONS := Color("b9a4ff")
+const COULEUR_MALEDICTION := Color("ff8a8a")
 
 
 static func couleur_texte(fond: Color) -> Color:
