@@ -9,10 +9,10 @@ nom = "Fantôme de joueur"
 couleur = Color(0.55, 0.6, 0.85, 1)
 etage = 2
 pv_max = 26
-or_victoire = 10
+or_victoire = 16
 intentions = Array[Dictionary]([{
 "type": "attaque",
-"valeur": 10
+"valeur": 7
 }, {
 "type": "protection",
 "valeur": 6

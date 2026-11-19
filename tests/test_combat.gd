@@ -93,7 +93,7 @@ func test_donnees_ennemis() -> void:
 	verifier(squelette.intentions.size() == 2 and squelette.intentions[0]["type"] == "protection"
 			and squelette.intentions[1]["type"] == "attaque", "le squelette se protège puis attaque")
 	var golem := donnees("golem_jetons")
-	verifier(golem != null and golem.pv_max == 40, "le golem a 40 PV")
+	verifier(golem != null and golem.pv_max > 0, "le golem a des PV (réglés dans le .tres)")
 	# Les valeurs d'attaque se règlent dans les .tres : on vérifie juste qu'elles sont positives
 	# (sauf « charge » et « fuite », qui n'ont pas de chiffre).
 	var valeurs_ok := true
@@ -262,8 +262,8 @@ func test_nouveaux_ennemis() -> void:
 			"le gobelin alterne attaque et vol d'or")
 	verifier(gobelin.intentions[1]["valeur"] == 3, "le gobelin vole 3 or")
 	var boss := donnees("rat_croupier")
-	verifier(boss != null and boss.pv_max == 60 and boss.est_boss and boss.etage == 1,
-			"le Rat-Croupier : 60 PV, boss de l'étage 1")
+	verifier(boss != null and boss.pv_max >= 40 and boss.est_boss and boss.etage == 1,
+			"le Rat-Croupier : un boss de l'étage 1 bien costaud")
 	verifier(boss.intentions[0]["type"] == "attaque" and boss.intentions[1]["type"] == "blocage",
 			"le Rat-Croupier alterne attaque et blocage")
 	verifier(donnees("golem_jetons").etage == 2, "le golem est un ennemi de l'étage 2")

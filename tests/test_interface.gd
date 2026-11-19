@@ -321,9 +321,9 @@ func _initialize() -> void:
 			GameState.partie.pas = 2
 			GameState.aller_a_suivant()
 			await _attendre()
-			for porte in current_scene.boutons_portes:
-				if porte.text.contains("COFFRE"):
-					avertit = porte.text.contains("mimiques")
+			for texte in current_scene.textes_portes:
+				if texte.contains("COFFRE"):
+					avertit = texte.contains("mimiques")
 			break
 	verifier(avertit, "à l'étage 3, les portes de coffre préviennent des mimiques")
 

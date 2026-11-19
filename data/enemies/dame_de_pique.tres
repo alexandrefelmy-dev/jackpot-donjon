@@ -9,15 +9,15 @@ nom = "La Dame de Pique"
 couleur = Color(0.3, 0.25, 0.4, 1)
 etage = 2
 est_boss = true
-pv_max = 90
-or_victoire = 40
+pv_max = 54
+or_victoire = 64
 intentions = Array[Dictionary]([{
 "type": "attaque",
-"valeur": 14
+"valeur": 7
 }, {
 "type": "attaque",
-"valeur": 20
+"valeur": 10
 }])
 passif = {
-"cranes_par_tour": 2
+"cranes_par_tour": 1
 }

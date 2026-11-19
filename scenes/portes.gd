@@ -18,6 +18,8 @@ const COULEURS: Dictionary = {
 var partie: Partie
 var portes: Array[Salle] = []
 var boutons_portes: Array[Button] = []
+## Le texte de chaque porte (titre et description), pour les tests et l'info-bulle.
+var textes_portes: Array[String] = []
 
 
 func _ready() -> void:
@@ -124,15 +126,11 @@ func _creer_progression() -> Control:
 	return rangee
 
 
-## Une porte = un gros bouton coloré : le type de salle en grand, puis ce qu'on y fait.
+## Une porte = une grosse carte colorée : le type de salle en grand, puis ce qu'on y fait.
 func _creer_porte(salle: Salle, index: int) -> Button:
-	var porte := Button.new()
-	porte.custom_minimum_size = TAILLE_PORTE
-	porte.focus_mode = Control.FOCUS_NONE
-	porte.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	porte.text = "%s\n\n%s" % [salle.nom_type().to_upper(), _description(salle)]
-	porte.add_theme_font_size_override("font_size", 19)
+	var description := _description(salle)
+	var porte := Cartes.creer_carte(COULEURS[salle.type], salle.nom_type().to_upper(), description, TAILLE_PORTE)
+	textes_portes.append(Cartes.texte_carte(porte))
 	porte.tooltip_text = tr("Franchir cette porte : %s") % salle.nom_type()
-	Cartes.habiller_bouton(porte, COULEURS[salle.type])
 	porte.pressed.connect(_choisir.bind(index))
 	return porte

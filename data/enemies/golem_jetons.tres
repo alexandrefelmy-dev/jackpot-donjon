@@ -8,12 +8,12 @@ id = &"golem_jetons"
 nom = "Golem de jetons"
 couleur = Color(0.8, 0.62, 0.2, 1)
 etage = 2
-pv_max = 40
-or_victoire = 15
+pv_max = 36
+or_victoire = 24
 intentions = Array[Dictionary]([{
 "type": "charge",
 "valeur": 0
 }, {
 "type": "attaque",
-"valeur": 26
+"valeur": 16
 }])

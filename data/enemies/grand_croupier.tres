@@ -9,14 +9,14 @@ nom = "Le Grand Croupier"
 couleur = Color(0.15, 0.15, 0.2, 1)
 etage = 3
 est_boss = true
-pv_max = 140
+pv_max = 63
 or_victoire = 60
 intentions = Array[Dictionary]([{
 "type": "attaque",
-"valeur": 18
+"valeur": 7
 }, {
 "type": "attaque",
-"valeur": 22
+"valeur": 9
 }])
 passif = {
 "regle_par_tour": true

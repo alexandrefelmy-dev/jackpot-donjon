@@ -9,10 +9,10 @@ nom = "Mimique"
 couleur = Color(0.7, 0.45, 0.2, 1)
 etage = 3
 pv_max = 35
-or_victoire = 12
+or_victoire = 19
 intentions = Array[Dictionary]([{
 "type": "attaque",
-"valeur": 14
+"valeur": 11
 }])
 ouverture = {
 "type": "attaque",

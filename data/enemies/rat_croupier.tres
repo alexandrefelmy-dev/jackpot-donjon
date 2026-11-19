@@ -8,11 +8,11 @@ id = &"rat_croupier"
 nom = "Le Rat-Croupier"
 couleur = Color(0.62, 0.2, 0.25, 1)
 est_boss = true
-pv_max = 60
-or_victoire = 25
+pv_max = 48
+or_victoire = 40
 intentions = Array[Dictionary]([{
 "type": "attaque",
-"valeur": 14
+"valeur": 10
 }, {
 "type": "blocage",
 "valeur": 1

@@ -18,7 +18,7 @@ const NB_ROULEAUX_DEPART := 5
 const SOIN_REPOS_POURCENT := 30
 ## Pourcentage des PV max rendu au joueur quand il passe à l'étage suivant (levier d'équilibrage :
 ## 0 = les PV ne remontent pas, comme l'écrit le cahier des charges).
-const SOIN_APRES_BOSS_POURCENT := 0
+const SOIN_APRES_BOSS_POURCENT := 50
 
 ## Symboles proposés en récompense (les symboles de base, sans le crâne).
 const RECOMPENSES: Array[String] = [

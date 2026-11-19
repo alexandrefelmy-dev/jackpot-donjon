@@ -9,7 +9,7 @@ nom = "Usurier"
 couleur = Color(0.75, 0.65, 0.25, 1)
 etage = 3
 pv_max = 38
-or_victoire = 15
+or_victoire = 24
 intentions = Array[Dictionary]([{
 "type": "attaque",
 "valeur": 10

@@ -15,6 +15,7 @@ var mode: Mode = Mode.CHOIX
 var texte_infos: Label
 var texte_message: Label
 var zone_choix: Control
+var boite_choix: HBoxContainer
 var bouton_soin: Button
 var bouton_dorer: Button
 var zone_sac: Control
@@ -67,9 +68,9 @@ func _rafraichir() -> void:
 
 	var soin := partie.soin_du_repos()
 	if soin > 0:
-		bouton_soin.text = tr("Se reposer\n\n+%d PV (%d %% des PV max)") % [soin, Partie.SOIN_REPOS_POURCENT]
+		Cartes.changer_carte(bouton_soin, tr("Se reposer"), tr("+%d PV (%d %% des PV max)") % [soin, Partie.SOIN_REPOS_POURCENT])
 	else:
-		bouton_soin.text = tr("Se reposer\n\nTes PV sont déjà au maximum.")
+		Cartes.changer_carte(bouton_soin, tr("Se reposer"), tr("Tes PV sont déjà au maximum."))
 	bouton_soin.disabled = soin <= 0
 	bouton_dorer.disabled = not partie.peut_dorer()
 
@@ -141,14 +142,15 @@ func _construire_interface() -> void:
 	var centre := CenterContainer.new()
 	centre.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	page.add_child(centre)
-	zone_choix = HBoxContainer.new()
-	zone_choix.add_theme_constant_override("separation", 40)
-	centre.add_child(zone_choix)
-	bouton_soin = _creer_carte(COULEUR_SOIN, _se_reposer)
-	zone_choix.add_child(bouton_soin)
-	bouton_dorer = _creer_carte(COULEUR_DORER, _choisir_symbole)
-	bouton_dorer.text = tr("Rendre un symbole doré\n\nGratuit : tu choisis le symbole dans ton sac.")
-	zone_choix.add_child(bouton_dorer)
+	zone_choix = centre
+	boite_choix = HBoxContainer.new()
+	boite_choix.add_theme_constant_override("separation", 40)
+	centre.add_child(boite_choix)
+	bouton_soin = _creer_carte(COULEUR_SOIN, tr("Se reposer"), "", _se_reposer)
+	boite_choix.add_child(bouton_soin)
+	bouton_dorer = _creer_carte(COULEUR_DORER, tr("Rendre un symbole doré"),
+			tr("Gratuit : tu choisis le symbole dans ton sac."), _choisir_symbole)
+	boite_choix.add_child(bouton_dorer)
 
 	# Mode « dorer » : le sac, qui défile.
 	var defilement := ScrollContainer.new()
@@ -169,12 +171,7 @@ func _construire_interface() -> void:
 	page.add_child(bouton_annuler)
 
 
-func _creer_carte(couleur: Color, action: Callable) -> Button:
-	var carte := Button.new()
-	carte.custom_minimum_size = TAILLE_CHOIX
-	carte.focus_mode = Control.FOCUS_NONE
-	carte.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	carte.add_theme_font_size_override("font_size", 22)
-	Cartes.habiller_bouton(carte, couleur)
+func _creer_carte(couleur: Color, titre: String, detail: String, action: Callable) -> Button:
+	var carte := Cartes.creer_carte(couleur, titre, detail, TAILLE_CHOIX, 30, 21)
 	carte.pressed.connect(action)
 	return carte

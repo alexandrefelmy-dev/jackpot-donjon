@@ -99,7 +99,7 @@ func test_donnees() -> void:
 		var ennemi := charger(id)
 		verifier(ennemi != null and ennemi.id == StringName(id) and ennemi.pv_max > 0 and not ennemi.intentions.is_empty(),
 				"%s : fichier valide, PV et intentions" % id)
-	verifier(charger("dame_de_pique").passif.get("cranes_par_tour") == 2, "Dame de Pique : 2 crânes par tour")
+	verifier(charger("dame_de_pique").passif.get("cranes_par_tour") == 1, "Dame de Pique : 1 crâne par tour")
 	verifier(charger("fantome_joueur").passif.get("cranes_par_tour") == 1, "Fantôme : 1 crâne par tour")
 	verifier(charger("usurier").passif.get("attaque_par_mise") == 2, "Usurier : +2 attaque par mise")
 	verifier(charger("grand_croupier").passif.get("regle_par_tour") == true, "Grand Croupier : une règle par tour")
@@ -198,14 +198,17 @@ func test_pickpocket() -> void:
 func test_golem() -> void:
 	print("Golem : se charge puis frappe fort")
 	var combat := combat_de(charger("golem_jetons"), 100)
+	# La grosse attaque se règle dans le .tres : on lit sa valeur.
+	var grosse: int = charger("golem_jetons").intentions[1]["valeur"]
+	verifier(grosse > 15, "la grosse attaque du Golem est grosse (%d)" % grosse)
 	var journal := jouer(combat, grille_calme())
 	verifier(combat.pv_joueur == 100, "tour 1 : il se charge, aucun dégât")
 	verifier(journal_contient(journal, "se prépare"), "le journal annonce la charge")
 	verifier(Intentions.decrire(combat.intention_actuelle()) != "", "l'intention suivante se décrit")
 	jouer(combat, grille_calme())
-	verifier(combat.pv_joueur == 100 - 26, "tour 2 : attaque 26")
+	verifier(combat.pv_joueur == 100 - grosse, "tour 2 : sa grosse attaque (%d)" % grosse)
 	jouer(combat, grille_calme())
-	verifier(combat.pv_joueur == 100 - 26, "tour 3 : il se recharge, aucun dégât")
+	verifier(combat.pv_joueur == 100 - grosse, "tour 3 : il se recharge, aucun dégât")
 
 
 func test_mimique() -> void:
@@ -217,7 +220,8 @@ func test_mimique() -> void:
 	verifier(combat.journal_ouverture == journal, "le combat garde le texte pour l'écran")
 	verifier(combat.jouer_ouverture().is_empty() and combat.pv_joueur == 30, "elle ne se rejoue pas")
 	jouer(combat, grille_calme())
-	verifier(combat.pv_joueur == 30 - 14, "puis elle attaque pour 14 à chaque tour")
+	var attaque: int = charger("mimique").intentions[0]["valeur"]
+	verifier(combat.pv_joueur == 30 - attaque, "puis elle attaque à chaque tour (%d)" % attaque)
 	var faible := combat_de(charger("mimique"), 6)
 	faible.jouer_ouverture()
 	verifier(faible.pv_joueur == 1 and not faible.est_fini(), "la surprise ne tue jamais : il reste 1 PV")

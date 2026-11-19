@@ -1,7 +1,9 @@
 extends SceneTree
-## OUTIL : joue des parties ENTIÈRES à travers les vraies scènes (combat, récompense, relique
-## offerte, boutique, fin), en cliquant comme un joueur : mises, relances, achats, soins.
-## Vérifie qu'aucun écran ne bloque ni ne plante. Deux passes : sans relique, puis avec les 9.
+## OUTIL : joue des parties ENTIÈRES à travers les vraies scènes (portes, combat, récompense,
+## relique, boutique, repos, fin), en cliquant comme un joueur : portes au hasard, mises, relances,
+## achats, soins, dorures. Vérifie qu'aucun écran ne bloque ni ne plante.
+## Trois passes : sans relique, avec les 9 reliques, puis « increvable » (beaucoup de PV, pour
+## aller jusqu'aux étages 2 et 3 : Dame de Pique, mimiques, Grand Croupier, victoire).
 ##
 ## Lancer :  godot --headless --path . -s res://outils/simulation_parties.gd
 ## (avec `timeout` et la sortie redirigée vers un fichier : voir CLAUDE.md)
@@ -9,26 +11,47 @@ extends SceneTree
 ##
 ## À relancer après tout changement d'écran ou d'enchaînement des écrans.
 
-const PARTIES_PAR_PASSE := 25
+const PARTIES_PAR_PASSE := 20
 
 var etats := {"victoire": 0, "defaite": 0}
 var erreurs := 0
-var vu := {"relique_offerte": 0, "mise": 0, "relance_pipe": 0, "relance_as": 0, "relique_achetee": 0, "attente": 0}
+var vu := {
+	"porte_combat": 0, "porte_boutique": 0, "porte_coffre": 0, "porte_repos": 0,
+	"mimique": 0, "fuite": 0, "boss": 0, "relique_offerte": 0, "relique_achetee": 0,
+	"repos_soin": 0, "repos_dore": 0, "mise": 0, "relance_pipe": 0, "relance_as": 0,
+	"attente": 0, "etage_2": 0, "etage_3": 0,
+}
 var hasard := RandomNumberGenerator.new()
 var toutes_les_reliques := false
+var increvable := false
 
 
 func _initialize() -> void:
 	hasard.seed = 12
 	await process_frame
 	await _jouer(PARTIES_PAR_PASSE)
-	print("passe 1 (sans relique) : ", etats, " ", vu, " erreurs ", erreurs)
-	# Si la première passe a échoué, la seconde n'aurait pas de sens : on s'arrête là.
+	print("passe 1 (sans relique) : ", etats, " erreurs ", erreurs)
+	# Si la première passe a échoué, la suite n'aurait pas de sens : on s'arrête là.
 	if erreurs == 0:
 		toutes_les_reliques = true
 		etats = {"victoire": 0, "defaite": 0}
 		await _jouer(PARTIES_PAR_PASSE)
-		print("passe 2 (9 reliques) : ", etats, " ", vu, " erreurs ", erreurs)
+		print("passe 2 (9 reliques) : ", etats, " erreurs ", erreurs)
+	if erreurs == 0:
+		increvable = true
+		etats = {"victoire": 0, "defaite": 0}
+		await _jouer(PARTIES_PAR_PASSE)
+		print("passe 3 (increvable) : ", etats, " erreurs ", erreurs)
+		# Les parties increvables doivent tout avoir vu : sinon une salle ou un ennemi n'est jamais joué.
+		for obligatoire in ["porte_combat", "porte_boutique", "porte_coffre", "porte_repos", "mimique", "fuite",
+				"boss", "relique_offerte", "repos_soin", "repos_dore", "etage_2", "etage_3"]:
+			if int(vu[obligatoire]) == 0:
+				print("ERREUR : « %s » n'a jamais été joué pendant la simulation" % obligatoire)
+				erreurs += 1
+		if int(etats["victoire"]) == 0:
+			print("ERREUR : aucune victoire en passe 3 (le donjon n'est pas finissable ?)")
+			erreurs += 1
+	print("vu : ", vu)
 	print("RÉSULTAT : ", "OK" if erreurs == 0 else "%d ERREUR(S)" % erreurs)
 	quit(1 if erreurs > 0 else 0)
 
@@ -47,17 +70,23 @@ func _nouvelle_partie() -> void:
 	if toutes_les_reliques:
 		for relique in Reliques.toutes():
 			GameState.partie.ajouter_relique(relique)
+	if increvable:
+		GameState.partie.pv_max = 400
+		GameState.partie.pv = 400
 
 
 func _jouer(nb_parties: int) -> void:
 	_nouvelle_partie()
-	GameState.aller_a(GameState.SCENE_COMBAT)
+	GameState.aller_a_suivant()
 	await _attendre()
 	var parties := 0
 	var etapes := 0
-	while parties < nb_parties and etapes < 12000:
+	while parties < nb_parties and etapes < 40000:
 		etapes += 1
 		match _nom_scene():
+			"Portes":
+				_jouer_portes()
+				await _attendre()
 			"Combat":
 				_jouer_combat()
 				current_scene._continuer()
@@ -73,11 +102,13 @@ func _jouer(nb_parties: int) -> void:
 				await _attendre()
 			"Boutique":
 				await _jouer_boutique()
+			"Repos":
+				await _jouer_repos()
 			"FinPartie":
 				etats["victoire" if current_scene.partie.etat == Partie.Etat.VICTOIRE else "defaite"] += 1
 				parties += 1
 				_nouvelle_partie()
-				GameState.aller_a(GameState.SCENE_COMBAT)
+				GameState.aller_a_suivant()
 				await _attendre()
 			var inattendue:
 				print("ERREUR : écran inattendu « %s »" % inattendue)
@@ -89,9 +120,38 @@ func _jouer(nb_parties: int) -> void:
 		erreurs += 1
 
 
+## Les portes : une au hasard, en comptant ce qu'on franchit.
+func _jouer_portes() -> void:
+	var ecran: Control = current_scene
+	var partie: Partie = ecran.partie
+	if partie.etage == 2:
+		vu["etage_2"] += 1
+	elif partie.etage == 3:
+		vu["etage_3"] += 1
+	if ecran.boutons_portes.size() != 2:
+		print("ERREUR : %d portes au lieu de 2" % ecran.boutons_portes.size())
+		erreurs += 1
+	var index := hasard.randi_range(0, ecran.boutons_portes.size() - 1)
+	var salle: Salle = ecran.portes[index]
+	match salle.type:
+		Salle.Type.COMBAT:
+			vu["porte_combat"] += 1
+		Salle.Type.BOUTIQUE:
+			vu["porte_boutique"] += 1
+		Salle.Type.COFFRE:
+			vu["porte_coffre"] += 1
+			if salle.mimique:
+				vu["mimique"] += 1
+		Salle.Type.REPOS:
+			vu["porte_repos"] += 1
+	ecran.boutons_portes[index].pressed.emit()
+
+
 ## Un combat entier : mise au hasard, levier, relances au hasard, validation.
 func _jouer_combat() -> void:
 	var ecran: Control = current_scene
+	if ecran.combat.ennemi.est_boss:
+		vu["boss"] += 1
 	var tours := 0
 	while not ecran.combat.est_fini() and tours < 400:
 		var possibles: Array[int] = []
@@ -128,6 +188,8 @@ func _jouer_combat() -> void:
 				print("ERREUR : le tirage attend encore après « Valider »")
 				erreurs += 1
 		tours += 1
+	if ecran.combat.etat == Combat.Etat.FUITE:
+		vu["fuite"] += 1
 	if not ecran.bouton_continuer.visible:
 		print("ERREUR : le bouton « Continuer » n'apparaît pas en fin de combat")
 		erreurs += 1
@@ -153,4 +215,25 @@ func _jouer_boutique() -> void:
 		print("ERREUR : or négatif (%d)" % partie.or_total)
 		erreurs += 1
 	boutique._quitter()
+	await _attendre()
+
+
+## Le repos : se soigner si on est blessé, sinon dorer le premier symbole possible.
+func _jouer_repos() -> void:
+	var repos: Control = current_scene
+	var partie: Partie = repos.partie
+	if partie.soin_du_repos() > 0 and hasard.randi_range(0, 1) == 0:
+		repos._se_reposer()
+		vu["repos_soin"] += 1
+	else:
+		repos._choisir_symbole()
+		await _attendre()
+		for i in partie.sac.taille():
+			if not partie.sac.symboles[i].doree:
+				repos._dorer(i)
+				vu["repos_dore"] += 1
+				break
+		if current_scene == repos and partie.ecran == Partie.Ecran.REPOS and partie.soin_du_repos() > 0:
+			repos._se_reposer()
+			vu["repos_soin"] += 1
 	await _attendre()
