@@ -6,7 +6,7 @@ Une ligne de 5 rouleaux, tirés au hasard dans le « sac » de symboles du joueu
 
 Inspirations : Luck be a Landlord, Slay the Spire, Balatro.
 
-**Statut : en développement, version 0.4 écrite** (une partie complète avec une boutique : acheter, retirer, dorer des symboles, se soigner), en cours de test en jeu ; prochaine étape : v0.5, les mises et les reliques. Projet personnel, développé avec l'aide de l'IA.
+**Statut : en développement, version 0.4 terminée** (une partie complète avec une boutique : acheter, retirer, dorer des symboles, se soigner) ; prochaine étape : v0.5, les mises et les reliques. Projet personnel, développé avec l'aide de l'IA.
 
 ## Lancer le jeu
 
