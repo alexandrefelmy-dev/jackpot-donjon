@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RelicData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"tirelire"
+nom = "Tirelire"
+description = "+2 or à chaque tour dont le tirage ne contient aucun combo."
+couleur = Color(0.9, 0.6, 0.65, 1)
+prix = 30
+parametres = {
+"or_sans_combo": 2
+}

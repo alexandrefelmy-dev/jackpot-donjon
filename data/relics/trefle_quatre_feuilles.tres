@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RelicData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"trefle_quatre_feuilles"
+nom = "Trèfle à quatre feuilles"
+description = "À chaque tirage, chaque crâne a 1 chance sur 2 de devenir une pièce."
+couleur = Color(0.4, 0.75, 0.4, 1)
+prix = 30
+parametres = {
+"chance_crane_en_piece": 0.5
+}

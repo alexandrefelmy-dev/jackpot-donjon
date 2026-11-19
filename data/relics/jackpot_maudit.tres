@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="RelicData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"jackpot_maudit"
+nom = "Jackpot maudit"
+description = "L'effet de tous les combos est doublé, mais 2 crânes sont ajoutés à ton sac."
+couleur = Color(0.7, 0.3, 0.7, 1)
+prix = 40
+parametres = {
+"facteur_combo": 2,
+"cranes_ajoutes": 2
+}

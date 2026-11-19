@@ -45,6 +45,32 @@ func appliquer(effet: Dictionary, source: String, multiplicateur: int = 1) -> vo
 	journal.append("%s : %s" % [source, Effets.decrire(effet_final)])
 
 
+## Vrai s'il y a au moins un combo qui n'est pas un combo de crânes (condition d'une mise d'or gagnée).
+func a_combo_hors_cranes() -> bool:
+	for combo in combos:
+		if combo.symbole.id != &"crane":
+			return true
+	return false
+
+
+## Combien de crânes sont visibles sur les rouleaux (condition du quitte ou double).
+func nb_cranes() -> int:
+	var nombre := 0
+	for symbole in grille:
+		if symbole != null and symbole.id == &"crane":
+			nombre += 1
+	return nombre
+
+
+## Quitte ou double gagné : les effets positifs (dégâts, armure, soin, or) sont doublés.
+## Les effets négatifs (malus des crânes, perte de PV) ne le sont pas.
+func doubler_effets_positifs() -> void:
+	for cle in ["degats", "armure", "soin", "or"]:
+		if totaux.has(cle):
+			totaux[cle] = int(totaux[cle]) * 2
+	journal.append(TranslationServer.translate("Quitte ou double : effets positifs doublés"))
+
+
 ## Total d'une clé d'effet (0 si absente).
 func total(cle: String) -> int:
 	return int(totaux.get(cle, 0))

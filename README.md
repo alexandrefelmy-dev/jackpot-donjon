@@ -6,13 +6,13 @@ Une ligne de 5 rouleaux, tirés au hasard dans le « sac » de symboles du joueu
 
 Inspirations : Luck be a Landlord, Slay the Spire, Balatro.
 
-**Statut : en développement, version 0.4 terminée** (une partie complète avec une boutique : acheter, retirer, dorer des symboles, se soigner) ; prochaine étape : v0.5, les mises et les reliques. Projet personnel, développé avec l'aide de l'IA.
+**Statut : en développement, version 0.5 écrite** (mises, 9 reliques, relances, 6e rouleau), en cours de test en jeu ; prochaine étape : v0.6, le donjon (3 étages, portes, coffres). Projet personnel, développé avec l'aide de l'IA.
 
 ## Lancer le jeu
 
 1. Installer [Godot 4.7](https://godotengine.org/download) (version standard, GDScript).
 2. Ouvrir le dossier du projet dans Godot (`project.godot`).
-3. Appuyer sur F5 : la partie commence sur l'écran de combat (boutons « [test] » visibles seulement quand on lance depuis l'éditeur : aller directement au boss en combat, +30 or en boutique). L'écran de test de la machine est `scenes/machine_test.tscn`.
+3. Appuyer sur F5 : la partie commence sur l'écran de combat (boutons « [test] » visibles seulement quand on lance depuis l'éditeur : aller directement au boss et recevoir une relique en combat, +30 or en boutique). L'écran de test de la machine est `scenes/machine_test.tscn`.
 
 ## Lancer les tests
 
@@ -22,6 +22,8 @@ godot --headless --path . -s res://tests/test_machine.gd
 godot --headless --path . -s res://tests/test_combat.gd
 godot --headless --path . -s res://tests/test_partie.gd
 godot --headless --path . -s res://tests/test_boutique.gd
+godot --headless --path . -s res://tests/test_reliques.gd
+godot --headless --path . -s res://tests/test_mises.gd
 godot --headless --path . -s res://tests/test_interface.gd
 ```
 
@@ -35,8 +37,8 @@ Les règles, les valeurs et les jalons (v0.1 à v1.1) sont dans [`docs/cahier-de
 
 | Dossier | Contenu |
 | --- | --- |
-| `scenes/` | scènes et leur script (combat, récompense, boutique, fin de partie, test de la machine) |
-| `scripts/` | logique : sac, tirage, combos, effets, combat, partie, boutique |
-| `data/` | symboles et ennemis, un fichier `.tres` chacun |
+| `scenes/` | scènes et leur script (combat, récompense, relique, boutique, fin de partie, test de la machine) |
+| `scripts/` | logique : sac, tirage, combos, effets, combat, mises, partie, boutique, reliques |
+| `data/` | symboles, ennemis et reliques, un fichier `.tres` chacun |
 | `tests/` | tests en ligne de commande |
 | `docs/` | cahier des charges |

@@ -39,18 +39,39 @@ func tirer(sac: Sac, rng: RandomNumberGenerator, cases_bloquees: Array[int] = []
 	return grille
 
 
+## Au tirage, chaque crâne devient une pièce avec cette chance (Trèfle à quatre feuilles).
+## Se fait AVANT le calcul des combos : les pièces nées d'un crâne peuvent en former un.
+## Ne touche pas au hasard quand la chance est nulle (les tirages sans relique ne changent pas).
+func transformer_craniens(grille: Array[SymbolData], chance: float, rng: RandomNumberGenerator) -> Array[SymbolData]:
+	var resultat: Array[SymbolData] = grille.duplicate()
+	if chance <= 0.0:
+		return resultat
+	var piece := load("res://data/symbols/piece.tres") as SymbolData
+	for i in resultat.size():
+		var symbole := resultat[i]
+		if symbole != null and symbole.id == &"crane" and (chance >= 1.0 or rng.randf() < chance):
+			resultat[i] = piece
+	return resultat
+
+
 ## Calcule les effets d'un tirage :
 ## 1. repère les combos (3 symboles identiques ou plus, côte à côte) ;
 ## 2. applique les effets de base, de gauche à droite,
-##    sauf pour les symboles qui font partie d'un combo ;
-## 3. applique les effets de combo en dernier, multipliés selon leur longueur.
-func resoudre(grille: Array[SymbolData]) -> ResultatTirage:
+##    sauf pour les symboles qui font partie d'un combo, puis les effets des reliques
+##    (Lame aimantée, Tirelire) ;
+## 3. applique les effets de combo en dernier, multipliés selon leur longueur
+##    (et selon les reliques, comme le Jackpot maudit).
+## `mods` = ce que les reliques changent (null = rien).
+func resoudre(grille: Array[SymbolData], mods: Modificateurs = null) -> ResultatTirage:
 	var resultat := ResultatTirage.new()
 	resultat.grille = grille
 
 	# 1. Combos.
 	for ligne in lignes:
 		_chercher_combos(grille, ligne, resultat)
+	if mods != null and mods.facteur_combo != 1:
+		for combo in resultat.combos:
+			combo.multiplicateur *= mods.facteur_combo
 
 	# 2. Effets de base.
 	for i in grille.size():
@@ -58,6 +79,19 @@ func resoudre(grille: Array[SymbolData]) -> ResultatTirage:
 		if symbole == null or i in resultat.cases_en_combo:
 			continue
 		resultat.appliquer(symbole.effet_base, symbole.nom_affiche())
+
+	# Effets des reliques sur le tirage.
+	if mods != null:
+		if mods.degats_par_piece > 0:
+			var nb_pieces := 0
+			for symbole in grille:
+				if symbole != null and symbole.id == &"piece":
+					nb_pieces += 1
+			if nb_pieces > 0:
+				resultat.appliquer({"degats": nb_pieces * mods.degats_par_piece},
+						tr("Lame aimantée (%d pièces)") % nb_pieces)
+		if mods.or_sans_combo > 0 and resultat.combos.is_empty():
+			resultat.appliquer({"or": mods.or_sans_combo}, tr("Tirelire"))
 
 	# 3. Effets de combo.
 	for combo in resultat.combos:

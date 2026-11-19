@@ -16,14 +16,18 @@ func _ready() -> void:
 	_construire_interface()
 
 
-## Le joueur prend un symbole (ou passe si `symbole` est null), puis il passe à la boutique.
+## Le joueur prend un symbole (ou passe si `symbole` est null), puis il va à la relique
+## offerte (après le combat 3) ou directement à la boutique.
 func _choisir(symbole: SymbolData) -> void:
 	for bouton in boutons:
 		bouton.disabled = true
 	bouton_passer.disabled = true
 	if symbole != null:
 		partie.choisir_recompense(symbole)
-	GameState.aller_a(GameState.SCENE_BOUTIQUE)
+	if partie.relique_a_offrir():
+		GameState.aller_a(GameState.SCENE_RELIQUE)
+	else:
+		GameState.aller_a(GameState.SCENE_BOUTIQUE)
 
 
 func _compter_dans_le_sac(symbole: SymbolData) -> int:

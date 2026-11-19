@@ -1,21 +1,26 @@
 extends Control
 ## Écran de combat : un ennemi avec son intention, la machine à sous, les PV et l'armure
-## du joueur. Les PV, l'or et le sac viennent de la partie en cours (GameState.partie).
-## En fin de combat, « Continuer » mène à la récompense, ou à l'écran de fin.
+## du joueur, les mises et les reliques. Les PV, l'or, le sac et les reliques viennent de la
+## partie en cours (GameState.partie).
+##
+## Un tour : on choisit une mise (facultatif), on tire le levier, les rouleaux s'affichent.
+## Sans relance disponible, le tour se joue aussitôt. Avec le Dé pipé ou le Cinquième as, on peut
+## relancer avant de « Valider ». En fin de combat, « Continuer » mène à la récompense ou à la fin.
 ## L'interface est construite en code ; les vrais décors viendront en v0.8.
 
 ## La fenêtre fait 648 px de haut : toute la colonne de gauche (jusqu'au bouton Continuer)
-## doit tenir dedans. tests/test_interface.gd vérifie la position du bouton.
-const TAILLE_CASE := Vector2(120, 100)
+## doit tenir dedans. tests/test_interface.gd vérifie la position des boutons.
+const HAUTEUR_CASE := 100
 const COULEUR_FOND := Color("1b1a24")
 const COULEUR_CASE_VIDE := Color("2c2a38")
 const COULEUR_CASE_BLOQUEE := Color("5a2430")
 const COULEUR_COMBO := Color("ffd34d")
+const COULEUR_CHOIX := Color("7fd7ff")
 const COULEUR_VICTOIRE := Color("7ddc7d")
 const COULEUR_DEFAITE := Color("ff6b6b")
 const COULEUR_BOSS := Color("ff9a5c")
 
-var machine := MachineASous.new(5, 1)
+var machine: MachineASous
 var partie: Partie
 var combat: Combat
 
@@ -35,13 +40,33 @@ var texte_or: Label
 var texte_fin: Label
 var bouton_levier: Button
 var bouton_continuer: Button
-var bouton_debug: Button
 var texte_journal: RichTextLabel
 var texte_graine: Label
+
+# Mises : un bouton par mise possible, dans l'ordre de `mises`.
+var mises: Array[Mise] = []
+var boutons_mise: Array[Button] = []
+var mise_choisie: int = 0
+
+# Reliques possédées (une étiquette chacune, bulle d'aide = ce qu'elle fait).
+var rangee_reliques: HFlowContainer
+
+# Entre le tirage et « Valider » : relances (Dé pipé, Cinquième as).
+var ligne_relance: HBoxContainer
+var bouton_valider: Button
+var bouton_de_pipe: Button
+var bouton_cinquieme_as: Button
+## Vrai quand on a cliqué sur « Cinquième as » et qu'on doit choisir le rouleau à garder.
+var choix_du_rouleau: bool = false
+
+# Boutons de test (visibles seulement quand on lance depuis l'éditeur).
+var bouton_debug: Button
+var bouton_debug_relique: Button
 
 
 func _ready() -> void:
 	partie = GameState.partie
+	machine = partie.creer_machine()
 	combat = partie.creer_combat()
 	_construire_interface()
 
@@ -71,27 +96,83 @@ func _unhandled_input(event: InputEvent) -> void:
 		_tirer()
 
 
-## Pour tester le boss sans gagner 5 combats (bouton visible seulement en test, pas dans le jeu exporté).
-## Ce n'est pas une touche : l'éditeur Godot garde F8 (arrêter) et d'autres touches de fonction.
-func _aller_au_boss() -> void:
-	bouton_debug.disabled = true
-	partie.aller_au_boss()
-	GameState.aller_a(GameState.SCENE_COMBAT)
+# --- Le tour : mise, levier, relances, validation -----------------------------
 
-
+## Levier (bouton ou Espace). Pendant une relance possible, Espace valide le tirage affiché.
 func _tirer() -> void:
 	if combat.est_fini():
 		return
+	if combat.tirage_en_attente:
+		_valider()
+		return
+
+	var mise := mises[mise_choisie]
+	if not combat.tirer(mise):
+		return
+	_dessiner_grille()
+	if combat.peut_relancer():
+		_attendre_validation()
+	else:
+		_valider()
+
+
+## Applique le tirage affiché (et la mise) : l'ennemi agit ensuite.
+func _valider() -> void:
+	if not combat.tirage_en_attente:
+		return
+	choix_du_rouleau = false
 	var numero_tour := combat.numero_tour
-	# Les rouleaux bloqués par l'ennemi restent vides pour ce tirage.
-	var bloques: Array[int] = combat.rouleaux_bloques.duplicate()
-	var grille := machine.tirer(partie.sac, partie.rng, bloques)
-	var resultat := machine.resoudre(grille)
-	for i in grille.size():
-		_dessiner_case(i, grille[i], i in resultat.cases_en_combo, i in bloques)
-	var journal_combat := combat.jouer_tour(resultat)
-	_afficher_tour(numero_tour, resultat, journal_combat)
+	var journal_combat := combat.valider()
+	_dessiner_grille()
+	_afficher_tour(numero_tour, combat.resultat_courant, journal_combat)
+	_choisir_mise(0)
 	_rafraichir()
+
+
+## Les rouleaux sont affichés mais pas encore appliqués : on peut relancer ou valider.
+func _attendre_validation() -> void:
+	_afficher_apercu()
+	_rafraichir()
+
+
+## Dé pipé : relance tous les rouleaux.
+func _relancer_tout() -> void:
+	if combat.relancer_tout():
+		choix_du_rouleau = false
+		_dessiner_grille()
+		_afficher_apercu()
+		_rafraichir()
+
+
+## Cinquième as, étape 1 : on active le choix du rouleau à garder (un second clic annule).
+func _commencer_cinquieme_as() -> void:
+	choix_du_rouleau = not choix_du_rouleau
+	_dessiner_grille()
+	_afficher_apercu()
+	_rafraichir()
+
+
+## Cinquième as, étape 2 : clic sur un rouleau = on le garde et on relance les autres.
+func _sur_case(evenement: InputEvent, index: int) -> void:
+	var clic := evenement as InputEventMouseButton
+	if clic != null and clic.pressed and clic.button_index == MOUSE_BUTTON_LEFT:
+		_garder_rouleau(index)
+
+
+func _garder_rouleau(index: int) -> void:
+	if not choix_du_rouleau:
+		return
+	if combat.relancer_en_gardant(index):
+		choix_du_rouleau = false
+		_dessiner_grille()
+		_afficher_apercu()
+		_rafraichir()
+
+
+func _choisir_mise(index: int) -> void:
+	mise_choisie = index
+	if boutons_mise.size() > index:
+		boutons_mise[index].button_pressed = true
 
 
 func _continuer() -> void:
@@ -101,6 +182,25 @@ func _continuer() -> void:
 		GameState.aller_a(GameState.SCENE_RECOMPENSE)
 	else:
 		GameState.aller_a(GameState.SCENE_FIN)
+
+
+## Pour tester le boss sans gagner 5 combats (bouton visible seulement en test, pas dans le jeu exporté).
+## Ce n'est pas une touche : l'éditeur Godot garde F8 (arrêter) et d'autres touches de fonction.
+func _aller_au_boss() -> void:
+	bouton_debug.disabled = true
+	partie.aller_au_boss()
+	GameState.aller_a(GameState.SCENE_COMBAT)
+
+
+## Pour essayer les reliques sans les acheter : en ajoute une au hasard (bouton visible seulement
+## en test). Le combat recommence pour que la relique serve tout de suite.
+func _donner_relique_debug() -> void:
+	var propositions := partie.proposer_reliques(1)
+	if propositions.is_empty():
+		return
+	bouton_debug_relique.disabled = true
+	partie.ajouter_relique(propositions[0])
+	GameState.aller_a(GameState.SCENE_COMBAT)
 
 
 # --- Affichage -------------------------------------------------------------
@@ -134,8 +234,9 @@ func _rafraichir() -> void:
 		combat.or_du_joueur(), partie.sac.taille()]
 
 	# Les rouleaux que l'ennemi vient de bloquer sont déjà marqués pour le prochain tirage.
-	for index in combat.rouleaux_bloques:
-		_dessiner_case(index, null, false, true)
+	if not combat.tirage_en_attente:
+		for index in combat.rouleaux_bloques:
+			_dessiner_case(index, null, false, true)
 
 	match combat.etat:
 		Combat.Etat.VICTOIRE:
@@ -146,8 +247,49 @@ func _rafraichir() -> void:
 			texte_fin.add_theme_color_override("font_color", COULEUR_DEFAITE)
 		_:
 			texte_fin.text = ""
-	bouton_levier.disabled = combat.est_fini()
+	bouton_levier.disabled = combat.est_fini() or combat.tirage_en_attente
 	bouton_continuer.visible = combat.est_fini()
+
+	_rafraichir_mises()
+	_rafraichir_relances()
+
+
+## Les boutons de mise : grisés si la mise est impossible (pas assez d'or, trop peu de PV).
+## Pendant qu'un tirage attend sa validation, on ne peut plus changer de mise : seule la mise
+## choisie reste affichée en clair, pour qu'on voie ce qu'on a misé.
+func _rafraichir_mises() -> void:
+	for i in boutons_mise.size():
+		if combat.est_fini():
+			boutons_mise[i].disabled = true
+		elif combat.tirage_en_attente:
+			boutons_mise[i].disabled = i != mise_choisie
+		else:
+			boutons_mise[i].disabled = not combat.peut_miser(mises[i])
+	# Une mise devenue impossible (or volé, PV perdus) est abandonnée.
+	if not combat.peut_miser(mises[mise_choisie]) and not combat.tirage_en_attente:
+		_choisir_mise(0)
+
+
+## « Valider » et les boutons de relance remplacent « Continuer » pendant un tirage en attente.
+func _rafraichir_relances() -> void:
+	ligne_relance.visible = combat.tirage_en_attente and not combat.est_fini()
+	bouton_de_pipe.visible = partie.a_relique(Reliques.DE_PIPE)
+	bouton_de_pipe.disabled = combat.relances_gratuites <= 0
+	bouton_cinquieme_as.visible = partie.a_relique(Reliques.CINQUIEME_AS)
+	bouton_cinquieme_as.disabled = combat.relances_cinquieme_as <= 0
+	bouton_cinquieme_as.text = tr("Annuler : garder quel rouleau ?") if choix_du_rouleau \
+			else tr("Cinquième as : garder un rouleau")
+	var curseur := Control.CURSOR_POINTING_HAND if choix_du_rouleau else Control.CURSOR_ARROW
+	for case_rouleau in cases:
+		case_rouleau.mouse_default_cursor_shape = curseur
+
+
+## Dessine les rouleaux du tirage en cours (ou du dernier tour joué).
+func _dessiner_grille() -> void:
+	var grille := combat.grille_courante
+	var resultat := combat.resultat_courant
+	for i in grille.size():
+		_dessiner_case(i, grille[i], i in resultat.cases_en_combo, i in combat.bloques_du_tirage)
 
 
 func _dessiner_case(index: int, symbole: SymbolData, en_combo: bool, bloquee: bool = false) -> void:
@@ -178,8 +320,34 @@ func _dessiner_case(index: int, symbole: SymbolData, en_combo: bool, bloquee: bo
 	if en_combo:
 		style.set_border_width_all(6)
 		style.border_color = COULEUR_COMBO
+	elif choix_du_rouleau and symbole != null and not bloquee:
+		# Cinquième as : les rouleaux qu'on peut garder sont entourés.
+		style.set_border_width_all(4)
+		style.border_color = COULEUR_CHOIX
 
 	cases[index].add_theme_stylebox_override("panel", style)
+
+
+## Pendant un tirage en attente : ce que donnerait le tour, et ce qu'on peut faire.
+func _afficher_apercu() -> void:
+	var resultat := combat.resultat_courant
+	var texte := PackedStringArray()
+	texte.append("[b]%s[/b]" % tr("Tirage affiché, pas encore appliqué"))
+	for combo in resultat.combos:
+		var titre := tr("JACKPOT !!!") if combo.est_jackpot() else tr("COMBO !")
+		texte.append("[color=#ffd34d][b]%s[/b] %s[/color]" % [
+			titre, tr("%d × %s, effet ×%d") % [
+				combo.longueur, tr(combo.symbole.nom), combo.multiplicateur]])
+	if resultat.totaux.is_empty():
+		texte.append(tr("aucun effet"))
+	else:
+		texte.append(Effets.decrire(resultat.totaux, "\n"))
+	texte.append("")
+	if choix_du_rouleau:
+		texte.append("[b]%s[/b]" % tr("Clique sur le rouleau à garder : les autres seront relancés."))
+	else:
+		texte.append(tr("Valide ce tirage (Espace) ou relance avec tes reliques."))
+	texte_journal.text = "\n".join(texte)
 
 
 ## Écrit ce qui s'est passé pendant le tour : combos, effets du tirage, puis le combat.
@@ -257,7 +425,8 @@ func _construire_colonne_combat(parent: Control) -> void:
 	texte_pv_ennemi = _etiquette_ennemi(boite_ennemi, 18)
 	texte_intention = _etiquette_ennemi(boite_ennemi, 22)
 
-	# Les 5 rouleaux.
+	# Les rouleaux (5, ou 6 avec le Sixième rouleau, un peu plus étroits).
+	var largeur_case := 120 if machine.colonnes <= 5 else 104
 	var grille := GridContainer.new()
 	grille.columns = machine.colonnes
 	grille.add_theme_constant_override("h_separation", 10)
@@ -265,11 +434,13 @@ func _construire_colonne_combat(parent: Control) -> void:
 	colonne.add_child(grille)
 	for i in machine.nb_cases():
 		var case_grille := PanelContainer.new()
-		case_grille.custom_minimum_size = TAILLE_CASE
+		case_grille.custom_minimum_size = Vector2(largeur_case, HAUTEUR_CASE)
+		case_grille.gui_input.connect(_sur_case.bind(i))
 		var etiquette := Label.new()
 		etiquette.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		etiquette.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		etiquette.add_theme_font_size_override("font_size", 20)
+		etiquette.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		etiquette.add_theme_font_size_override("font_size", 20 if machine.colonnes <= 5 else 17)
 		case_grille.add_child(etiquette)
 		grille.add_child(case_grille)
 		cases.append(case_grille)
@@ -292,7 +463,7 @@ func _construire_colonne_combat(parent: Control) -> void:
 	texte_or.add_theme_font_size_override("font_size", 18)
 	colonne.add_child(texte_or)
 
-	# Fin du combat.
+	# Fin du combat, ou (au même endroit) valider / relancer un tirage en attente.
 	texte_fin = Label.new()
 	texte_fin.add_theme_font_size_override("font_size", 26)
 	colonne.add_child(texte_fin)
@@ -303,12 +474,33 @@ func _construire_colonne_combat(parent: Control) -> void:
 	bouton_continuer.pressed.connect(_continuer)
 	colonne.add_child(bouton_continuer)
 
+	ligne_relance = HBoxContainer.new()
+	ligne_relance.add_theme_constant_override("separation", 8)
+	colonne.add_child(ligne_relance)
+	bouton_valider = _creer_bouton_relance(tr("Valider (Espace)"), _valider)
+	bouton_de_pipe = _creer_bouton_relance(tr("Dé pipé : tout relancer"), _relancer_tout)
+	bouton_cinquieme_as = _creer_bouton_relance(tr("Cinquième as : garder un rouleau"), _commencer_cinquieme_as)
+	ligne_relance.visible = false
+
+
+func _creer_bouton_relance(texte: String, action: Callable) -> Button:
+	var bouton := Button.new()
+	bouton.text = texte
+	bouton.custom_minimum_size = Vector2(0, 44)
+	bouton.focus_mode = Control.FOCUS_NONE
+	bouton.pressed.connect(action)
+	ligne_relance.add_child(bouton)
+	return bouton
+
 
 func _construire_colonne_journal(parent: Control) -> void:
 	var colonne := VBoxContainer.new()
 	colonne.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	colonne.add_theme_constant_override("separation", 12)
+	colonne.add_theme_constant_override("separation", 8)
 	parent.add_child(colonne)
+
+	_construire_panneau_mise(colonne)
+	_construire_rangee_reliques(colonne)
 
 	var titre := Label.new()
 	titre.text = tr("Dernier tour")
@@ -333,6 +525,89 @@ func _construire_colonne_journal(parent: Control) -> void:
 		bouton_debug.focus_mode = Control.FOCUS_NONE
 		bouton_debug.pressed.connect(_aller_au_boss)
 		colonne.add_child(bouton_debug)
+
+		bouton_debug_relique = Button.new()
+		bouton_debug_relique.text = tr("[test] Recevoir une relique au hasard")
+		bouton_debug_relique.disabled = not partie.peut_recevoir_relique()
+		bouton_debug_relique.focus_mode = Control.FOCUS_NONE
+		bouton_debug_relique.pressed.connect(_donner_relique_debug)
+		colonne.add_child(bouton_debug_relique)
+
+
+## Les mises : pas de mise, 5 / 10 / 20 or, quitte ou double. Une seule choisie à la fois.
+func _construire_panneau_mise(parent: Control) -> void:
+	var titre := Label.new()
+	titre.text = tr("Mise (facultative)")
+	titre.add_theme_font_size_override("font_size", 20)
+	parent.add_child(titre)
+
+	var boutons := HFlowContainer.new()
+	boutons.add_theme_constant_override("h_separation", 6)
+	boutons.add_theme_constant_override("v_separation", 6)
+	parent.add_child(boutons)
+
+	mises.append(Mise.aucune())
+	for montant in Mise.MONTANTS_OR:
+		mises.append(Mise.en_or(montant))
+	mises.append(Mise.quitte_ou_double())
+
+	var groupe := ButtonGroup.new()
+	for i in mises.size():
+		var bouton := Button.new()
+		bouton.text = mises[i].libelle()
+		bouton.toggle_mode = true
+		bouton.button_group = groupe
+		bouton.focus_mode = Control.FOCUS_NONE
+		bouton.custom_minimum_size = Vector2(0, 34)
+		Cartes.habiller_bouton_mise(bouton)
+		bouton.pressed.connect(_choisir_mise.bind(i))
+		match mises[i].type:
+			Mise.Type.OR:
+				bouton.tooltip_text = tr("Si le tirage a un combo (hors crânes), tu reçois %d fois ta mise. Sinon elle est perdue.") % Mise.MULTIPLICATEUR_GAIN_OR
+			Mise.Type.QUITTE_OU_DOUBLE:
+				bouton.tooltip_text = tr("Aucun crâne visible : effets positifs doublés. Un crâne visible : tu perds %d PV.") % Mise.PV_QUITTE_OU_DOUBLE
+			_:
+				bouton.tooltip_text = tr("Pas de risque, pas de gain en plus.")
+		boutons.add_child(bouton)
+		boutons_mise.append(bouton)
+	boutons_mise[0].button_pressed = true
+
+
+## Les reliques possédées, avec une bulle d'aide qui dit ce que chacune fait.
+func _construire_rangee_reliques(parent: Control) -> void:
+	var titre := Label.new()
+	titre.text = tr("Reliques")
+	titre.add_theme_font_size_override("font_size", 20)
+	parent.add_child(titre)
+
+	rangee_reliques = HFlowContainer.new()
+	rangee_reliques.add_theme_constant_override("h_separation", 6)
+	rangee_reliques.add_theme_constant_override("v_separation", 6)
+	parent.add_child(rangee_reliques)
+
+	if partie.reliques.is_empty():
+		var aucune := Label.new()
+		aucune.text = tr("aucune pour l'instant")
+		aucune.add_theme_color_override("font_color", Color(1, 1, 1, 0.4))
+		rangee_reliques.add_child(aucune)
+		return
+	for relique in partie.reliques:
+		var puce := PanelContainer.new()
+		var style := StyleBoxFlat.new()
+		style.set_corner_radius_all(8)
+		style.bg_color = relique.couleur
+		style.content_margin_left = 8
+		style.content_margin_right = 8
+		style.content_margin_top = 3
+		style.content_margin_bottom = 3
+		puce.add_theme_stylebox_override("panel", style)
+		puce.tooltip_text = "%s\n%s" % [tr(relique.nom), tr(relique.description)]
+		var nom := Label.new()
+		nom.text = tr(relique.nom)
+		nom.add_theme_font_size_override("font_size", 16)
+		nom.add_theme_color_override("font_color", _couleur_texte(relique.couleur))
+		puce.add_child(nom)
+		rangee_reliques.add_child(puce)
 
 
 func _creer_barre() -> ProgressBar:

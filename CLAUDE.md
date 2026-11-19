@@ -25,7 +25,10 @@ IMPORTANT : dès qu'une étape est terminée (ou avant qu'Alex quitte la session
 - Bug trouvé par Alex en jeu (v0.4) : « Identifier not found: GameState » (l'éditeur ouvert ne connaissait pas l'autoload). Corrigé en remplaçant l'autoload par une classe statique, qui ne dépend plus de `project.godot`.
 - Bug trouvé par Alex en jeu (v0.4) : les touches de test F8 (+30 or) et F9 (aller au boss) ne marchaient pas : dans l'éditeur Godot, F8 est « Arrêter le jeu » (le jeu se fermait) et F9 gelait le jeu ; chez Claude, F9 marchait (fenêtre réelle + événements clavier réels, hors éditeur). Corrigé en les remplaçant par des boutons « [test] » visibles dans les écrans. **Ne jamais utiliser les touches de fonction F1–F12 (ni raccourcis d'éditeur) pour des fonctions de test : le jeu se joue à la souris, utiliser des boutons.**
 - Les journaux du jeu (y compris celui d'un jeu lancé par Alex depuis l'éditeur) sont dans `%APPDATA%\Godot\app_userdata\jackpot donjon\logs\` ; Godot n'en garde que 5 : lancer des tests en ligne de commande les fait tourner et efface celui d'Alex. Quand Alex rapporte un bug, lire ce dossier AVANT de lancer quoi que ce soit.
-- Prochaine étape : v0.5 (mises et reliques). Plan à rédiger avec Alex avant de coder.
+- v0.5 écrite (pas encore confirmée en jeu) : mises (`Mise` : or 5/10/20 gagnée = 3× la mise, quitte ou double à 5 PV), 9 reliques (`RelicData`, `data/relics/*.tres`, effets = paramètres du `.tres` ; `Reliques`, `Modificateurs`, `Partie.ajouter_relique`), tour en deux temps dans `Combat` (`tirer` / `relancer_tout` / `relancer_en_gardant` / `valider`, `jouer_tour(resultat, mise)` reste la fonction de règles), machine à 6 rouleaux (Sixième rouleau), relique offerte après le combat 3 (`scenes/relique.tscn`), 2 reliques en boutique. Ordre des écrans : combat → récompense → [relique après le combat 3] → boutique → combat. Tests : 30 (machine) + 78 (combat) + 54 (partie) + 67 (boutique) + 103 (reliques) + 122 (mises) + 131 (interface) = 585, tous ok ; 50 parties jouées à travers les vraies scènes (mises, relances, reliques, boutique) sans erreur ; de vrais clics de souris dans une vraie fenêtre vérifiés (mise, Cinquième as, Dé pipé, Valider). Règles v0.5 reportées dans le cahier des charges local ET en ligne (2026-11-19).
+- Équilibrage v0.5 : valeurs des ennemis inchangées (rat 8, squelette 13, gobelin 9, boss 14) ; robot sans réflexion : environ 55 % de victoires sans relique, 56 à 61 % avec reliques offertes/achetées. À régler dans les `.tres` après les essais d'Alex.
+- v0.5 reste à tester en jeu : Alex joue avec F5 (miser 5/10/20 or et quitte ou double, lire le journal ; bouton « [test] Recevoir une relique au hasard » en combat pour essayer chaque relique ; relique offerte après le combat 3 ; reliques en boutique ; relancer avec Dé pipé et Cinquième as (clic sur le rouleau à garder) ; machine à 6 rouleaux). Ensuite : commit « v0.5 confirmée » + `git push`.
+- Prochaine étape : v0.6 (le donjon : 3 étages, choix entre 2 portes, coffres et repos, tous les ennemis et boss), seulement après confirmation de la v0.5 en jeu. Plan à rédiger avec Alex avant de coder.
 
 ## Conventions
 
@@ -39,11 +42,13 @@ IMPORTANT : dès qu'une étape est terminée (ou avant qu'Alex quitte la session
 
 - `scripts/data/` : classes de données (`SymbolData`…)
 - `scripts/machine/` : sac, tirage, détection des combos, résultat
-- `scripts/combat/` : `Combat` (tour par tour, PV, armure, victoire/défaite, rouleaux bloqués), `Intentions`
-- `scripts/partie/` : `Partie` (état et règles d'une partie : PV, or, sac, rencontres, récompenses), `Boutique` (prix et actions de la boutique)
+- `scripts/combat/` : `Combat` (tour par tour en deux temps, PV, armure, victoire/défaite, rouleaux bloqués, mises, relances), `Intentions`, `Mise`
+- `scripts/machine/modificateurs.gd` : `Modificateurs` (ce que les reliques changent dans le calcul d'un tirage)
+- `scripts/partie/` : `Partie` (état et règles d'une partie : PV, or, sac, rencontres, récompenses, reliques), `Boutique` (prix et actions de la boutique, symboles et reliques), `Reliques` (liste des 9 reliques)
+- `data/relics/` : un `.tres` par relique (prix, description, paramètres des effets)
 - `scripts/ui/` : `Cartes` (styles de boutons partagés par les écrans)
 - `scripts/game_state.gd` : classe `GameState` à membres statiques, PAS un autoload (garde la partie, change d'écran ; aucune règle dedans)
-- `scenes/` : scènes et leur script (`combat.tscn` = écran principal, puis `recompense.tscn` et `fin_partie.tscn` ; `machine_test.tscn` = test de la machine)
+- `scenes/` : scènes et leur script (`combat.tscn` = écran principal, puis `recompense.tscn`, `relique.tscn`, `boutique.tscn` et `fin_partie.tscn` ; `machine_test.tscn` = test de la machine)
 - `data/symbols/` : un `.tres` par symbole
 - `data/enemies/` : un `.tres` par ennemi
 - `tests/` : scripts de test en ligne de commande
@@ -51,7 +56,8 @@ IMPORTANT : dès qu'une étape est terminée (ou avant qu'Alex quitte la session
 
 ## Vérifier son travail
 
-- Tests : `godot --headless --path . -s res://tests/test_machine.gd`, `... test_combat.gd`, `... test_partie.gd`, `... test_boutique.gd` et `... test_interface.gd` (vérifie que les boutons tiennent dans la fenêtre 1152×648) (affichent ok / ÉCHEC, code de sortie 1 en cas d'échec). Les tests de règles utilisent des ennemis de test aux valeurs fixes, pas les `.tres` (qui sont réglés en jouant).
+- Tests : `godot --headless --path . -s res://tests/test_machine.gd`, `... test_combat.gd`, `... test_partie.gd`, `... test_boutique.gd`, `... test_reliques.gd`, `... test_mises.gd` et `... test_interface.gd` (vérifie que les boutons tiennent dans la fenêtre 1152×648) (affichent ok / ÉCHEC, code de sortie 1 en cas d'échec). Les tests de règles utilisent des ennemis de test aux valeurs fixes, pas les `.tres` (qui sont réglés en jouant).
+- Pour vérifier l'aspect d'un écran : lancer un script jetable SANS `--headless` (`godot --path . -s script.gd`, fenêtre réelle) qui enregistre `root.get_texture().get_image().save_png(...)` après quelques images, puis lire le PNG. Les tests de position ne voient pas un texte coupé ou un cadre mal dimensionné. On peut aussi y envoyer de vrais clics avec `Input.parse_input_event(InputEventMouseButton)`.
 - Toujours lancer Godot en ligne de commande avec `timeout` et la sortie redirigée vers un fichier : un script en erreur peut bloquer Godot headless sans jamais rendre la main.
 - Script jetable qui instancie une scène : attendre `await process_frame` avant de lire ses nœuds (sinon `_ready` n'a pas tourné). Les ressources chargées par `load()` sont déchargées quand plus rien ne les référence : garder une référence si on les modifie en mémoire.
 - Éviter de modifier `project.godot` à la main : si Alex a l'éditeur Godot ouvert, celui-ci le réécrit depuis sa mémoire et efface la modification (c'est arrivé avec un autoload, et le jeu d'Alex plantait avec « Identifier not found: GameState » en v0.4). C'est pourquoi `GameState` est une classe statique et non un autoload. Si une modification de `project.godot` est vraiment nécessaire, demander à Alex de fermer et rouvrir l'éditeur avant de tester.

@@ -9,6 +9,7 @@ extends RefCounted
 
 const SCENE_COMBAT := "res://scenes/combat.tscn"
 const SCENE_RECOMPENSE := "res://scenes/recompense.tscn"
+const SCENE_RELIQUE := "res://scenes/relique.tscn"
 const SCENE_BOUTIQUE := "res://scenes/boutique.tscn"
 const SCENE_FIN := "res://scenes/fin_partie.tscn"
 

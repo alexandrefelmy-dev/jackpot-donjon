@@ -33,6 +33,13 @@ func taille() -> int:
 	return symboles.size()
 
 
+## Une copie du sac (les mêmes symboles, une nouvelle liste), pour tirer sans toucher au sac.
+func copie() -> Sac:
+	var autre := Sac.new()
+	autre.symboles = symboles.duplicate()
+	return autre
+
+
 ## Retire le symbole à cet index du sac. Renvoie faux si l'index n'existe pas.
 func retirer(index: int) -> bool:
 	if index < 0 or index >= symboles.size():

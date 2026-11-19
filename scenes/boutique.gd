@@ -16,6 +16,7 @@ var mode: Mode = Mode.NORMAL
 var texte_infos: Label
 var texte_message: Label
 var cartes_offres: Array[Button] = []
+var cartes_reliques: Array[Button] = []
 var bouton_soin: Button
 var bouton_retrait: Button
 var bouton_amelioration: Button
@@ -39,6 +40,15 @@ func _acheter(index: int) -> void:
 	var symbole := boutique.offres[index]
 	if boutique.acheter(index):
 		_message(tr("%s ajouté à ton sac.") % symbole.nom_affiche())
+	else:
+		_message(tr("Achat impossible."))
+	_rafraichir()
+
+
+func _acheter_relique(index: int) -> void:
+	var relique := boutique.offres_reliques[index]
+	if boutique.acheter_relique(index):
+		_message(tr("%s : relique achetée !") % tr(relique.nom))
 	else:
 		_message(tr("Achat impossible."))
 	_rafraichir()
@@ -106,11 +116,13 @@ func _message(texte: String) -> void:
 
 ## Met à jour tout ce qui dépend de l'état : or, PV, offres, services, sac.
 func _rafraichir() -> void:
-	texte_infos.text = tr("Or : %d     PV : %d / %d     Sac : %d symboles") % [
-		partie.or_total, partie.pv, partie.pv_max, partie.sac.taille()]
+	texte_infos.text = tr("Or : %d     PV : %d / %d     Sac : %d symboles     Reliques : %d") % [
+		partie.or_total, partie.pv, partie.pv_max, partie.sac.taille(), partie.reliques.size()]
 
 	for i in cartes_offres.size():
 		_rafraichir_offre(i)
+	for i in cartes_reliques.size():
+		_rafraichir_relique(i)
 
 	bouton_soin.text = tr("Se soigner de %d PV (%d or)") % [Boutique.SOIN_PV, Boutique.PRIX_SOIN]
 	bouton_soin.disabled = not boutique.peut_soigner()
@@ -129,6 +141,17 @@ func _rafraichir() -> void:
 	bouton_amelioration.disabled = mode != Mode.AMELIORATION and partie.or_total < boutique.prix_amelioration()
 
 	_rafraichir_sac()
+
+
+func _rafraichir_relique(i: int) -> void:
+	var relique := boutique.offres_reliques[i]
+	var carte := cartes_reliques[i]
+	if boutique.reliques_vendues[i]:
+		carte.text = "%s\n%s" % [tr(relique.nom), tr("ACHETÉE")]
+	else:
+		carte.text = "%s\n%s\n%s" % [
+			tr(relique.nom), tr(relique.description), tr("Prix : %d or") % relique.prix]
+	carte.disabled = not boutique.peut_acheter_relique(i)
 
 
 func _rafraichir_offre(i: int) -> void:
@@ -284,6 +307,28 @@ func _construire_colonne_sac(parent: Control) -> void:
 	colonne.add_theme_constant_override("separation", 10)
 	colonne.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(colonne)
+
+	# Les reliques à vendre (2), au-dessus du sac.
+	var titre_reliques := Label.new()
+	titre_reliques.text = tr("Reliques à vendre")
+	titre_reliques.add_theme_font_size_override("font_size", 22)
+	colonne.add_child(titre_reliques)
+
+	var ligne_reliques := HBoxContainer.new()
+	ligne_reliques.add_theme_constant_override("separation", 10)
+	colonne.add_child(ligne_reliques)
+	for i in boutique.offres_reliques.size():
+		var carte := Button.new()
+		carte.custom_minimum_size = Vector2(0, 112)
+		carte.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		carte.focus_mode = Control.FOCUS_NONE
+		carte.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		carte.add_theme_font_size_override("font_size", 15)
+		Cartes.habiller_bouton(carte, boutique.offres_reliques[i].couleur)
+		carte.tooltip_text = "%s\n%s" % [tr(boutique.offres_reliques[i].nom), tr(boutique.offres_reliques[i].description)]
+		carte.pressed.connect(_acheter_relique.bind(i))
+		ligne_reliques.add_child(carte)
+		cartes_reliques.append(carte)
 
 	var titre := Label.new()
 	titre.text = tr("Ton sac")

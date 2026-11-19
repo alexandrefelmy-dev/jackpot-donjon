@@ -20,6 +20,33 @@ static func style(couleur: Color, en_valeur: bool) -> StyleBoxFlat:
 	return boite
 
 
+## Un style pour les petits boutons de mise : fond sombre, cadre doré quand elle est choisie.
+## Les marges sont fixes pour que le texte ne soit jamais coupé quand le cadre apparaît.
+static func style_mise(choisie: bool, survol: bool = false) -> StyleBoxFlat:
+	var boite := StyleBoxFlat.new()
+	boite.set_corner_radius_all(8)
+	boite.bg_color = Color("4a3f1c") if choisie else (Color("3a3846") if survol else Color("2a2833"))
+	boite.set_border_width_all(3 if choisie else 0)
+	boite.border_color = COULEUR_SURVOL
+	boite.content_margin_left = 12
+	boite.content_margin_right = 12
+	boite.content_margin_top = 4
+	boite.content_margin_bottom = 4
+	return boite
+
+
+static func habiller_bouton_mise(bouton: Button) -> void:
+	bouton.add_theme_stylebox_override("normal", style_mise(false))
+	bouton.add_theme_stylebox_override("hover", style_mise(false, true))
+	bouton.add_theme_stylebox_override("pressed", style_mise(true))
+	bouton.add_theme_stylebox_override("hover_pressed", style_mise(true))
+	bouton.add_theme_stylebox_override("disabled", style_mise(false))
+	bouton.add_theme_stylebox_override("focus", style_mise(false))
+	for etat in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
+		bouton.add_theme_color_override(etat, Color.WHITE)
+	bouton.add_theme_color_override("font_disabled_color", Color(1, 1, 1, 0.35))
+
+
 ## Applique à un bouton les couleurs d'un symbole : fond coloré, bordure dorée au survol,
 ## fond assombri quand il est désactivé.
 static func habiller_bouton(bouton: Button, couleur: Color) -> void:

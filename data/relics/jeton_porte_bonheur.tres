@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RelicData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"jeton_porte_bonheur"
+nom = "Jeton porte-bonheur"
+description = "La première mise d'or perdue de chaque combat est remboursée."
+couleur = Color(0.95, 0.8, 0.3, 1)
+prix = 25
+parametres = {
+"mise_remboursee_par_combat": 1
+}

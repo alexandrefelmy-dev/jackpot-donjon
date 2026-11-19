@@ -12,12 +12,17 @@ const PRIX_DOREE := 20
 const PRIX_SOIN := 10
 const SOIN_PV := 10
 const NB_OFFRES := 3
+## Reliques à vendre (au prix de leur fichier de données, entre 25 et 40 or).
+const NB_OFFRES_RELIQUES := 2
 
 var partie: Partie
 ## Les symboles à vendre (3 différents).
 var offres: Array[SymbolData] = []
 ## Une offre achetée disparaît de l'étal.
 var vendues: Array[bool] = []
+## Les reliques à vendre (2 différentes, que le joueur ne possède pas encore).
+var offres_reliques: Array[RelicData] = []
+var reliques_vendues: Array[bool] = []
 
 
 ## Ouvre la boutique : tire les offres avec le générateur de la partie.
@@ -27,6 +32,9 @@ static func creer(la_partie: Partie) -> Boutique:
 	boutique.offres = la_partie.tirer_symboles(NB_OFFRES)
 	for i in boutique.offres.size():
 		boutique.vendues.append(false)
+	boutique.offres_reliques = la_partie.proposer_reliques(NB_OFFRES_RELIQUES)
+	for i in boutique.offres_reliques.size():
+		boutique.reliques_vendues.append(false)
 	return boutique
 
 
@@ -48,6 +56,29 @@ func acheter(index: int) -> bool:
 	partie.or_total -= offres[index].prix
 	partie.sac.ajouter(offres[index])
 	vendues[index] = true
+	return true
+
+
+# --- Acheter une relique -----------------------------------------------------
+
+func prix_relique(index: int) -> int:
+	return offres_reliques[index].prix
+
+
+func peut_acheter_relique(index: int) -> bool:
+	return index >= 0 and index < offres_reliques.size() and not reliques_vendues[index] \
+			and not partie.a_relique(offres_reliques[index].id) \
+			and partie.or_total >= offres_reliques[index].prix
+
+
+## Achète une relique : elle s'ajoute à la partie (ses effets immédiats s'appliquent aussitôt).
+## Renvoie faux (sans rien changer) si impossible.
+func acheter_relique(index: int) -> bool:
+	if not peut_acheter_relique(index):
+		return false
+	partie.or_total -= offres_reliques[index].prix
+	partie.ajouter_relique(offres_reliques[index])
+	reliques_vendues[index] = true
 	return true
 
 

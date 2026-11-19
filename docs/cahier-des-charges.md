@@ -109,7 +109,7 @@ Un combat oppose le joueur à un seul ennemi, au tour par tour : un tirage du jo
 
 - Une partie v0.3 = 5 combats contre des ennemis de l'étage 1 (tirés au hasard, jamais le même deux fois de suite), puis le boss de l'étage. Boss vaincu = victoire (un seul étage pour l'instant ; les 3 étages arrivent en v0.6).
 - Entre deux combats, les PV ne remontent pas (sauf soins), l'armure retombe, l'or gagné et le sac sont conservés. L'or se dépense à la boutique (v0.4).
-- Après chaque combat normal, 3 symboles différents sont proposés parmi épée, bouclier, potion et pièce (jamais le crâne) : on en prend 1 pour l'ajouter au sac, ou on passe. Pas de récompense après le boss (une relique est prévue en v0.5).
+- Après chaque combat normal, 3 symboles différents sont proposés parmi épée, bouclier, potion et pièce (jamais le crâne) : on en prend 1 pour l'ajouter au sac, ou on passe. Pas de récompense après le boss (les coffres et les boss de la v0.6 donneront des reliques).
 - Intention « Blocage » : à son action du tour N, l'ennemi bloque un rouleau tiré au hasard, qui reste vide au tirage du tour N+1 (un rouleau vide casse les combos). Le joueur voit « bloque un rouleau » dans l'intention dès le tour N.
 - Gobelin tricheur : alterne attaque et vol d'or (v0.4 ; en v0.3 il alternait attaque et protection, faute de boutique). Rat-Croupier : 60 PV, alterne attaque et blocage.
 - À 0 PV dans un combat : game over. Rejouer lance une nouvelle partie (nouveau sac, PV pleins, nouvelle graine).
@@ -140,6 +140,17 @@ Avant chaque tirage, le joueur peut miser pour amplifier le résultat : c'est le
 
 Une seule mise par tour. Certaines reliques modifient les mises (gains plus forts, mise gratuite une fois par combat).
 
+**Précisions de règles (v0.5)**
+
+- Mises : une seule par tour, choisie avant le tirage (boutons « Pas de mise », 5, 10, 20 or, « Quitte ou double »), remise à « Pas de mise » après chaque tour. Une mise impossible (pas assez d'or ; 5 PV ou moins pour le quitte ou double) est grisée. Elle se règle même si le tirage tue l'ennemi.
+- Mise d'or : si le tirage contient au moins un combo qui n'est pas un combo de crânes, l'or misé « revient ×3 » : on reçoit 3 fois la mise (gain net : 2 fois la mise). Sinon la mise est perdue.
+- Quitte ou double : aucun crâne visible → les effets positifs du tirage (dégâts, armure, soin, or) sont doublés, pas le malus des crânes. Au moins un crâne visible → on perd 5 PV (l'armure ne les bloque pas).
+- Tour en deux temps : le levier affiche les rouleaux. Sans relance possible, le tour se joue aussitôt. Avec le Dé pipé ou le Cinquième as, on peut relancer, puis « Valider » (la touche Espace valide aussi). La mise est fixée au premier tirage ; les rouleaux bloqués par un ennemi restent bloqués.
+- Reliques (chacune une seule fois par partie ; prix en boutique) : Cœur de pierre (30 or) : +10 PV max et +10 PV tout de suite. Tirelire (30) : +2 or à chaque tour sans combo (un combo de crânes compte comme un combo). Lame aimantée (35) : chaque pièce visible inflige aussi 1 dégât (pièces dans un combo comprises). Trèfle à quatre feuilles (30) : chaque crâne tiré a 1 chance sur 2 de devenir une pièce, avant le calcul des combos. Jackpot maudit (40) : l'effet de tous les combos est ×2, et 2 crânes sont ajoutés au sac tout de suite. Jeton porte-bonheur (25) : la première mise d'or perdue de chaque combat est remboursée. Sixième rouleau (40) : 6 rouleaux (combo de 6 : ×8). Dé pipé (30) : une relance gratuite de tous les rouleaux par combat. Cinquième as (35) : une fois par combat, on garde 1 rouleau (clic dessus) et on relance les autres.
+- Obtention : la boutique propose 2 reliques non possédées. Après le combat 3, après la récompense en symbole, un écran « Choisis 1 relique parmi 2 » (sans « passer ») précède la boutique. Pas de relique après le boss : les coffres et les boss de la v0.6 en donneront.
+- Déroulé : combat → récompense (symbole) → [relique offerte après le combat 3] → boutique → combat suivant.
+- Équilibrage : les valeurs des ennemis de la v0.4 sont inchangées. Un robot qui ne réfléchit pas gagne environ 55 % des parties sans relique et 56 à 61 % avec les reliques offertes et achetées.
+
 Toute la monnaie du jeu est fictive : aucun achat ni argent réel.
 
 ## Progression
@@ -158,7 +169,7 @@ Le joueur progresse pendant une partie seulement : or, symboles et reliques sont
 
 **Précisions de règles (v0.4)**
 
-- Déroulé : combat → récompense (1 symbole parmi 3, ou passer) → boutique → combat suivant. Pas de boutique après le boss. Les salles au choix entre 2 portes remplaceront cette suite en v0.6.
+- Déroulé : combat → récompense (1 symbole parmi 3, ou passer) → [relique offerte après le combat 3, voir v0.5] → boutique → combat suivant. Pas de boutique après le boss. Les salles au choix entre 2 portes remplaceront cette suite en v0.6.
 - Acheter un symbole : 3 symboles différents sont proposés parmi épée, bouclier, potion et pièce (jamais le crâne), chacun à son prix (épée 10, bouclier 8, potion 10, pièce 12). Une offre achetée disparaît de l'étal.
 - Retirer un symbole du sac : 10 or, puis 5 de plus à chaque retrait de la partie (10, 15, 20…). On garde toujours au moins 1 symbole dans le sac.
 - Rendre un symbole doré : 20 or. Un symbole déjà doré ne peut pas l'être deux fois.
@@ -319,6 +330,8 @@ Le jeu se construit par versions jouables : la version 0.3 est le MVP, une parti
    - Fini quand : on peut dépenser son or en boutique pour changer son sac et se soigner.
    - Réalisé : boutique après chaque combat normal (acheter, retirer, rendre doré, se soigner) ; symboles dorés qui doublent leur effet et celui des combos ; vol d'or du Gobelin tricheur ; équilibrage des ennemis refait avec la boutique.
 5. **v0.5 – Gambling** : mises, reliques.
+   - Fini quand : on peut miser avant un tirage et jouer avec des reliques qui changent les règles.
+   - Réalisé : mises d'or et quitte ou double ; les 9 reliques ; tour en deux temps pour les relances (Dé pipé, Cinquième as) ; machine à 6 rouleaux (Sixième rouleau) ; une relique offerte après le combat 3 (1 parmi 2) ; 2 reliques en boutique.
 6. **v0.6 – Le donjon** : 3 étages, choix entre 2 portes, coffres et repos, tous les ennemis et boss.
 7. **v0.7 – Entre les parties** : jetons d'âme, Comptoir du Croupier, malédictions, sauvegarde du profil.
 8. **v0.8 – Habillage** : graphismes, sons, musique, animations, menu principal.

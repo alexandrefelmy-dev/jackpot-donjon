@@ -35,6 +35,32 @@ var or_gagne: int = 0
 var rouleaux_bloques: Array[int] = []
 ## Or volé au joueur pendant ce combat (par le Gobelin tricheur, par exemple).
 var or_vole: int = 0
+## Combien de mises d'or perdues seront encore remboursées dans ce combat
+## (Jeton porte-bonheur : 1 par combat). Rempli par Partie.creer_combat().
+var remboursements_de_mise: int = 0
+## Relances de tous les rouleaux encore disponibles dans ce combat (Dé pipé : 1 par combat).
+var relances_gratuites: int = 0
+## Relances « garder un rouleau, relancer les autres » disponibles (Cinquième as : 1 par combat).
+var relances_cinquieme_as: int = 0
+
+# --- Le tour en deux temps : tirer, (relancer), valider ---------------------
+## Vrai entre tirer() et valider() : les rouleaux sont affichés, les effets pas encore appliqués.
+var tirage_en_attente: bool = false
+## Les symboles du tirage en cours (null = rouleau vide ou bloqué).
+var grille_courante: Array[SymbolData] = []
+## Le résultat calculé de ce tirage (effets, combos), appliqué par valider().
+var resultat_courant: ResultatTirage
+## La mise choisie pour ce tour.
+var mise_en_cours: Mise
+## Les rouleaux qui étaient bloqués par l'ennemi pour ce tirage (jouer_tour les libère ensuite).
+var bloques_du_tirage: Array[int] = []
+
+var _machine: MachineASous
+var _sac: Sac
+var _modificateurs: Modificateurs
+## Les symboles tels que tirés du sac, avant le Trèfle (pour garder un rouleau à la relance).
+var _origine: Array[SymbolData] = []
+var _notes_relances: Array[String] = []
 
 var _hasard: RandomNumberGenerator
 var _nb_rouleaux: int
@@ -56,6 +82,99 @@ func _init(donnees: EnemyData, pv_depart: int = PV_JOUEUR_DEPART, pv_max: int = 
 	_or_depart = or_joueur
 
 
+## Donne au combat de quoi tirer lui-même (tour en deux temps) : la machine, le sac du joueur
+## et ce que ses reliques changent. Sans cet appel, tirer() ne fait rien (jouer_tour() marche toujours).
+func preparer_tirages(machine: MachineASous, sac: Sac, modificateurs: Modificateurs) -> void:
+	_machine = machine
+	_sac = sac
+	_modificateurs = modificateurs if modificateurs != null else Modificateurs.new()
+
+
+## Premier temps du tour : tire les rouleaux (ceux que l'ennemi a bloqués restent vides, le Trèfle
+## transforme des crânes en pièces) et calcule le résultat, sans l'appliquer. `mise` est la mise du tour.
+## Renvoie faux si on ne peut pas tirer (combat fini, tirage déjà en attente, combat non préparé).
+func tirer(mise: Mise = null) -> bool:
+	if _machine == null or est_fini() or tirage_en_attente:
+		return false
+	mise_en_cours = mise
+	bloques_du_tirage = rouleaux_bloques.duplicate()
+	_notes_relances = []
+	_nouveau_tirage(-1)
+	tirage_en_attente = true
+	return true
+
+
+## Une relance est-elle possible maintenant ? (tirage affiché et une relique de relance disponible)
+func peut_relancer() -> bool:
+	return tirage_en_attente and (relances_gratuites > 0 or relances_cinquieme_as > 0)
+
+
+## Dé pipé : relance tous les rouleaux (les rouleaux bloqués restent bloqués). Une fois par combat.
+func relancer_tout() -> bool:
+	if not tirage_en_attente or relances_gratuites <= 0:
+		return false
+	relances_gratuites -= 1
+	_nouveau_tirage(-1)
+	_notes_relances.append(tr("Dé pipé : tous les rouleaux sont relancés"))
+	return true
+
+
+## Cinquième as : garde le rouleau `index` (0 = celui de gauche) et relance les autres.
+## Un rouleau vide ou bloqué ne peut pas être gardé. Une fois par combat.
+func relancer_en_gardant(index: int) -> bool:
+	if not tirage_en_attente or relances_cinquieme_as <= 0:
+		return false
+	if index < 0 or index >= grille_courante.size() or grille_courante[index] == null:
+		return false
+	relances_cinquieme_as -= 1
+	_nouveau_tirage(index)
+	_notes_relances.append(tr("Cinquième as : le rouleau %d est gardé, les autres sont relancés") % (index + 1))
+	return true
+
+
+## Second temps du tour : applique le tirage affiché et la mise, puis l'ennemi agit.
+## Renvoie le détail du tour (relances comprises), ligne par ligne.
+func valider() -> Array[String]:
+	var journal: Array[String] = []
+	if not tirage_en_attente:
+		return journal
+	tirage_en_attente = false
+	var mise := mise_en_cours
+	mise_en_cours = null
+	journal.append_array(_notes_relances)
+	journal.append_array(jouer_tour(resultat_courant, mise))
+	return journal
+
+
+## Tire (ou retire) les rouleaux. `garde` = index d'un rouleau à conserver (-1 = aucun) : il reste
+## tel quel et son symbole est retiré du sac pour les autres, qui sont tirés sans remise.
+func _nouveau_tirage(garde: int) -> void:
+	var nb := _machine.nb_cases()
+	var reste := _sac.copie()
+	if garde >= 0:
+		reste.symboles.erase(_origine[garde])
+	var tires := reste.tirer(nb - (1 if garde >= 0 else 0), _hasard)
+
+	var origine: Array[SymbolData] = []
+	var k := 0
+	for i in nb:
+		if i == garde:
+			origine.append(_origine[garde])
+		else:
+			origine.append(tires[k])
+			k += 1
+	for index in bloques_du_tirage:
+		if index >= 0 and index < nb and index != garde:
+			origine[index] = null
+
+	var grille := _machine.transformer_craniens(origine, _modificateurs.chance_crane_en_piece, _hasard)
+	if garde >= 0:
+		grille[garde] = grille_courante[garde]
+	_origine = origine
+	grille_courante = grille
+	resultat_courant = _machine.resoudre(grille_courante, _modificateurs)
+
+
 ## L'or que le joueur possède en ce moment : celui d'avant le combat, plus les pièces
 ## tirées, moins ce qu'on lui a volé.
 func or_du_joueur() -> int:
@@ -73,15 +192,36 @@ func intention_actuelle() -> Dictionary:
 	return ennemi.intentions[index_intention % ennemi.intentions.size()]
 
 
-## Joue un tour complet à partir du résultat du tirage.
+## Le joueur peut-il faire cette mise maintenant ?
+## Mise d'or : un montant autorisé et assez d'or. Quitte ou double : plus de 5 PV
+## (pour ne jamais se tuer soi-même en misant). Pas de mise : toujours.
+func peut_miser(mise: Mise) -> bool:
+	if mise == null:
+		return true
+	match mise.type:
+		Mise.Type.OR:
+			return mise.montant in Mise.MONTANTS_OR and or_du_joueur() >= mise.montant
+		Mise.Type.QUITTE_OU_DOUBLE:
+			return pv_joueur > Mise.PV_QUITTE_OU_DOUBLE
+	return true
+
+
+## Joue un tour complet à partir du résultat du tirage et de la mise (aucune si null).
 ## Renvoie le détail du tour, ligne par ligne. Ne fait rien si le combat est fini.
-func jouer_tour(resultat: ResultatTirage) -> Array[String]:
+func jouer_tour(resultat: ResultatTirage, mise: Mise = null) -> Array[String]:
 	var journal: Array[String] = []
 	if est_fini():
 		return journal
 
 	# Les rouleaux bloqués ont servi pour ce tirage : ils sont libres à nouveau.
 	rouleaux_bloques = []
+
+	# La mise est réglée d'abord (même si le tirage tue l'ennemi).
+	if mise != null and mise.type != Mise.Type.AUCUNE:
+		if peut_miser(mise):
+			_regler_mise(mise, resultat, journal)
+		else:
+			journal.append(tr("Mise impossible : elle est annulée."))
 
 	# 1. Effets du tirage, dans l'ordre de Effets.ORDRE.
 	var degats := resultat.total("degats")
@@ -137,6 +277,35 @@ func jouer_tour(resultat: ResultatTirage) -> Array[String]:
 	index_intention += 1
 	numero_tour += 1
 	return journal
+
+
+## Règle une mise d'après le tirage (voir « Mise et prise de risque » du cahier des charges).
+## Mise d'or : un combo qui n'est pas un combo de crânes => on reçoit 3 fois la mise ;
+## sinon la mise est perdue (le Jeton porte-bonheur la rembourse une fois par combat).
+## Quitte ou double : aucun crâne visible => effets positifs doublés ; sinon -5 PV.
+func _regler_mise(mise: Mise, resultat: ResultatTirage, journal: Array[String]) -> void:
+	match mise.type:
+		Mise.Type.OR:
+			if resultat.a_combo_hors_cranes():
+				var gain := mise.montant * (Mise.MULTIPLICATEUR_GAIN_OR - 1)
+				or_gagne += gain
+				journal.append(tr("Mise de %d or gagnée : tu reçois %d or (+%d)") % [
+					mise.montant, mise.montant * Mise.MULTIPLICATEUR_GAIN_OR, gain])
+			else:
+				or_gagne -= mise.montant
+				journal.append(tr("Mise de %d or perdue") % mise.montant)
+				if remboursements_de_mise > 0:
+					remboursements_de_mise -= 1
+					or_gagne += mise.montant
+					journal.append(tr("Jeton porte-bonheur : ta mise est remboursée"))
+		Mise.Type.QUITTE_OU_DOUBLE:
+			if resultat.nb_cranes() == 0:
+				resultat.doubler_effets_positifs()
+				journal.append(tr("Quitte ou double gagné : effets positifs doublés !"))
+			else:
+				# Comme les crânes, la perte est immédiate : l'armure ne protège pas.
+				pv_joueur = maxi(0, pv_joueur - Mise.PV_QUITTE_OU_DOUBLE)
+				journal.append(tr("Quitte ou double perdu : tu perds %d PV") % Mise.PV_QUITTE_OU_DOUBLE)
 
 
 ## L'ennemi exécute son intention. `bonus_attaque` vient des crânes du tirage.
