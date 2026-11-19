@@ -344,6 +344,15 @@ func repos_soigner() -> int:
 	return soin
 
 
+## Repos : le joueur part sans rien faire (seulement possible quand aucune action ne l'est : PV pleins
+## et tous les symboles déjà dorés), pour ne jamais rester bloqué dans la salle.
+func quitter_repos() -> bool:
+	if ecran != Ecran.REPOS or etat != Etat.EN_COURS or soin_du_repos() > 0 or peut_dorer():
+		return false
+	_salle_terminee()
+	return true
+
+
 ## Y a-t-il un symbole qui peut encore être doré dans le sac ?
 func peut_dorer() -> bool:
 	for symbole in sac.symboles:
@@ -372,6 +381,7 @@ func aller_au_boss() -> void:
 	ennemi_courant = donjon.boss_de(etage)
 	combat_courant = null
 	_relique_apres_combat = false
+	_relique_apres_boss = false
 	ecran = Ecran.COMBAT
 
 

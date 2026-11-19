@@ -21,6 +21,8 @@ var bouton_dorer: Button
 var zone_sac: Control
 var liste_sac: VBoxContainer
 var bouton_annuler: Button
+## Visible seulement quand ni le soin ni la dorure ne sont possibles : on ne reste jamais bloqué.
+var bouton_partir: Button
 
 
 func _ready() -> void:
@@ -45,6 +47,11 @@ func _se_reposer() -> void:
 func _choisir_symbole() -> void:
 	mode = Mode.DORER
 	_rafraichir()
+
+
+func _partir() -> void:
+	if partie.quitter_repos():
+		GameState.aller_a_suivant()
 
 
 func _annuler() -> void:
@@ -73,6 +80,7 @@ func _rafraichir() -> void:
 		Cartes.changer_carte(bouton_soin, tr("Se reposer"), tr("Tes PV sont déjà au maximum."))
 	bouton_soin.disabled = soin <= 0
 	bouton_dorer.disabled = not partie.peut_dorer()
+	bouton_partir.visible = mode == Mode.CHOIX and bouton_soin.disabled and bouton_dorer.disabled
 
 	if mode == Mode.DORER:
 		texte_message.text = tr("Choisis dans ton sac le symbole à rendre doré (gratuit).")
@@ -169,6 +177,13 @@ func _construire_interface() -> void:
 	bouton_annuler.focus_mode = Control.FOCUS_NONE
 	bouton_annuler.pressed.connect(_annuler)
 	page.add_child(bouton_annuler)
+
+	bouton_partir = Button.new()
+	bouton_partir.text = tr("Partir sans rien faire")
+	bouton_partir.custom_minimum_size = Vector2(0, 46)
+	bouton_partir.focus_mode = Control.FOCUS_NONE
+	bouton_partir.pressed.connect(_partir)
+	page.add_child(bouton_partir)
 
 
 func _creer_carte(couleur: Color, titre: String, detail: String, action: Callable) -> Button:

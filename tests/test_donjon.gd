@@ -14,6 +14,7 @@ func _init() -> void:
 	test_ennemis_par_etage()
 	test_mimiques()
 	test_erreur_etage()
+	test_repos_sans_issue()
 
 	print("TERMINÉ : %d échec(s)" % echecs)
 	quit(1 if echecs > 0 else 0)
@@ -179,6 +180,17 @@ func test_mimiques() -> void:
 	print("    mimiques à l'étage 3 : %d coffres sur %d (%.0f %%)" % [mimiques[2], coffres[2], 100.0 * part])
 	verifier(part > 0.25 and part < 0.42, "environ 1 coffre sur 3 est une mimique à l'étage 3")
 	verifier(bien_formees, "seuls des coffres sont des mimiques, et ils portent l'ennemi Mimique")
+
+
+func test_repos_sans_issue() -> void:
+	print("Repos : on ne reste jamais bloqué")
+	var partie := Partie.creer(1)
+	partie.ecran = Partie.Ecran.REPOS
+	verifier(not partie.quitter_repos(), "à PV pleins mais avec un symbole à dorer, on ne peut pas « partir »")
+	for i in partie.sac.taille():
+		partie.sac.ameliorer(i)
+	verifier(partie.soin_du_repos() == 0 and not partie.peut_dorer(), "PV pleins et sac entièrement doré : plus d'action possible")
+	verifier(partie.quitter_repos() and partie.ecran == Partie.Ecran.PORTES and partie.pas == 2, "on peut partir : retour aux portes")
 
 
 func test_erreur_etage() -> void:
