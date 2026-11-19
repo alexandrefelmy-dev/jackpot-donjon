@@ -70,18 +70,20 @@ static func charger_profil() -> void:
 		profil = Profil.nouveau()
 
 
-## Écrit le profil sur le disque (si la sauvegarde est active et permise). Un échec est signalé au Comptoir.
-static func sauver_profil() -> void:
+## Écrit le profil sur le disque (si la sauvegarde est active et permise). Renvoie faux si l'écriture
+## a échoué (le message est alors dans message_profil, que le Comptoir affiche aussitôt).
+static func sauver_profil() -> bool:
 	if profil == null or not _sauvegarde_active() or not _ecriture_permise:
-		return
+		return true
 	if ProfilFichier.sauver(profil, ProfilFichier.CHEMIN_DEFAUT) != OK:
 		message_profil = TranslationServer.translate("Le profil n'a pas pu être enregistré.")
+		return false
+	return true
 
 
 ## Remet le profil à zéro (bouton de test du Comptoir).
 static func reinitialiser_profil() -> void:
 	profil = Profil.nouveau()
-	_ecriture_permise = true
 	sauver_profil()
 
 

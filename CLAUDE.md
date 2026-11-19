@@ -118,7 +118,7 @@ Décision d'Alex : utiliser les skills disponibles au maximum, pour tout le proj
 À parcourir dans l'ordre avant de dire « l'étape est finie » à Alex (cocher mentalement, ne rien sauter) :
 
 0. Ce qui a été codé correspond au plan approuvé par Alex ; les écarts lui ont été signalés.
-1. Tous les tests de `tests/` passent (`test_machine`, `test_combat`, `test_partie`, `test_boutique`, `test_reliques`, `test_mises`, `test_interface`) et le jeu se lance comme avec F5 (`godot --headless --path . --quit-after 60`) sans erreur.
+1. Tous les tests de `tests/` passent (`test_machine`, `test_combat`, `test_partie`, `test_boutique`, `test_reliques`, `test_mises`, `test_donjon`, `test_ennemis`, `test_profil`, `test_comptoir`, `test_symboles`, `test_interface`) et le jeu se lance comme avec F5 (`godot --headless --path . --quit-after 60`) sans erreur.
 2. `outils/simulation_parties.gd` : aucune erreur ; `outils/equilibrage.gd` relancé si des valeurs ont changé (cible 50 à 60 %).
 3. `outils/capture_ecrans.gd` : chaque écran nouveau ou modifié a été regardé en vrai (texte coupé, débordement, lisibilité) ; `outils/clics_reels.gd` si des boutons ont changé.
 4. Chaque nouvelle règle de calcul a son test.

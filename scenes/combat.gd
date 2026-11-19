@@ -516,7 +516,7 @@ func _construire_colonne_combat(parent: Control) -> void:
 	ligne_relance.add_theme_constant_override("separation", 8)
 	colonne.add_child(ligne_relance)
 	bouton_valider = _creer_bouton_relance(tr("Valider (Espace)"), _valider)
-	bouton_de_pipe = _creer_bouton_relance(tr("Dé pipé : tout relancer"), _relancer_tout)
+	bouton_de_pipe = _creer_bouton_relance(tr("Relance gratuite : tout relancer"), _relancer_tout)
 	bouton_cinquieme_as = _creer_bouton_relance(tr("Cinquième as : garder un rouleau"), _commencer_cinquieme_as)
 	ligne_relance.visible = false
 

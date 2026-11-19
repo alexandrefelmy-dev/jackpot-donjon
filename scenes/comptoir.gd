@@ -42,7 +42,10 @@ func _ready() -> void:
 func _acheter(achat: Comptoir.Achat) -> void:
 	var titre := comptoir.titre(achat)
 	if comptoir.acheter(achat):
-		GameState.sauver_profil()
+		if not GameState.sauver_profil():
+			texte_message.text = GameState.message_profil
+			_rafraichir()
+			return
 		if comptoir.dernier_deblocage != &"":
 			texte_message.text = tr("%s : %s est débloqué !") % [titre, _nom_deblocage(comptoir.dernier_deblocage)]
 		else:

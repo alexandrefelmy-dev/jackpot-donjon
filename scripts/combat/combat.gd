@@ -148,7 +148,7 @@ func relancer_tout() -> bool:
 	else:
 		relances_de_partie -= 1
 	_nouveau_tirage(-1)
-	_notes_relances.append(tr("Dé pipé : tous les rouleaux sont relancés"))
+	_notes_relances.append(tr("Relance gratuite : tous les rouleaux sont relancés"))
 	return true
 
 
