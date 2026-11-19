@@ -82,7 +82,11 @@ static func jouer_flux(flux: AudioStream, hauteur: float = 1.0) -> bool:
 		return false
 	lecteur.stream = flux
 	lecteur.pitch_scale = maxf(0.1, hauteur * _hasard.randf_range(1.0 - VARIATION_HAUTEUR, 1.0 + VARIATION_HAUTEUR))
-	lecteur.play()
+	# Le tout premier son : le lecteur est ajouté à l'arbre en différé, sa lecture aussi (après l'ajout).
+	if lecteur.is_inside_tree():
+		lecteur.play()
+	else:
+		lecteur.play.call_deferred()
 	return true
 
 

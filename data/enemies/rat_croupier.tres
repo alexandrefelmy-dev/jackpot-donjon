@@ -6,6 +6,7 @@
 script = ExtResource("1_enemy")
 id = &"rat_croupier"
 nom = "Le Rat-Croupier"
+images = "ogre_idle_anim"
 couleur = Color(0.62, 0.2, 0.25, 1)
 est_boss = true
 pv_max = 48

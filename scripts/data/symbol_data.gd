@@ -14,6 +14,8 @@ extends Resource
 @export var nom: String = ""
 ## Couleur du rouleau, en attendant les vrais graphismes.
 @export var couleur: Color = Color.GRAY
+## Nom de l'image du symbole dans assets/images/ (sans « .png »).
+@export var icone: String = ""
 ## Prix d'achat en boutique (0 = jamais vendu, comme le crâne).
 @export var prix: int = 0
 ## Effet quand le symbole est visible sur la ligne.

@@ -6,6 +6,7 @@
 script = ExtResource("1_symbol")
 id = &"epee"
 nom = "Épée"
+icone = "weapon_regular_sword"
 couleur = Color(0.76, 0.79, 0.86, 1)
 prix = 10
 effet_base = {

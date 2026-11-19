@@ -61,10 +61,7 @@ func _description(salle: Salle) -> String:
 
 
 func _construire_interface() -> void:
-	var fond := ColorRect.new()
-	fond.color = COULEUR_FOND
-	fond.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(fond)
+	Cartes.ajouter_fond(self, COULEUR_FOND)
 
 	var centre := CenterContainer.new()
 	centre.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -129,10 +126,20 @@ func _creer_progression() -> Control:
 	return rangee
 
 
+## L'image de chaque type de salle (pack 0x72).
+const ICONES: Dictionary = {
+	Salle.Type.COMBAT: "weapon_knight_sword",
+	Salle.Type.BOUTIQUE: "coin_anim_f0",
+	Salle.Type.COFFRE: "chest_full_open_anim_f0",
+	Salle.Type.REPOS: "flask_big_green",
+}
+
+
 ## Une porte = une grosse carte colorée : le type de salle en grand, puis ce qu'on y fait.
 func _creer_porte(salle: Salle, index: int) -> Button:
 	var description := _description(salle)
-	var porte := Cartes.creer_carte(COULEURS[salle.type], salle.nom_type().to_upper(), description, TAILLE_PORTE)
+	var porte := Cartes.creer_carte(COULEURS[salle.type], salle.nom_type().to_upper(), description, TAILLE_PORTE,
+			40, 19, Images.icone(ICONES[salle.type], 64))
 	textes_portes.append(Cartes.texte_carte(porte))
 	Cartes.neon(porte.get_meta("titre") as Label, Color("ffd34d"))
 	porte.tooltip_text = tr("Franchir cette porte : %s") % salle.nom_type()

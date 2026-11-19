@@ -14,6 +14,8 @@ extends Control
 ## La fenêtre fait 648 px de haut : toute la colonne de gauche (jusqu'au bouton Continuer)
 ## doit tenir dedans. tests/test_interface.gd vérifie la position des boutons.
 const HAUTEUR_CASE := 100
+## Côté (en pixels) de l'icône d'un rouleau.
+const ICONE_ROULEAU := 48
 const COULEUR_FOND := Color("1b1a24")
 const COULEUR_CASE_VIDE := Color("2c2a38")
 const COULEUR_CASE_BLOQUEE := Color("5a2430")
@@ -38,6 +40,10 @@ var barre_pv_ennemi: ProgressBar
 var texte_pv_ennemi: Label
 var texte_intention: Label
 var texte_passif: Label
+var image_ennemi: ImageAnimee
+var image_joueur: ImageAnimee
+## L'icône de chaque rouleau (au-dessus du nom du symbole).
+var icones: Array[TextureRect] = []
 var barre_pv_joueur: ProgressBar
 var texte_pv_joueur: Label
 var texte_or: Label
@@ -109,6 +115,8 @@ func _ready() -> void:
 	for etiquette in etiquettes_ennemi:
 		etiquette.add_theme_color_override("font_color", couleur_texte)
 
+	image_ennemi.definir(Images.cadres(combat.ennemi.images, 96), 0.2)
+	image_joueur.definir(Images.cadres("knight_m_idle_anim", 72), 0.22)
 	barre_pv_ennemi.max_value = combat.pv_max_ennemi
 	barre_pv_joueur.max_value = combat.pv_max_joueur
 	_rafraichir()
@@ -448,6 +456,7 @@ func _dessiner_case(index: int, symbole: SymbolData, en_combo: bool, bloquee: bo
 	style.set_corner_radius_all(10)
 	var etiquette := etiquettes[index]
 
+	icones[index].texture = Images.icone(symbole.icone, ICONE_ROULEAU) if symbole != null and not bloquee else null
 	if bloquee:
 		style.bg_color = COULEUR_CASE_BLOQUEE
 		etiquette.text = tr("BLOQUÉ")
@@ -530,10 +539,7 @@ func _afficher_tour(numero_tour: int, resultat: ResultatTirage, journal_combat: 
 # --- Construction de l'interface (en code) ---------------------------------
 
 func _construire_interface() -> void:
-	var fond := ColorRect.new()
-	fond.color = COULEUR_FOND
-	fond.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(fond)
+	Cartes.ajouter_fond(self, COULEUR_FOND)
 
 	var marge := MarginContainer.new()
 	marge.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -568,7 +574,13 @@ func _construire_colonne_combat(parent: Control) -> void:
 	panneau_ennemi.add_child(marge_ennemi)
 	var boite_ennemi := VBoxContainer.new()
 	boite_ennemi.add_theme_constant_override("separation", 6)
-	marge_ennemi.add_child(boite_ennemi)
+	boite_ennemi.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var ligne_ennemi := HBoxContainer.new()
+	ligne_ennemi.add_theme_constant_override("separation", 12)
+	marge_ennemi.add_child(ligne_ennemi)
+	ligne_ennemi.add_child(boite_ennemi)
+	image_ennemi = ImageAnimee.new()
+	ligne_ennemi.add_child(image_ennemi)
 
 	texte_nom_ennemi = _etiquette_ennemi(boite_ennemi, 24)
 	barre_pv_ennemi = _creer_barre()
@@ -593,10 +605,24 @@ func _construire_colonne_combat(parent: Control) -> void:
 		etiquette.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		etiquette.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		etiquette.add_theme_font_size_override("font_size", 20 if machine.colonnes <= 5 else 17)
-		case_grille.add_child(etiquette)
+		var contenu := VBoxContainer.new()
+		contenu.alignment = BoxContainer.ALIGNMENT_CENTER
+		contenu.add_theme_constant_override("separation", 0)
+		contenu.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var icone := TextureRect.new()
+		icone.custom_minimum_size = Vector2(ICONE_ROULEAU, ICONE_ROULEAU)
+		icone.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+		icone.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icone.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icone.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		contenu.add_child(icone)
+		etiquette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		contenu.add_child(etiquette)
+		case_grille.add_child(contenu)
 		grille.add_child(case_grille)
 		cases.append(case_grille)
 		etiquettes.append(etiquette)
+		icones.append(icone)
 
 	bouton_levier = Button.new()
 	bouton_levier.text = tr("Tirer le levier (Espace)")
@@ -606,14 +632,23 @@ func _construire_colonne_combat(parent: Control) -> void:
 	colonne.add_child(bouton_levier)
 
 	# Le joueur : PV, armure, or, sac.
+	var ligne_joueur := HBoxContainer.new()
+	ligne_joueur.add_theme_constant_override("separation", 12)
+	colonne.add_child(ligne_joueur)
+	var bloc_joueur := VBoxContainer.new()
+	bloc_joueur.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bloc_joueur.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	ligne_joueur.add_child(bloc_joueur)
 	barre_pv_joueur = _creer_barre()
-	colonne.add_child(barre_pv_joueur)
+	bloc_joueur.add_child(barre_pv_joueur)
 	texte_pv_joueur = Label.new()
 	texte_pv_joueur.add_theme_font_size_override("font_size", 20)
-	colonne.add_child(texte_pv_joueur)
+	bloc_joueur.add_child(texte_pv_joueur)
 	texte_or = Label.new()
 	texte_or.add_theme_font_size_override("font_size", 18)
-	colonne.add_child(texte_or)
+	bloc_joueur.add_child(texte_or)
+	image_joueur = ImageAnimee.new()
+	ligne_joueur.add_child(image_joueur)
 
 	# Fin du combat, ou (au même endroit) valider / relancer un tirage en attente.
 	texte_fin = Label.new()

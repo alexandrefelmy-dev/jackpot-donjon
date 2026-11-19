@@ -44,10 +44,7 @@ func _quitter() -> void:
 
 
 func _construire_interface() -> void:
-	var fond := ColorRect.new()
-	fond.color = COULEUR_FOND
-	fond.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(fond)
+	Cartes.ajouter_fond(self, COULEUR_FOND)
 
 	var centre := CenterContainer.new()
 	centre.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -74,9 +71,14 @@ func _construire_interface() -> void:
 	sous_titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	colonne.add_child(sous_titre)
 
-	var espace := Control.new()
-	espace.custom_minimum_size = Vector2(0, 24)
-	colonne.add_child(espace)
+	var troupe := HBoxContainer.new()
+	troupe.alignment = BoxContainer.ALIGNMENT_CENTER
+	troupe.add_theme_constant_override("separation", 40)
+	colonne.add_child(troupe)
+	for prefixe in ["goblin_idle_anim", "knight_m_idle_anim", "skelet_idle_anim"]:
+		var image := ImageAnimee.new()
+		image.definir(Images.cadres(prefixe, 96), 0.22)
+		troupe.add_child(image)
 
 	bouton_jouer = _creer_bouton(tr("Jouer"), _jouer)
 	bouton_comptoir = _creer_bouton(tr("Comptoir du Croupier"), _comptoir)

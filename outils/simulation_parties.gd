@@ -208,6 +208,7 @@ func _jouer_combat() -> void:
 		if choix > 0:
 			vu["mise"] += 1
 		ecran._tirer()
+		ecran._terminer_animation()  # fenêtre réelle : les rouleaux s'arrêtent un par un, on n'attend pas
 		if ecran.combat.tirage_en_attente:
 			vu["attente"] += 1
 			if hasard.randi_range(0, 1) == 0 and ecran.bouton_de_pipe.visible and not ecran.bouton_de_pipe.disabled:
@@ -229,6 +230,7 @@ func _jouer_combat() -> void:
 						print("ERREUR : le choix du rouleau reste ouvert après avoir gardé un rouleau")
 						erreurs += 1
 			ecran.bouton_valider.pressed.emit()
+			ecran._terminer_animation()
 			if ecran.combat.tirage_en_attente:
 				print("ERREUR : le tirage attend encore après « Valider »")
 				erreurs += 1

@@ -6,6 +6,7 @@
 script = ExtResource("1_symbol")
 id = &"piece"
 nom = "Pièce"
+icone = "coin_anim_f0"
 couleur = Color(0.96, 0.78, 0.26, 1)
 prix = 12
 effet_base = {

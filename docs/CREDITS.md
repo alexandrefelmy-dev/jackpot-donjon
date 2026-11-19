@@ -24,7 +24,16 @@ usage libre, crédit non obligatoire, donné ici par courtoisie).
 
 ## Graphismes
 
-*(à venir : pack DungeonTileset II de 0x72, CC0 — voir la section Graphismes du cahier des charges)*
+- **DungeonTileset II** (v1.7) par 0x72 — https://0x72.itch.io/dungeontileset-ii — CC0 1.0.
+  Fichiers utilisés dans `assets/images/` : les animations d'attente des ennemis et du chevalier (`*_idle_anim_f*.png`,
+  `tiny_slug_anim`, `ice_zombie_anim`, `necromancer_anim`, `chest_mimic_open_anim`…), la pièce (`coin_anim_f*`),
+  des icônes (`weapon_regular_sword`, `weapon_arrow`, `weapon_knight_sword`, `flask_big_red`, `flask_big_green`,
+  `skull`, `bomb_f0`, `chest_full_open_anim_f0`, `ui_heart_full`) et les dalles du sol (`floor_1` à `floor_4`).
+  Le pack lui-même n'est pas dans le dépôt : `outils/importer_assets.py` en copie ces seuls fichiers.
+- **Dessinées pour le jeu** par `outils/importer_assets.py` (16×16, palette réduite, dans le style du pack) :
+  `bouclier.png`, `aimant.png`, `trefle.png` — le pack n'a pas ces images ; aucune licence externe.
+- Correspondance ennemi → image : dans le champ `images` de chaque `data/enemies/*.tres` (choix de ressemblance :
+  le pack n'a pas de rat, de pickpocket ni de croupier exacts).
 
 ## Polices
 

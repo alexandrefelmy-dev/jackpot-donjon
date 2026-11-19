@@ -64,10 +64,7 @@ func _rafraichir() -> void:
 
 
 func _construire_interface() -> void:
-	var fond := ColorRect.new()
-	fond.color = COULEUR_FOND
-	fond.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(fond)
+	Cartes.ajouter_fond(self, COULEUR_FOND)
 
 	var marge := MarginContainer.new()
 	marge.set_anchors_preset(Control.PRESET_FULL_RECT)

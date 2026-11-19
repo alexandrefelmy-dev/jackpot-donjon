@@ -6,6 +6,7 @@
 script = ExtResource("1_symbol")
 id = &"potion"
 nom = "Potion"
+icone = "flask_big_red"
 couleur = Color(0.86, 0.32, 0.46, 1)
 prix = 10
 effet_base = {

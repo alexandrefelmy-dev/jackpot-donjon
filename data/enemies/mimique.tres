@@ -6,6 +6,7 @@
 script = ExtResource("1_enemy")
 id = &"mimique"
 nom = "Mimique"
+images = "chest_mimic_open_anim"
 couleur = Color(0.7, 0.45, 0.2, 1)
 etage = 3
 pv_max = 35

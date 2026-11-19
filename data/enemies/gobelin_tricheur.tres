@@ -6,6 +6,7 @@
 script = ExtResource("1_enemy")
 id = &"gobelin_tricheur"
 nom = "Gobelin tricheur"
+images = "goblin_idle_anim"
 couleur = Color(0.4, 0.7, 0.35, 1)
 pv_max = 18
 or_victoire = 13

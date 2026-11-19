@@ -6,6 +6,7 @@
 script = ExtResource("1_enemy")
 id = &"grand_croupier"
 nom = "Le Grand Croupier"
+images = "big_demon_idle_anim"
 couleur = Color(0.2, 0.38, 0.42, 1)
 etage = 3
 est_boss = true

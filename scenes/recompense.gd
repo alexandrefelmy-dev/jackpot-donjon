@@ -43,10 +43,7 @@ func _compter_dans_le_sac(symbole: SymbolData) -> int:
 
 
 func _construire_interface() -> void:
-	var fond := ColorRect.new()
-	fond.color = COULEUR_FOND
-	fond.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(fond)
+	Cartes.ajouter_fond(self, COULEUR_FOND)
 
 	var centre := CenterContainer.new()
 	centre.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -107,5 +104,8 @@ func _creer_carte(symbole: SymbolData) -> Button:
 	carte.tooltip_text = tr("Ajouter %s à ton sac") % tr(symbole.nom)
 
 	Cartes.habiller_bouton(carte, symbole.couleur)
+	carte.icon = Images.icone(symbole.icone, 48)
+	carte.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	carte.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
 	carte.pressed.connect(_choisir.bind(symbole))
 	return carte
