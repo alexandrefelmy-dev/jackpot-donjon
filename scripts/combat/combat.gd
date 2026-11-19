@@ -160,7 +160,19 @@ func valider() -> Array[String]:
 	mise_en_cours = null
 	journal.append_array(_notes_relances)
 	journal.append_array(jouer_tour(resultat_courant, mise))
+	_retirer_symboles_a_usage_unique(journal)
 	return journal
+
+
+## Les symboles à usage unique (Bombe) visibles sur ce tirage quittent le sac DU COMBAT.
+## Le vrai sac du joueur n'est jamais touché : ils reviennent au combat suivant.
+func _retirer_symboles_a_usage_unique(journal: Array[String]) -> void:
+	if _sac == null:
+		return
+	for symbole in grille_courante:
+		if symbole != null and symbole.usage_unique and _sac.symboles.has(symbole):
+			_sac.symboles.erase(symbole)
+			journal.append(tr("%s : retiré du sac pour ce combat") % symbole.nom_affiche())
 
 
 ## Tire (ou retire) les rouleaux. `garde` = index d'un rouleau à conserver (-1 = aucun) : il reste
@@ -185,6 +197,8 @@ func _nouveau_tirage(garde: int) -> void:
 			origine[index] = null
 
 	var grille := _machine.transformer_craniens(origine, _modificateurs.chance_crane_en_piece, _hasard)
+	# Le symbole Trèfle change un crâne voisin en pièce (sans hasard, avant les combos).
+	grille = _machine.transformer_voisins(grille)
 	if garde >= 0:
 		grille[garde] = grille_courante[garde]
 	_origine = origine
