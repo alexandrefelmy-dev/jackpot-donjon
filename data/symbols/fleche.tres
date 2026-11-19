@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SymbolData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/symbol_data.gd" id="1_symbol"]
+
+[resource]
+script = ExtResource("1_symbol")
+id = &"fleche"
+nom = "Flèche"
+couleur = Color(0.45, 0.75, 0.45, 1)
+prix = 12
+effet_base = {}
+effet_combo = {
+"degats": 12
+}
+compte_id = &"fleche"
+effet_par_compte = {
+"degats": 1
+}
+description = "1 dégât par flèche visible (pour chaque flèche)"

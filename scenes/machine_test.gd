@@ -57,8 +57,8 @@ func _dessiner_case(index: int, symbole: SymbolData, en_combo: bool) -> void:
 		etiquette.add_theme_color_override("font_color", couleur_texte)
 		cases[index].tooltip_text = "%s\n%s\n%s" % [
 			tr(symbole.nom),
-			Effets.decrire(symbole.effet_base),
-			tr("Combo de 3 : %s") % Effets.decrire(symbole.effet_combo),
+			symbole.decrire_base(),
+			tr("Combo de 3 : %s") % symbole.decrire_combo(),
 		]
 
 	if en_combo:

@@ -5,6 +5,8 @@ extends RefCounted
 
 ## Le crâne, chargé une fois (ajouté au sac par Jackpot maudit et par les passifs des ennemis).
 const CRANE: SymbolData = preload("res://data/symbols/crane.tres")
+const PIECE: SymbolData = preload("res://data/symbols/piece.tres")
+const TREFLE: SymbolData = preload("res://data/symbols/trefle.tres")
 
 ## Composition du sac de départ : chemin du symbole -> quantité.
 const DEPART: Dictionary = {

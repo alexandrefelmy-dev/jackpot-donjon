@@ -1,5 +1,5 @@
 extends SceneTree
-## OUTIL : joue des parties ENTIÈRES à travers les vraies scènes (portes, combat, récompense,
+## OUTIL : joue des parties ENTIÈRES à travers les vraies scènes (Comptoir, portes, combat, récompense,
 ## relique, boutique, repos, fin), en cliquant comme un joueur : portes au hasard, mises, relances,
 ## achats, soins, dorures. Vérifie qu'aucun écran ne bloque ni ne plante.
 ## Trois passes : sans relique, avec les 9 reliques, puis « increvable » (beaucoup de PV, pour
@@ -20,14 +20,19 @@ var vu := {
 	"mimique": 0, "fuite": 0, "boss": 0, "relique_offerte": 0, "relique_achetee": 0,
 	"repos_soin": 0, "repos_dore": 0, "mise": 0, "relance_pipe": 0, "relance_as": 0,
 	"attente": 0, "etage_2": 0, "etage_3": 0,
+	"achat_comptoir": 0, "malediction_en_partie": 0, "symbole_debloque_en_sac": 0,
 }
 var hasard := RandomNumberGenerator.new()
 var toutes_les_reliques := false
 var increvable := false
+## La dernière partie dont les réglages de la passe (reliques, PV) ont été appliqués.
+var derniere_partie: Partie
 
 
 func _initialize() -> void:
 	hasard.seed = 12
+	# Le profil vit en mémoire et évolue d'une partie à l'autre (jamais écrit sur le disque : mode sans fenêtre).
+	GameState.profil = Profil.nouveau()
 	await process_frame
 	await _jouer(PARTIES_PAR_PASSE)
 	print("passe 1 (sans relique) : ", etats, " erreurs ", erreurs)
@@ -65,18 +70,28 @@ func _attendre() -> void:
 	await process_frame
 
 
-func _nouvelle_partie() -> void:
-	GameState.nouvelle_partie()
+## Les réglages propres à la passe, appliqués une fois au début de chaque partie (reliques, PV).
+func _regler_la_partie() -> void:
+	var partie := GameState.partie
+	if partie == derniere_partie:
+		return
+	derniere_partie = partie
+	if not partie.maledictions.is_empty():
+		vu["malediction_en_partie"] += 1
+	for symbole in partie.sac.symboles:
+		if symbole.id in Profil.SYMBOLES_A_DEBLOQUER:
+			vu["symbole_debloque_en_sac"] += 1
+			break
 	if toutes_les_reliques:
 		for relique in Reliques.toutes():
-			GameState.partie.ajouter_relique(relique)
+			partie.ajouter_relique(relique)
 	if increvable:
-		GameState.partie.pv_max = 400
-		GameState.partie.pv = 400
+		partie.pv_max = 400
+		partie.pv = 400
 
 
 func _jouer(nb_parties: int) -> void:
-	_nouvelle_partie()
+	GameState.en_partie = false
 	GameState.aller_a_suivant()
 	await _attendre()
 	var parties := 0
@@ -84,7 +99,11 @@ func _jouer(nb_parties: int) -> void:
 	while parties < nb_parties and etapes < 40000:
 		etapes += 1
 		match _nom_scene():
+			"Comptoir":
+				_jouer_comptoir()
+				await _attendre()
 			"Portes":
+				_regler_la_partie()
 				_jouer_portes()
 				await _attendre()
 			"Combat":
@@ -107,8 +126,10 @@ func _jouer(nb_parties: int) -> void:
 			"FinPartie":
 				etats["victoire" if current_scene.partie.etat == Partie.Etat.VICTOIRE else "defaite"] += 1
 				parties += 1
-				_nouvelle_partie()
-				GameState.aller_a_suivant()
+				if hasard.randi_range(0, 3) == 0:
+					current_scene.bouton_rejouer.pressed.emit()
+				else:
+					current_scene.bouton_comptoir.pressed.emit()
 				await _attendre()
 			var inattendue:
 				print("ERREUR : écran inattendu « %s »" % inattendue)
@@ -118,6 +139,23 @@ func _jouer(nb_parties: int) -> void:
 	if parties < nb_parties:
 		print("ERREUR : seulement %d parties sur %d ont été jouées jusqu'à l'écran de fin (écran bloqué ?)" % [parties, nb_parties])
 		erreurs += 1
+
+
+## Le Comptoir : quelques achats possibles au hasard, puis « Jouer ».
+func _jouer_comptoir() -> void:
+	var ecran: Control = current_scene
+	var profil := GameState.profil
+	var achats := 0
+	for i in hasard.randi_range(0, 3):
+		var achat: Comptoir.Achat = Comptoir.ORDRE[hasard.randi_range(0, Comptoir.ORDRE.size() - 1)]
+		if ecran.comptoir.peut_acheter(achat):
+			ecran.boutons_achats[Comptoir.ORDRE.find(achat)].pressed.emit()
+			achats += 1
+	vu["achat_comptoir"] += achats
+	if profil.jetons < 0:
+		print("ERREUR : jetons négatifs (%d)" % profil.jetons)
+		erreurs += 1
+	ecran.bouton_jouer.pressed.emit()
 
 
 ## Les portes : une au hasard, en comptant ce qu'on franchit.

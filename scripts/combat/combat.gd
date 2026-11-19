@@ -25,6 +25,8 @@ var armure_joueur: int = 0
 ## Les données de l'ennemi (partagées, jamais modifiées).
 var ennemi: EnemyData
 var pv_ennemi: int
+## Les PV max de CET ennemi dans CE combat (ceux du fichier, plus 20 % avec le Croupier rancunier).
+var pv_max_ennemi: int
 var armure_ennemi: int = 0
 
 ## Position dans la liste d'intentions de l'ennemi (jouées en boucle).
@@ -45,6 +47,11 @@ var remboursements_de_mise: int = 0
 var relances_gratuites: int = 0
 ## Relances « garder un rouleau, relancer les autres » disponibles (Cinquième as : 1 par combat).
 var relances_cinquieme_as: int = 0
+## La relance gratuite « de partie » (avantage du Comptoir) : utilisable une fois dans toute la partie,
+## après celles des reliques. Partie la donne au combat et reprend ce qui n'a pas servi.
+var relances_de_partie: int = 0
+## Ce que rapporte une mise d'or gagnée : 3 fois la mise (2 avec le Mauvais œil).
+var gain_mise_or: int = Mise.MULTIPLICATEUR_GAIN_OR
 
 # --- Ce que les ennemis ajoutent (voir EnemyData.passif et .ouverture) -------
 ## Crânes temporaires ajoutés au sac DU COMBAT (le vrai sac du joueur n'est jamais touché).
@@ -89,6 +96,7 @@ func _init(donnees: EnemyData, pv_depart: int = PV_JOUEUR_DEPART, pv_max: int = 
 		hasard: RandomNumberGenerator = null, nb_rouleaux: int = 5, or_joueur: int = 0) -> void:
 	ennemi = donnees
 	pv_ennemi = donnees.pv_max
+	pv_max_ennemi = donnees.pv_max
 	pv_joueur = pv_depart
 	pv_max_joueur = pv_max
 	_hasard = hasard if hasard != null else RandomNumberGenerator.new()
@@ -123,16 +131,24 @@ func tirer(mise: Mise = null) -> bool:
 
 ## Une relance est-elle possible maintenant ? (tirage affiché et une relique de relance disponible)
 func peut_relancer() -> bool:
-	return tirage_en_attente and (relances_gratuites > 0 or relances_cinquieme_as > 0)
+	return tirage_en_attente and (relances_toutes_les_cases() > 0 or relances_cinquieme_as > 0)
+
+
+## Combien de relances de tous les rouleaux sont encore possibles (reliques, puis relance de partie).
+func relances_toutes_les_cases() -> int:
+	return relances_gratuites + relances_de_partie
 
 
 ## Dé pipé : relance tous les rouleaux (les rouleaux bloqués restent bloqués). Une fois par combat.
 func relancer_tout() -> bool:
-	if not tirage_en_attente or relances_gratuites <= 0:
+	if not tirage_en_attente or relances_toutes_les_cases() <= 0:
 		return false
-	relances_gratuites -= 1
+	if relances_gratuites > 0:
+		relances_gratuites -= 1
+	else:
+		relances_de_partie -= 1
 	_nouveau_tirage(-1)
-	_notes_relances.append(tr("Dé pipé : tous les rouleaux sont relancés"))
+	_notes_relances.append(tr("Relance gratuite : tous les rouleaux sont relancés"))
 	return true
 
 
@@ -160,7 +176,19 @@ func valider() -> Array[String]:
 	mise_en_cours = null
 	journal.append_array(_notes_relances)
 	journal.append_array(jouer_tour(resultat_courant, mise))
+	_retirer_symboles_a_usage_unique(journal)
 	return journal
+
+
+## Les symboles à usage unique (Bombe) visibles sur ce tirage quittent le sac DU COMBAT.
+## Le vrai sac du joueur n'est jamais touché : ils reviennent au combat suivant.
+func _retirer_symboles_a_usage_unique(journal: Array[String]) -> void:
+	if _sac == null:
+		return
+	for symbole in grille_courante:
+		if symbole != null and symbole.usage_unique and _sac.symboles.has(symbole):
+			_sac.symboles.erase(symbole)
+			journal.append(tr("%s : retiré du sac pour ce combat") % symbole.nom_affiche())
 
 
 ## Tire (ou retire) les rouleaux. `garde` = index d'un rouleau à conserver (-1 = aucun) : il reste
@@ -185,6 +213,8 @@ func _nouveau_tirage(garde: int) -> void:
 			origine[index] = null
 
 	var grille := _machine.transformer_craniens(origine, _modificateurs.chance_crane_en_piece, _hasard)
+	# Le symbole Trèfle change un crâne voisin en pièce (sans hasard, avant les combos).
+	grille = _machine.transformer_voisins(grille)
 	if garde >= 0:
 		grille[garde] = grille_courante[garde]
 	_origine = origine
@@ -273,7 +303,7 @@ func jouer_tour(resultat: ResultatTirage, mise: Mise = null) -> Array[String]:
 
 	# 1. Effets du tirage, dans l'ordre de Effets.ORDRE.
 	# (Règle du Grand Croupier : des épées soignent l'ennemi, avant que les dégâts ne tombent.)
-	var soin_ennemi := mini(resultat.total("soin_ennemi"), ennemi.pv_max - pv_ennemi)
+	var soin_ennemi := mini(resultat.total("soin_ennemi"), pv_max_ennemi - pv_ennemi)
 	if soin_ennemi > 0:
 		pv_ennemi += soin_ennemi
 		journal.append(tr("%s se soigne de %d PV") % [tr(ennemi.nom), soin_ennemi])
@@ -345,10 +375,10 @@ func _regler_mise(mise: Mise, resultat: ResultatTirage, journal: Array[String]) 
 	match mise.type:
 		Mise.Type.OR:
 			if resultat.a_combo_hors_cranes():
-				var gain := mise.montant * (Mise.MULTIPLICATEUR_GAIN_OR - 1)
+				var gain := mise.montant * (gain_mise_or - 1)
 				or_gagne += gain
 				journal.append(tr("Mise de %d or gagnée : tu reçois %d or (+%d)") % [
-					mise.montant, mise.montant * Mise.MULTIPLICATEUR_GAIN_OR, gain])
+					mise.montant, mise.montant * gain_mise_or, gain])
 			else:
 				or_gagne -= mise.montant
 				journal.append(tr("Mise de %d or perdue") % mise.montant)

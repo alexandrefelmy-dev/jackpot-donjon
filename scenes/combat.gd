@@ -98,7 +98,7 @@ func _ready() -> void:
 	for etiquette in etiquettes_ennemi:
 		etiquette.add_theme_color_override("font_color", couleur_texte)
 
-	barre_pv_ennemi.max_value = combat.ennemi.pv_max
+	barre_pv_ennemi.max_value = combat.pv_max_ennemi
 	barre_pv_joueur.max_value = combat.pv_max_joueur
 	_rafraichir()
 
@@ -239,7 +239,7 @@ func _rafraichir() -> void:
 	texte_nom_ennemi.text = tr(combat.ennemi.nom)
 	barre_pv_ennemi.value = combat.pv_ennemi
 	texte_pv_ennemi.text = tr("PV %d / %d   Armure %d") % [
-		combat.pv_ennemi, combat.ennemi.pv_max, combat.armure_ennemi]
+		combat.pv_ennemi, combat.pv_max_ennemi, combat.armure_ennemi]
 
 	if combat.est_fini():
 		texte_intention.text = ""
@@ -310,8 +310,8 @@ func _rafraichir_mises() -> void:
 ## « Valider » et les boutons de relance remplacent « Continuer » pendant un tirage en attente.
 func _rafraichir_relances() -> void:
 	ligne_relance.visible = combat.tirage_en_attente and not combat.est_fini()
-	bouton_de_pipe.visible = partie.a_relique(Reliques.DE_PIPE)
-	bouton_de_pipe.disabled = combat.relances_gratuites <= 0
+	bouton_de_pipe.visible = partie.a_relique(Reliques.DE_PIPE) or partie.relances_de_partie > 0
+	bouton_de_pipe.disabled = combat.relances_toutes_les_cases() <= 0
 	bouton_cinquieme_as.visible = partie.a_relique(Reliques.CINQUIEME_AS)
 	bouton_cinquieme_as.disabled = combat.relances_cinquieme_as <= 0
 	bouton_cinquieme_as.text = tr("Annuler : garder quel rouleau ?") if choix_du_rouleau \
@@ -350,8 +350,8 @@ func _dessiner_case(index: int, symbole: SymbolData, en_combo: bool, bloquee: bo
 		etiquette.add_theme_color_override("font_color", _couleur_texte(symbole.couleur))
 		cases[index].tooltip_text = "%s\n%s\n%s" % [
 			symbole.nom_affiche(),
-			Effets.decrire(symbole.effet_base),
-			tr("Combo de 3 : %s") % Effets.decrire(symbole.effet_combo),
+			symbole.decrire_base(),
+			tr("Combo de 3 : %s") % symbole.decrire_combo(),
 		]
 
 	if en_combo:
@@ -516,7 +516,7 @@ func _construire_colonne_combat(parent: Control) -> void:
 	ligne_relance.add_theme_constant_override("separation", 8)
 	colonne.add_child(ligne_relance)
 	bouton_valider = _creer_bouton_relance(tr("Valider (Espace)"), _valider)
-	bouton_de_pipe = _creer_bouton_relance(tr("Dé pipé : tout relancer"), _relancer_tout)
+	bouton_de_pipe = _creer_bouton_relance(tr("Relance gratuite : tout relancer"), _relancer_tout)
 	bouton_cinquieme_as = _creer_bouton_relance(tr("Cinquième as : garder un rouleau"), _commencer_cinquieme_as)
 	ligne_relance.visible = false
 
@@ -617,7 +617,7 @@ func _construire_panneau_mise(parent: Control) -> void:
 		bouton.pressed.connect(_choisir_mise.bind(i))
 		match mises[i].type:
 			Mise.Type.OR:
-				bouton.tooltip_text = tr("Si le tirage a un combo (hors crânes), tu reçois %d fois ta mise. Sinon elle est perdue.") % Mise.MULTIPLICATEUR_GAIN_OR
+				bouton.tooltip_text = tr("Si le tirage a un combo (hors crânes), tu reçois %d fois ta mise. Sinon elle est perdue.") % combat.gain_mise_or
 			Mise.Type.QUITTE_OU_DOUBLE:
 				bouton.tooltip_text = tr("Aucun crâne visible : effets positifs doublés. Un crâne visible : tu perds %d PV.") % Mise.PV_QUITTE_OU_DOUBLE
 			_:

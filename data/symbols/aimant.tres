@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SymbolData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/symbol_data.gd" id="1_symbol"]
+
+[resource]
+script = ExtResource("1_symbol")
+id = &"aimant"
+nom = "Aimant"
+couleur = Color(0.85, 0.45, 0.45, 1)
+prix = 12
+effet_base = {}
+effet_combo = {
+"or": 8
+}
+compte_id = &"piece"
+effet_par_compte = {
+"or": 1
+}
+description = "+1 or par pièce visible"

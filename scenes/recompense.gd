@@ -96,8 +96,8 @@ func _creer_carte(symbole: SymbolData) -> Button:
 	carte.focus_mode = Control.FOCUS_NONE
 	carte.text = "%s\n\n%s\n\n%s\n\n%s" % [
 		tr(symbole.nom),
-		Effets.decrire(symbole.effet_base),
-		tr("Combo de 3 : %s") % Effets.decrire(symbole.effet_combo),
+		symbole.decrire_base(),
+		tr("Combo de 3 : %s") % symbole.decrire_combo(),
 		tr("Déjà %d dans ton sac") % _compter_dans_le_sac(symbole),
 	]
 	carte.add_theme_font_size_override("font_size", 18)

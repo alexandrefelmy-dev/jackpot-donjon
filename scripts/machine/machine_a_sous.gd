@@ -46,12 +46,43 @@ func transformer_craniens(grille: Array[SymbolData], chance: float, rng: RandomN
 	var resultat: Array[SymbolData] = grille.duplicate()
 	if chance <= 0.0:
 		return resultat
-	var piece := load("res://data/symbols/piece.tres") as SymbolData
 	for i in resultat.size():
 		var symbole := resultat[i]
 		if symbole != null and symbole.id == &"crane" and (chance >= 1.0 or rng.randf() < chance):
-			resultat[i] = piece
+			resultat[i] = Sac.PIECE
 	return resultat
+
+
+## Trèfle : chaque trèfle transforme un crâne voisin (à sa gauche, sinon à sa droite) en pièce.
+## Un crâne ne devient pièce qu'une fois. Se fait AVANT le calcul des combos.
+func transformer_voisins(grille: Array[SymbolData]) -> Array[SymbolData]:
+	var resultat: Array[SymbolData] = grille.duplicate()
+	for i in grille.size():
+		var symbole := grille[i]
+		if symbole == null or symbole.id != &"trefle":
+			continue
+		for voisin in [i - 1, i + 1]:
+			if voisin >= 0 and voisin < resultat.size() and resultat[voisin] != null and resultat[voisin].id == &"crane":
+				resultat[voisin] = Sac.PIECE
+				break
+	return resultat
+
+
+## L'effet « par symbole visible » d'un symbole : `effet_par_compte` × le nombre de symboles
+## `compte_id` visibles ({} s'il n'en a pas ou s'il n'y en a aucun).
+func _effet_par_compte(symbole: SymbolData, grille: Array[SymbolData]) -> Dictionary:
+	if symbole.compte_id == &"" or symbole.effet_par_compte.is_empty():
+		return {}
+	var nombre := 0
+	for autre in grille:
+		if autre != null and autre.id == symbole.compte_id:
+			nombre += 1
+	if nombre == 0:
+		return {}
+	var effet := {}
+	for cle: String in symbole.effet_par_compte:
+		effet[cle] = int(symbole.effet_par_compte[cle]) * nombre
+	return effet
 
 
 ## Calcule les effets d'un tirage :
@@ -82,6 +113,10 @@ func resoudre(grille: Array[SymbolData], mods: Modificateurs = null) -> Resultat
 		if symbole == null or i in resultat.cases_en_combo:
 			continue
 		resultat.appliquer(ReglesMachine.effet_modifie(regle, symbole, symbole.effet_base), symbole.nom_affiche())
+		# Flèche, Aimant : un effet par symbole visible (voir SymbolData.effet_par_compte).
+		var par_compte := _effet_par_compte(symbole, grille)
+		if not par_compte.is_empty():
+			resultat.appliquer(ReglesMachine.effet_modifie(regle, symbole, par_compte), symbole.nom_affiche())
 
 	# Effets des reliques sur le tirage.
 	if mods != null:

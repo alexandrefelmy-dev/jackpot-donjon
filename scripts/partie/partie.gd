@@ -28,6 +28,21 @@ const RECOMPENSES: Array[String] = [
 	"res://data/symbols/piece.tres",
 ]
 
+## Le profil du joueur (jetons, déblocages, avantages, malédictions) ou null : sans profil, la partie se
+## joue comme en v0.6 (4 symboles de base, les 9 reliques, aucun avantage ni malédiction).
+var profil: Profil
+## Les malédictions de cette partie, fixées au lancement (ids de Maledictions).
+var maledictions: Array[StringName] = []
+## La relance gratuite « de partie » (avantage du Comptoir) qui reste : 0 ou 1.
+var relances_de_partie: int = 0
+## Vrai une fois le bilan de la partie (jetons, malédiction) enregistré dans le profil, et ce bilan
+## (voir Bilan.appliquer) : { "jetons", "malediction_recue", "maledictions_effacees" }.
+var bilan_applique: bool = false
+var bilan: Dictionary = {}
+## Étages où un combat a déjà commencé, et si le combat en cours est renforcé (Croupier rancunier).
+var _etages_combattus: Array[int] = []
+var _ennemi_renforce: bool = false
+
 ## Graine du générateur aléatoire (affichée, pour pouvoir rejouer la partie).
 var graine: int
 ## Le hasard du JEU : tirages, récompenses, offres, blocages. Le donjon, lui, ne dépend que de la graine.
@@ -64,14 +79,43 @@ var combat_courant: Combat
 
 
 ## Crée une partie neuve. Une graine positive rend la partie rejouable à l'identique.
-static func creer(graine_voulue: int = -1) -> Partie:
+static func creer(graine_voulue: int = -1, profil_du_joueur: Profil = null) -> Partie:
 	var partie := Partie.new()
 	# Une graine toujours positive : on peut la retaper pour rejouer la partie.
 	partie.graine = graine_voulue if graine_voulue >= 0 else randi()
 	partie.rng.seed = partie.graine
 	partie.sac = Sac.creer_sac_de_depart()
 	partie.donjon = Donjon.creer(partie.graine)
+	if profil_du_joueur != null:
+		partie._appliquer_profil(profil_du_joueur)
 	return partie
+
+
+## Ce que le profil change au départ : PV, or, sac, relance, malédictions.
+func _appliquer_profil(profil_du_joueur: Profil) -> void:
+	profil = profil_du_joueur
+	maledictions.assign(profil_du_joueur.maledictions)
+	pv_max = maxi(1, PV_DEPART + profil_du_joueur.pv_bonus() - Maledictions.pv_max_en_moins(maledictions))
+	pv = pv_max
+	or_total = profil_du_joueur.or_bonus()
+	sac.ajouter(Sac.CRANE, Maledictions.cranes_en_plus(maledictions))
+	if profil_du_joueur.trefle_au_depart:
+		sac.ajouter(Sac.TREFLE)
+	relances_de_partie = 1 if profil_du_joueur.relance_de_partie else 0
+
+
+## Un prix de boutique, avec la Bourse trouée s'il y a lieu.
+func prix_ajuste(prix: int) -> int:
+	return Maledictions.prix_ajuste(prix, maledictions)
+
+
+## Le combat qui commence est-il le premier de son étage ? (Croupier rancunier : l'ennemi a +20 % de PV.)
+## Noté quand l'ennemi devient courant, donc sans effet si l'écran est rechargé.
+func _preparer_renfort() -> void:
+	var premier := not (etage in _etages_combattus)
+	_ennemi_renforce = premier and Maledictions.renforce_le_premier_ennemi(maledictions)
+	if premier:
+		_etages_combattus.append(etage)
 
 
 # --- Avancer dans le donjon --------------------------------------------------
@@ -111,6 +155,7 @@ func choisir_porte(index: int) -> bool:
 	match salle_courante.type:
 		Salle.Type.COMBAT:
 			ennemi_courant = salle_courante.ennemi
+			_preparer_renfort()
 			ecran = Ecran.COMBAT
 		Salle.Type.BOUTIQUE:
 			ecran = Ecran.BOUTIQUE
@@ -120,6 +165,7 @@ func choisir_porte(index: int) -> bool:
 			if salle_courante.mimique:
 				# La Mimique attaque par surprise ; vaincue, elle laisse quand même la relique.
 				ennemi_courant = salle_courante.ennemi
+				_preparer_renfort()
 				ecran = Ecran.COMBAT
 			elif not _proposer_relique():
 				_salle_terminee()
@@ -134,6 +180,7 @@ func _salle_terminee() -> void:
 	pas += 1
 	if pas > Donjon.NB_PAS:
 		ennemi_courant = donjon.boss_de(etage)
+		_preparer_renfort()
 		ecran = Ecran.COMBAT
 	else:
 		ecran = Ecran.PORTES
@@ -154,6 +201,11 @@ func _etage_suivant() -> void:
 func creer_combat() -> Combat:
 	combat_courant = Combat.new(ennemi_courant, pv, pv_max, rng, nb_rouleaux, or_total)
 	combat_courant.preparer_tirages(creer_machine(), sac, modificateurs())
+	combat_courant.gain_mise_or = Maledictions.multiplicateur_gain_or(maledictions)
+	combat_courant.relances_de_partie = relances_de_partie
+	if _ennemi_renforce:
+		combat_courant.pv_max_ennemi = Maledictions.pv_ennemi_renforces(ennemi_courant.pv_max)
+		combat_courant.pv_ennemi = combat_courant.pv_max_ennemi
 	# Reliques qui se renouvellent à chaque combat : Jeton porte-bonheur (mise remboursée),
 	# Dé pipé (relance gratuite), Cinquième as (garder un rouleau et relancer les autres).
 	for relique in reliques:
@@ -222,15 +274,20 @@ func proposer_reliques(nombre: int) -> Array[RelicData]:
 func _reliques_disponibles() -> Array[RelicData]:
 	var liste: Array[RelicData] = []
 	for relique in Reliques.toutes():
-		if not a_relique(relique.id):
+		if _relique_proposable(relique):
 			liste.append(relique)
 	return liste
+
+
+## Une relique qu'on peut encore recevoir : pas déjà possédée, et débloquée dans le profil (s'il y en a un).
+func _relique_proposable(relique: RelicData) -> bool:
+	return not a_relique(relique.id) and (profil == null or profil.a_debloque_relique(relique.id))
 
 
 ## Reste-t-il au moins une relique que le joueur ne possède pas ? (sans toucher au hasard)
 func peut_recevoir_relique() -> bool:
 	for relique in Reliques.toutes():
-		if not a_relique(relique.id):
+		if _relique_proposable(relique):
 			return true
 	return false
 
@@ -269,6 +326,7 @@ func terminer_combat(combat: Combat) -> void:
 	combat_courant = null
 	pv = combat.pv_joueur
 	or_total += combat.or_gagne - combat.or_vole
+	relances_de_partie = combat.relances_de_partie
 
 	if combat.etat == Combat.Etat.DEFAITE:
 		etat = Etat.DEFAITE
@@ -301,10 +359,21 @@ func proposer_recompenses() -> Array[SymbolData]:
 	return tirer_symboles(NB_RECOMPENSES)
 
 
-## Tire `nombre` symboles différents parmi les symboles de base (sans le crâne),
-## avec le générateur de la partie. Sert aux récompenses et aux offres de la boutique.
-func tirer_symboles(nombre: int) -> Array[SymbolData]:
+## Les symboles qui peuvent être proposés (récompenses, boutique) : les 4 symboles de base,
+## plus ceux que le profil a débloqués (jamais le crâne).
+func chemins_des_symboles_proposables() -> Array[String]:
 	var chemins: Array[String] = RECOMPENSES.duplicate()
+	if profil != null:
+		for id in Profil.SYMBOLES_A_DEBLOQUER:
+			if profil.a_debloque_symbole(id):
+				chemins.append("res://data/symbols/%s.tres" % id)
+	return chemins
+
+
+## Tire `nombre` symboles différents parmi ceux qui sont proposables, avec le générateur de la partie.
+## Sert aux récompenses et aux offres de la boutique.
+func tirer_symboles(nombre: int) -> Array[SymbolData]:
+	var chemins := chemins_des_symboles_proposables()
 	# Mélange de Fisher-Yates avec notre générateur (Array.shuffle() utiliserait un autre hasard).
 	for i in range(chemins.size() - 1, 0, -1):
 		var j := rng.randi_range(0, i)
@@ -390,6 +459,7 @@ func aller_au_boss() -> void:
 	pas = Donjon.NB_PAS + 1
 	salle_courante = null
 	ennemi_courant = donjon.boss_de(etage)
+	_preparer_renfort()
 	combat_courant = null
 	ecran = Ecran.COMBAT
 

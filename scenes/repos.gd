@@ -98,13 +98,13 @@ func _rafraichir_sac() -> void:
 		var symbole: SymbolData = groupe["symbole"]
 		var index: int = groupe["index"]
 		var ligne := Button.new()
-		ligne.text = "%s ×%d  —  %s" % [symbole.nom_affiche(), groupe["quantite"], Effets.decrire(symbole.effet_base)]
+		ligne.text = "%s ×%d  —  %s" % [symbole.nom_affiche(), groupe["quantite"], symbole.decrire_base()]
 		ligne.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		ligne.custom_minimum_size = Vector2(0, 36)
 		ligne.focus_mode = Control.FOCUS_NONE
 		ligne.add_theme_font_size_override("font_size", 17)
 		ligne.tooltip_text = "%s\n%s" % [
-			symbole.nom_affiche(), tr("Combo de 3 : %s") % Effets.decrire(symbole.effet_combo)]
+			symbole.nom_affiche(), tr("Combo de 3 : %s") % symbole.decrire_combo()]
 		Cartes.habiller_bouton(ligne, symbole.couleur)
 		ligne.disabled = symbole.doree
 		ligne.pressed.connect(_dorer.bind(index))

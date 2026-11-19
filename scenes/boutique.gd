@@ -128,7 +128,7 @@ func _rafraichir() -> void:
 	for i in cartes_reliques.size():
 		_rafraichir_relique(i)
 
-	bouton_soin.text = tr("Se soigner de %d PV (%d or)") % [Boutique.SOIN_PV, Boutique.PRIX_SOIN]
+	bouton_soin.text = tr("Se soigner de %d PV (%d or)") % [Boutique.SOIN_PV, boutique.prix_soin()]
 	bouton_soin.disabled = not boutique.peut_soigner()
 
 	if mode == Mode.RETRAIT:
@@ -154,7 +154,7 @@ func _rafraichir_relique(i: int) -> void:
 		carte.text = "%s\n%s" % [tr(relique.nom), tr("ACHETÉE")]
 	else:
 		carte.text = "%s\n%s\n%s" % [
-			tr(relique.nom), tr(relique.description), tr("Prix : %d or") % relique.prix]
+			tr(relique.nom), tr(relique.description), tr("Prix : %d or") % boutique.prix_relique(i)]
 	carte.disabled = not boutique.peut_acheter_relique(i)
 
 
@@ -166,9 +166,9 @@ func _rafraichir_offre(i: int) -> void:
 	else:
 		carte.text = "%s\n%s\n%s\n\n%s" % [
 			tr(symbole.nom),
-			Effets.decrire(symbole.effet_base),
-			tr("Combo de 3 : %s") % Effets.decrire(symbole.effet_combo),
-			tr("Prix : %d or") % symbole.prix,
+			symbole.decrire_base(),
+			tr("Combo de 3 : %s") % symbole.decrire_combo(),
+			tr("Prix : %d or") % boutique.prix_offre(i),
 		]
 	carte.disabled = not boutique.peut_acheter(i)
 
@@ -183,15 +183,15 @@ func _rafraichir_sac() -> void:
 		var symbole: SymbolData = groupe["symbole"]
 		var index: int = groupe["index"]
 		var ligne := Button.new()
-		ligne.text = "%s ×%d  —  %s" % [symbole.nom_affiche(), groupe["quantite"], Effets.decrire(symbole.effet_base)]
+		ligne.text = "%s ×%d  —  %s" % [symbole.nom_affiche(), groupe["quantite"], symbole.decrire_base()]
 		ligne.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		ligne.custom_minimum_size = Vector2(0, 36)
 		ligne.focus_mode = Control.FOCUS_NONE
 		ligne.add_theme_font_size_override("font_size", 17)
 		ligne.tooltip_text = "%s\n%s\n%s" % [
 			symbole.nom_affiche(),
-			Effets.decrire(symbole.effet_base),
-			tr("Combo de 3 : %s") % Effets.decrire(symbole.effet_combo),
+			symbole.decrire_base(),
+			tr("Combo de 3 : %s") % symbole.decrire_combo(),
 		]
 		Cartes.habiller_bouton(ligne, symbole.couleur)
 		match mode:

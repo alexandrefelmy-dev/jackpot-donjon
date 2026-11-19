@@ -106,8 +106,8 @@ Le tirage se fait **sans remise** : chaque symbole du sac ne peut sortir qu'une 
 
 | Symbole | Effet |
 | --- | --- |
-| Bombe | 8 dégâts, puis retirée du sac pour le reste du combat |
-| Flèche | 1 dégât par flèche visible dans la grille |
+| Bombe | 8 dégâts, puis retirée du sac pour le reste du combat (v0.7) |
+| Flèche | 1 dégât par flèche visible dans la grille (v0.7) |
 | Poison | Empoisonne l'ennemi : 1 dégât par tour, cumulable |
 | Joker | Copie l'effet du symbole à sa gauche ; compte comme n'importe quel symbole pour les combos |
 | Trèfle | Transforme un crâne voisin en pièce |
@@ -249,6 +249,19 @@ Chaque partie, gagnée ou perdue, rapporte des avantages permanents ; chaque mor
 | Croupier rancunier | Le premier ennemi de chaque étage a +20 % de PV |
 | Mauvais œil | Les mises d'or gagnées rapportent ×2 au lieu de ×3 |
 
+**Précisions de règles (v0.7)**
+
+- Jetons d'âme : calculés une seule fois en fin de partie (1 par salle franchie, 5 par boss battu, 10 pour une victoire). Une partie abandonnée (jeu fermé) ne rapporte rien.
+- Déroulé : le jeu s'ouvre sur le Comptoir du Croupier (menu provisoire jusqu'à la v0.8) ; « Jouer » lance une partie ; l'écran de fin affiche les jetons gagnés et la malédiction reçue ou effacée, puis mène au Comptoir ou relance une partie.
+- Déblocages : un déblocage tire au hasard un élément encore verrouillé. Au départ sont débloqués les symboles épée, bouclier, potion et pièce, et les reliques Cœur de pierre, Tirelire, Lame aimantée et Dé pipé. Restent à débloquer les symboles Bombe, Flèche, Aimant et Trèfle, et les reliques Trèfle à quatre feuilles, Jackpot maudit, Jeton porte-bonheur, Sixième rouleau et Cinquième as. Les récompenses, la boutique, les coffres et les boss ne proposent que ce qui est débloqué. Une carte du Comptoir est grisée quand on ne peut plus l'acheter (pas assez de jetons, tout débloqué, niveau maximum, déjà acheté).
+- Avantages : PV max +5 par niveau (3 niveaux au maximum, PV de départ compris) ; or de départ +10 par niveau (3 niveaux) ; une relance gratuite par partie = une relance de tous les rouleaux, utilisable dans n'importe quel combat, une seule fois, après celles des reliques ; un Trèfle dans le sac de départ.
+- Malédictions : fixées au lancement de la partie. À chaque défaite, une malédiction tirée au hasard s'ajoute (3 au maximum, toutes différentes). Chaque boss battu pendant la partie en efface une (la plus ancienne) avant l'ajout, et celle qui vient d'être effacée ne revient pas aussitôt ; une victoire les efface toutes et n'en ajoute pas.
+- Effets des malédictions : Sac lesté, +1 crâne dans le sac de départ. Bourse trouée, tous les prix de la boutique +20 % (arrondi au-dessus). Fatigue, −5 PV max (et PV de départ). Croupier rancunier, l'ennemi du premier combat de chaque étage a +20 % de PV (arrondi au-dessus). Mauvais œil, une mise d'or gagnée rapporte ×2 au lieu de ×3.
+- Nouveaux symboles : Bombe, 8 dégâts (combo de 3 : 40), retirée du sac du combat après le tirage où elle est visible (elle revient au combat suivant). Flèche, chaque flèche visible inflige autant de dégâts que de flèches visibles (2 flèches : 4 dégâts ; combo de 3 : 12). Aimant, chaque aimant rapporte autant d'or que de pièces visibles (combo de 3 : 8 or). Trèfle, transforme un crâne voisin en pièce avant le calcul des combos (combo de 3 : 6 or). Les versions dorées doublent aussi ces effets. Poison, Joker et Sablier sont reportés à une version ultérieure.
+- Sans profil (tests et outils), le jeu se joue comme en v0.6 : 4 symboles de base, 9 reliques, aucun avantage ni malédiction.
+- Profil : fichier JSON `user://profil.save` avec un numéro de version, écrit dans un fichier temporaire puis renommé (l'ancien fichier est gardé en `.bak`). Fichier abîmé : le `.bak` est rechargé, sinon profil neuf, avec un message au Comptoir. Fichier d'une version plus récente que le jeu : ignoré et jamais écrasé. Contenu : jetons, symboles et reliques débloqués, niveaux, avantages achetés, malédictions, nombre de parties et de victoires. Les tests et les outils n'écrivent jamais dans le vrai profil du joueur.
+- Équilibrage : le robot « prudent » (voir v0.6) gagne 42 % de ses parties sans profil, 19 % avec un profil neuf (seulement 4 reliques et 4 symboles possibles), 11 % avec 3 malédictions (Fatigue, Rancunier, Bourse trouée) et 42 % avec tous les avantages et tout débloqué. Valeurs à régler après les essais d'Alex.
+
 ## Contenu
 
 La version 1.0 compte 3 étages, 9 ennemis normaux et 3 boss, dans un univers de donjon mélangé à un casino maudit.
@@ -367,6 +380,8 @@ Le jeu se construit par versions jouables : la version 0.3 est le MVP, une parti
    - Fini quand : on traverse les 3 étages et on peut gagner la partie en battant le Grand Croupier.
    - Réalisé : 3 étages de 5 salles au choix entre 2 portes (combat, boutique, coffre, repos) puis un boss ; donjon généré à partir de la graine ; coffres (1 relique parmi 2) et mimiques à l'étage 3 ; repos (soin ou dorure) ; 9 ennemis, la Mimique et 3 boss avec leurs mécaniques (crânes temporaires, Usurier, fuite du Pickpocket, charge du Golem, attaque surprise, règles du Grand Croupier) ; relique offerte par chaque boss ; PV remontés de 50 % à chaque nouvel étage.
 7. **v0.7 – Entre les parties** : jetons d'âme, Comptoir du Croupier, malédictions, sauvegarde du profil.
+   - Fini quand : on gagne des jetons en jouant, on les dépense au Comptoir, et tout survit à la fermeture du jeu.
+   - Réalisé : profil enregistré (écriture sûre, sauvegarde `.bak`, versions) ; Comptoir du Croupier au lancement et après chaque partie ; 6 achats (déblocage au hasard d'un symbole ou d'une relique, PV max, or de départ, relance gratuite, Trèfle) ; 5 malédictions ; bilan de fin de partie ; 4 nouveaux symboles (Bombe, Flèche, Aimant, Trèfle).
 8. **v0.8 – Habillage** : graphismes, sons, musique, animations, menu principal.
 9. **v1.0 – Sortie** : équilibrage, statistiques de fin de partie, export en .exe Windows.
 10. **v1.1 – Version anglaise** : traduction de tous les textes, choix de la langue dans les options.

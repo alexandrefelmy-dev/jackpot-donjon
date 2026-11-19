@@ -41,19 +41,19 @@ static func creer(la_partie: Partie) -> Boutique:
 # --- Acheter un symbole ------------------------------------------------------
 
 func prix_offre(index: int) -> int:
-	return offres[index].prix
+	return partie.prix_ajuste(offres[index].prix)
 
 
 func peut_acheter(index: int) -> bool:
 	return index >= 0 and index < offres.size() and not vendues[index] \
-			and partie.or_total >= offres[index].prix
+			and partie.or_total >= prix_offre(index)
 
 
 ## Achète une offre : le symbole va dans le sac. Renvoie faux (sans rien changer) si impossible.
 func acheter(index: int) -> bool:
 	if not peut_acheter(index):
 		return false
-	partie.or_total -= offres[index].prix
+	partie.or_total -= prix_offre(index)
 	partie.sac.ajouter(offres[index])
 	vendues[index] = true
 	return true
@@ -62,13 +62,13 @@ func acheter(index: int) -> bool:
 # --- Acheter une relique -----------------------------------------------------
 
 func prix_relique(index: int) -> int:
-	return offres_reliques[index].prix
+	return partie.prix_ajuste(offres_reliques[index].prix)
 
 
 func peut_acheter_relique(index: int) -> bool:
 	return index >= 0 and index < offres_reliques.size() and not reliques_vendues[index] \
 			and not partie.a_relique(offres_reliques[index].id) \
-			and partie.or_total >= offres_reliques[index].prix
+			and partie.or_total >= prix_relique(index)
 
 
 ## Achète une relique : elle s'ajoute à la partie (ses effets immédiats s'appliquent aussitôt).
@@ -76,7 +76,7 @@ func peut_acheter_relique(index: int) -> bool:
 func acheter_relique(index: int) -> bool:
 	if not peut_acheter_relique(index):
 		return false
-	partie.or_total -= offres_reliques[index].prix
+	partie.or_total -= prix_relique(index)
 	partie.ajouter_relique(offres_reliques[index])
 	reliques_vendues[index] = true
 	return true
@@ -86,7 +86,7 @@ func acheter_relique(index: int) -> bool:
 
 ## Prix du prochain retrait : 10 or, puis 5 de plus à chaque retrait de la partie.
 func prix_retrait() -> int:
-	return PRIX_RETRAIT_BASE + PRIX_RETRAIT_PAS * partie.nb_retraits
+	return partie.prix_ajuste(PRIX_RETRAIT_BASE + PRIX_RETRAIT_PAS * partie.nb_retraits)
 
 
 ## On garde toujours au moins 1 symbole dans le sac.
@@ -107,33 +107,37 @@ func retirer(index_sac: int) -> bool:
 # --- Rendre un symbole doré -------------------------------------------------
 
 func prix_amelioration() -> int:
-	return PRIX_DOREE
+	return partie.prix_ajuste(PRIX_DOREE)
 
 
 ## Un symbole déjà doré ne peut pas l'être deux fois.
 func peut_ameliorer(index_sac: int) -> bool:
 	return index_sac >= 0 and index_sac < partie.sac.taille() \
-			and not partie.sac.symboles[index_sac].doree and partie.or_total >= PRIX_DOREE
+			and not partie.sac.symboles[index_sac].doree and partie.or_total >= prix_amelioration()
 
 
 func ameliorer(index_sac: int) -> bool:
 	if not peut_ameliorer(index_sac):
 		return false
-	partie.or_total -= PRIX_DOREE
+	partie.or_total -= prix_amelioration()
 	partie.sac.ameliorer(index_sac)
 	return true
 
 
 # --- Se soigner --------------------------------------------------------------
 
+func prix_soin() -> int:
+	return partie.prix_ajuste(PRIX_SOIN)
+
+
 ## Possible tant que les PV ne sont pas au maximum.
 func peut_soigner() -> bool:
-	return partie.pv < partie.pv_max and partie.or_total >= PRIX_SOIN
+	return partie.pv < partie.pv_max and partie.or_total >= prix_soin()
 
 
 func soigner() -> bool:
 	if not peut_soigner():
 		return false
-	partie.or_total -= PRIX_SOIN
+	partie.or_total -= prix_soin()
 	partie.pv = mini(partie.pv_max, partie.pv + SOIN_PV)
 	return true
