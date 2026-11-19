@@ -1,6 +1,7 @@
 extends SceneTree
-## Tests de la partie, à lancer en ligne de commande :
+## Tests de la partie (PV, or, sac, enchaînement des combats, récompenses, fin), à lancer en ligne de commande :
 ## godot --headless --path . -s res://tests/test_partie.gd
+## Le parcours du donjon (portes, étages, coffres, repos) est dans test_donjon.gd.
 
 var echecs := 0
 var machine := MachineASous.new(5, 1)
@@ -8,7 +9,6 @@ var machine := MachineASous.new(5, 1)
 
 func _init() -> void:
 	test_partie_neuve()
-	test_rencontres()
 	test_enchainement()
 	test_or_et_vol()
 	test_defaite()
@@ -24,8 +24,21 @@ func _init() -> void:
 
 # --- Outils -----------------------------------------------------------------
 
+## Entre dans un combat : franchit la première porte de combat du pas en cours.
+func vers_un_combat(partie: Partie) -> void:
+	if partie.ecran != Partie.Ecran.PORTES:
+		return
+	var portes := partie.portes()
+	for i in portes.size():
+		if portes[i].type == Salle.Type.COMBAT:
+			partie.choisir_porte(i)
+			return
+	partie.choisir_porte(0)
+
+
 ## Fait gagner le combat en cours d'un coup (jackpot d'épées).
 func gagner(partie: Partie) -> Combat:
+	vers_un_combat(partie)
 	var combat := partie.creer_combat()
 	var epee := load("res://data/symbols/epee.tres") as SymbolData
 	var grille: Array[SymbolData] = [epee, epee, epee, epee, epee]
@@ -38,11 +51,11 @@ func gagner(partie: Partie) -> Combat:
 
 
 ## Joue un combat entier en tirant sans réfléchir.
-func jouer_combat_auto(partie: Partie, combat: Combat) -> void:
+func jouer_combat_auto(combat: Combat) -> void:
 	var tours := 0
 	while not combat.est_fini() and tours < 300:
-		var grille := machine.tirer(partie.sac, partie.rng, combat.rouleaux_bloques)
-		combat.jouer_tour(machine.resoudre(grille))
+		combat.tirer()
+		combat.valider()
 		tours += 1
 
 
@@ -53,56 +66,24 @@ func test_partie_neuve() -> void:
 	verifier(partie.pv == 40 and partie.pv_max == 40, "une partie commence à 40 PV")
 	verifier(partie.or_total == 0, "une partie commence à 0 or")
 	verifier(partie.sac.taille() == 15, "le sac de départ a 15 symboles")
-	verifier(partie.numero_combat == 1, "on commence au combat 1")
+	verifier(partie.etage == 1 and partie.pas == 1, "on commence à l'étage 1, au pas 1")
+	verifier(partie.ecran == Partie.Ecran.PORTES, "on commence au choix des portes")
 	verifier(partie.etat == Partie.Etat.EN_COURS, "la partie est en cours")
 	verifier(partie.graine == 1, "la graine est gardée : %d" % partie.graine)
-	verifier(not partie.est_combat_de_boss(), "le combat 1 n'est pas le boss")
-
-
-func test_rencontres() -> void:
-	var partie := Partie.creer(2)
-	verifier(partie.rencontres.size() == 6, "5 combats normaux + le boss = 6 rencontres")
-	var tous_etage_1 := true
-	for rencontre in partie.rencontres:
-		if rencontre.etage != 1:
-			tous_etage_1 = false
-	verifier(tous_etage_1, "toutes les rencontres sont de l'étage 1")
-	verifier(partie.rencontres[5].est_boss and partie.rencontres[5].id == &"rat_croupier",
-			"la dernière rencontre est le Rat-Croupier")
-	verifier(partie.rencontres.slice(0, 5).all(func(e: EnemyData) -> bool: return not e.est_boss),
-			"les 5 premières rencontres ne sont pas des boss")
-
-	# Jamais le même ennemi deux fois de suite, sur beaucoup de parties.
-	var jamais_deux_fois := true
-	var ennemis_vus := {}
-	for graine in 100:
-		var p := Partie.creer(graine)
-		for i in 4:
-			if p.rencontres[i].id == p.rencontres[i + 1].id:
-				jamais_deux_fois = false
-		for i in 5:
-			ennemis_vus[p.rencontres[i].id] = true
-	verifier(jamais_deux_fois, "jamais deux fois le même ennemi de suite (100 parties)")
-	verifier(ennemis_vus.size() == 3, "les 3 ennemis de l'étage 1 apparaissent : %d" % ennemis_vus.size())
-
-	# Même graine = mêmes rencontres.
-	var a := Partie.creer(77)
-	var b := Partie.creer(77)
-	var identiques := true
-	for i in 6:
-		if a.rencontres[i].id != b.rencontres[i].id:
-			identiques = false
-	verifier(identiques, "même graine, mêmes rencontres")
+	verifier(not partie.est_combat_de_boss(), "pas de boss au départ")
+	verifier(partie.donjon != null and partie.donjon.etages.size() == 3, "la partie a son donjon de 3 étages")
 	verifier(Partie.creer().graine >= 0, "sans graine donnée, une graine est choisie")
+	verifier(Partie.creer(77).donjon.empreinte() == Partie.creer(77).donjon.empreinte(), "même graine, même donjon")
 
 
 func test_enchainement() -> void:
 	var partie := Partie.creer(3)
-	var premier := partie.ennemi_actuel()
+	vers_un_combat(partie)
+	var premier := partie.ennemi_courant
 
 	# Combat 1 : on perd un peu de PV, on gagne de l'or.
 	var combat := partie.creer_combat()
-	verifier(combat.ennemi == premier and combat.pv_joueur == 40, "le combat 1 oppose le joueur au 1er ennemi")
+	verifier(combat.ennemi == premier and combat.pv_joueur == 40, "le combat oppose le joueur à l'ennemi de la porte")
 	combat.pv_joueur = 25
 	combat.pv_ennemi = 0
 	combat.etat = Combat.Etat.VICTOIRE
@@ -110,32 +91,25 @@ func test_enchainement() -> void:
 	partie.terminer_combat(combat)
 	verifier(partie.pv == 25, "les PV restent d'un combat à l'autre : %d" % partie.pv)
 	verifier(partie.or_total == 7, "l'or est conservé : %d" % partie.or_total)
-	verifier(partie.numero_combat == 2 and partie.combats_gagnes == 1, "on passe au combat 2")
+	verifier(partie.combats_gagnes == 1, "un combat gagné")
+	verifier(partie.ecran == Partie.Ecran.RECOMPENSE, "après un combat gagné : la récompense")
 	verifier(partie.etat == Partie.Etat.EN_COURS, "la partie continue")
+	partie.terminer_recompense()
+	verifier(partie.ecran == Partie.Ecran.PORTES and partie.pas == 2, "puis les portes du pas 2")
 
-	# Combat 2 : démarre avec les PV restants.
+	# Combat suivant : démarre avec les PV restants.
+	vers_un_combat(partie)
 	var combat2 := partie.creer_combat()
-	verifier(combat2.pv_joueur == 25, "le combat 2 démarre avec 25 PV : %d" % combat2.pv_joueur)
-	verifier(combat2.ennemi == partie.rencontres[1], "le combat 2 oppose le joueur à la 2e rencontre")
+	verifier(combat2.pv_joueur == 25, "le combat suivant démarre avec 25 PV : %d" % combat2.pv_joueur)
 	verifier(combat2.armure_joueur == 0, "l'armure ne se garde pas entre les combats")
-
-	# Les PV max sont respectés par les soins du combat suivant.
 	verifier(combat2.pv_max_joueur == 40, "PV max conservés : %d" % combat2.pv_max_joueur)
-
-	# Les 5 combats puis le boss.
-	var partie2 := Partie.creer(4)
-	for numero in range(1, 6):
-		verifier(partie2.numero_combat == numero and not partie2.est_combat_de_boss(), "combat normal %d" % numero)
-		gagner(partie2)
-		partie2.terminer_combat(partie2.combat_courant)
-	verifier(partie2.numero_combat == 6 and partie2.est_combat_de_boss(), "après 5 victoires, c'est le boss")
-	verifier(partie2.combats_gagnes == 5, "5 combats gagnés : %d" % partie2.combats_gagnes)
 
 
 func test_or_et_vol() -> void:
 	# L'or d'un combat (pièces + victoire) s'ajoute, ce qui a été volé s'en retranche.
 	var partie := Partie.creer(12)
 	partie.or_total = 10
+	vers_un_combat(partie)
 	var combat := partie.creer_combat()
 	verifier(combat.or_du_joueur() == 10, "le combat voit l'or de la partie : %d" % combat.or_du_joueur())
 	combat.or_gagne = 8
@@ -147,6 +121,7 @@ func test_or_et_vol() -> void:
 	# On peut perdre de l'or sur une défaite aussi, sans passer sous zéro.
 	var partie2 := Partie.creer(13)
 	partie2.or_total = 3
+	vers_un_combat(partie2)
 	var combat2 := partie2.creer_combat()
 	combat2.or_vole = 3
 	combat2.pv_joueur = 0
@@ -157,30 +132,42 @@ func test_or_et_vol() -> void:
 
 func test_defaite() -> void:
 	var partie := Partie.creer(5)
+	vers_un_combat(partie)
 	var combat := partie.creer_combat()
 	combat.pv_joueur = 0
 	combat.etat = Combat.Etat.DEFAITE
 	combat.or_gagne = 3
 	partie.terminer_combat(combat)
 	verifier(partie.etat == Partie.Etat.DEFAITE, "à 0 PV : défaite de la partie")
+	verifier(partie.ecran == Partie.Ecran.FIN, "la défaite mène à l'écran de fin")
 	verifier(partie.pv == 0 and partie.or_total == 3, "PV et or de la défaite reportés")
 	verifier(partie.combats_gagnes == 0, "aucun combat gagné")
 
 	# Une partie finie ne bouge plus.
 	partie.terminer_combat(combat)
 	verifier(partie.or_total == 3, "une partie finie ne bouge plus")
+	verifier(partie.portes().is_empty() and not partie.choisir_porte(0), "plus de portes dans une partie finie")
 
 
 func test_victoire_du_boss() -> void:
+	# Le boss de l'étage 3 vaincu : victoire de la partie.
 	var partie := Partie.creer(6)
+	partie.etage = 3
+	partie.pv = 500
+	partie.pv_max = 500
 	partie.aller_au_boss()
 	var combat := gagner(partie)
 	verifier(combat.etat == Combat.Etat.VICTOIRE, "des jackpots d'épées vainquent le boss")
 	partie.terminer_combat(combat)
-	verifier(partie.etat == Partie.Etat.VICTOIRE, "boss vaincu : victoire de la partie")
-	verifier(partie.numero_combat == 6, "le compteur ne dépasse pas le boss")
-	verifier(partie.combats_gagnes == 1 and partie.or_total == combat.ennemi.or_victoire,
+	verifier(partie.etat == Partie.Etat.VICTOIRE and partie.ecran == Partie.Ecran.FIN, "boss de l'étage 3 vaincu : victoire de la partie")
+	verifier(partie.combats_gagnes == 1 and partie.boss_vaincus == 1 and partie.or_total == combat.ennemi.or_victoire,
 			"or du boss compté : %d" % partie.or_total)
+
+	# Un boss d'un autre étage ne finit pas la partie.
+	var partie2 := Partie.creer(7)
+	partie2.aller_au_boss()
+	partie2.terminer_combat(gagner(partie2))
+	verifier(partie2.etat == Partie.Etat.EN_COURS and partie2.ecran == Partie.Ecran.RELIQUE, "boss de l'étage 1 vaincu : une relique, la partie continue")
 
 
 func test_recompenses() -> void:
@@ -224,43 +211,60 @@ func test_combat_compte_une_fois() -> void:
 	partie.terminer_combat(combat)
 	var or_apres := partie.or_total
 	partie.terminer_combat(combat)
-	verifier(partie.or_total == or_apres and partie.numero_combat == 2, "un combat n'est compté qu'une fois")
+	verifier(partie.or_total == or_apres and partie.combats_gagnes == 1, "un combat n'est compté qu'une fois")
 
 	# Un combat pas fini est ignoré.
 	var partie2 := Partie.creer(10)
+	vers_un_combat(partie2)
 	var combat2 := partie2.creer_combat()
 	partie2.terminer_combat(combat2)
-	verifier(partie2.numero_combat == 1 and partie2.combat_courant == combat2, "un combat en cours n'est pas terminé")
+	verifier(partie2.combats_gagnes == 0 and partie2.combat_courant == combat2, "un combat en cours n'est pas terminé")
 
 
 func test_aller_au_boss() -> void:
 	var partie := Partie.creer(11)
 	partie.aller_au_boss()
-	verifier(partie.est_combat_de_boss() and partie.numero_combat == 6, "aller_au_boss mène au combat 6")
+	verifier(partie.est_combat_de_boss() and partie.ecran == Partie.Ecran.COMBAT, "aller_au_boss mène au combat du boss")
 	var combat := partie.creer_combat()
 	verifier(combat.ennemi.id == &"rat_croupier" and combat.pv_ennemi == combat.ennemi.pv_max,
-			"le combat du boss : Rat-Croupier à pleins PV")
+			"le combat du boss de l'étage 1 : Rat-Croupier à pleins PV")
 
 
-## 200 parties jouées sans réfléchir : toutes doivent se terminer. Le taux de victoire
-## est affiché pour guider l'équilibrage (ce n'est pas un critère de réussite).
+## 200 parties jouées sans réfléchir à travers tout le donjon (portes au hasard) : toutes doivent
+## se terminer. Le taux de victoire est affiché pour guider l'équilibrage (pas un critère de réussite).
 func test_parties_automatiques() -> void:
 	var finies := 0
 	var victoires := 0
 	var coherent := true
 	var combats_total := 0
+	var hasard := RandomNumberGenerator.new()
+	hasard.seed = 5
 	for graine in 200:
 		var partie := Partie.creer(graine)
 		var garde_fou := 0
-		while partie.etat == Partie.Etat.EN_COURS and garde_fou < 20:
-			var combat := partie.creer_combat()
-			jouer_combat_auto(partie, combat)
-			partie.terminer_combat(combat)
-			combats_total += 1
+		while partie.etat == Partie.Etat.EN_COURS and garde_fou < 600:
+			match partie.ecran:
+				Partie.Ecran.PORTES:
+					partie.choisir_porte(hasard.randi_range(0, 1))
+				Partie.Ecran.COMBAT:
+					var combat := partie.creer_combat()
+					jouer_combat_auto(combat)
+					partie.terminer_combat(combat)
+					combats_total += 1
+				Partie.Ecran.RECOMPENSE:
+					partie.choisir_recompense(partie.proposer_recompenses()[0])
+					partie.terminer_recompense()
+				Partie.Ecran.RELIQUE:
+					partie.choisir_relique(partie.proposer_reliques(2)[0])
+				Partie.Ecran.BOUTIQUE:
+					partie.quitter_boutique()
+				Partie.Ecran.REPOS:
+					partie.repos_soigner()
+				_:
+					coherent = false
+					break
 			if partie.pv < 0 or partie.pv > partie.pv_max:
 				coherent = false
-			if partie.etat == Partie.Etat.EN_COURS:
-				partie.choisir_recompense(partie.proposer_recompenses()[0])
 			garde_fou += 1
 		if partie.etat != Partie.Etat.EN_COURS:
 			finies += 1

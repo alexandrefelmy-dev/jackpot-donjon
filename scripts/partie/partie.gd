@@ -1,26 +1,24 @@
 class_name Partie
 extends RefCounted
-## Une partie : tout ce qui traverse les combats (PV, or, sac) et l'enchaînement des
-## rencontres : 5 combats contre des ennemis de l'étage 1, puis le boss.
-## Pas d'interface ici : les écrans lisent cet état et appellent ses méthodes.
+## Une partie : tout ce qui traverse les salles (PV, or, sac, reliques) et l'avancée dans le donjon :
+## 3 étages de 5 salles choisies entre 2 portes, chacun fini par un boss.
+## Pas d'interface ici : les écrans lisent cet état et appellent ses méthodes. `ecran` dit quel
+## écran doit être affiché maintenant (GameState le traduit en scène).
 
 enum Etat { EN_COURS, VICTOIRE, DEFAITE }
+## L'écran à afficher : le choix des portes, puis selon la salle (combat, boutique, repos),
+## la récompense d'un combat, le choix d'une relique (coffre, boss), ou la fin.
+enum Ecran { PORTES, COMBAT, RECOMPENSE, RELIQUE, BOUTIQUE, REPOS, FIN }
 
 const PV_DEPART := 40
-const NB_COMBATS_NORMAUX := 5
 const NB_RECOMPENSES := 3
-## Après ce combat gagné, une relique est offerte (1 parmi 2), en attendant les coffres de la v0.6.
-const RELIQUE_APRES_COMBAT := 3
 const NB_RELIQUES_OFFERTES := 2
 const NB_ROULEAUX_DEPART := 5
-
-## Ennemis possibles pour les 5 combats normaux de l'étage 1.
-const ENNEMIS_ETAGE_1: Array[String] = [
-	"res://data/enemies/rat_egout.tres",
-	"res://data/enemies/squelette.tres",
-	"res://data/enemies/gobelin_tricheur.tres",
-]
-const BOSS_ETAGE_1 := "res://data/enemies/rat_croupier.tres"
+## Un repos soigne ce pourcentage des PV max (arrondi au-dessus, jamais au-dessus du maximum).
+const SOIN_REPOS_POURCENT := 30
+## Pourcentage des PV max rendu au joueur quand il passe à l'étage suivant (levier d'équilibrage :
+## 0 = les PV ne remontent pas, comme l'écrit le cahier des charges).
+const SOIN_APRES_BOSS_POURCENT := 0
 
 ## Symboles proposés en récompense (les symboles de base, sans le crâne).
 const RECOMPENSES: Array[String] = [
@@ -32,29 +30,40 @@ const RECOMPENSES: Array[String] = [
 
 ## Graine du générateur aléatoire (affichée, pour pouvoir rejouer la partie).
 var graine: int
-## Le seul générateur aléatoire de la partie : tirages, rencontres, récompenses, blocages.
+## Le hasard du JEU : tirages, récompenses, offres, blocages. Le donjon, lui, ne dépend que de la graine.
 var rng := RandomNumberGenerator.new()
+## La disposition de tout le donjon (portes, ennemis, mimiques), fixée par la graine.
+var donjon: Donjon
 
 var pv: int = PV_DEPART
 var pv_max: int = PV_DEPART
 var or_total: int = 0
 var sac: Sac
-## Les 5 ennemis normaux puis le boss, dans l'ordre.
-var rencontres: Array[EnemyData] = []
-## Numéro du combat en cours ou à venir : 1 à 5 = combats normaux, 6 = boss.
-var numero_combat: int = 1
+## Étage en cours (1 à 3) et pas dans l'étage (1 à 5 : le choix des portes ; 6 = le boss).
+var etage: int = 1
+var pas: int = 1
+## L'écran à afficher maintenant.
+var ecran: Ecran = Ecran.PORTES
+## La porte franchie (null au choix des portes et au boss).
+var salle_courante: Salle
+## L'ennemi du combat en cours ou à venir (celui d'une porte de combat, une Mimique ou le boss).
+var ennemi_courant: EnemyData
 var combats_gagnes: int = 0
+## Salles terminées (combats gagnés ou fuis, boutiques, coffres, repos) et boss vaincus.
+var salles_franchies: int = 0
+var boss_vaincus: int = 0
 ## Combien de symboles ont été retirés du sac en boutique : chaque retrait coûte plus cher.
 var nb_retraits: int = 0
 ## Les reliques possédées (chacune une seule fois).
 var reliques: Array[RelicData] = []
 ## Nombre de rouleaux de la machine (5, ou 6 avec le Sixième rouleau).
 var nb_rouleaux: int = NB_ROULEAUX_DEPART
-## Vrai une fois la relique de l'après-combat 3 choisie.
-var relique_offerte: bool = false
 var etat: Etat = Etat.EN_COURS
 ## Le combat en cours (créé par creer_combat, rendu à terminer_combat).
 var combat_courant: Combat
+## Vrai quand une relique est offerte après le combat qui vient (Mimique) ou après le boss.
+var _relique_apres_combat: bool = false
+var _relique_apres_boss: bool = false
 
 
 ## Crée une partie neuve. Une graine positive rend la partie rejouable à l'identique.
@@ -64,34 +73,83 @@ static func creer(graine_voulue: int = -1) -> Partie:
 	partie.graine = graine_voulue if graine_voulue >= 0 else randi()
 	partie.rng.seed = partie.graine
 	partie.sac = Sac.creer_sac_de_depart()
-	partie._choisir_rencontres()
+	partie.donjon = Donjon.creer(partie.graine)
 	return partie
 
 
-## Tire les 5 ennemis normaux (jamais le même deux fois de suite), puis ajoute le boss.
-func _choisir_rencontres() -> void:
-	var precedent := -1
-	for i in NB_COMBATS_NORMAUX:
-		var candidats: Array[int] = []
-		for k in ENNEMIS_ETAGE_1.size():
-			if k != precedent:
-				candidats.append(k)
-		precedent = candidats[rng.randi_range(0, candidats.size() - 1)]
-		rencontres.append(load(ENNEMIS_ETAGE_1[precedent]) as EnemyData)
-	rencontres.append(load(BOSS_ETAGE_1) as EnemyData)
-
-
-func ennemi_actuel() -> EnemyData:
-	return rencontres[numero_combat - 1]
-
+# --- Avancer dans le donjon --------------------------------------------------
 
 func est_combat_de_boss() -> bool:
-	return ennemi_actuel().est_boss
+	return ennemi_courant != null and ennemi_courant.est_boss
+
+
+## Les 2 portes à choisir maintenant (vide si on n'est pas au choix des portes).
+func portes() -> Array[Salle]:
+	if ecran != Ecran.PORTES or etat != Etat.EN_COURS:
+		return []
+	return donjon.portes(etage, pas)
+
+
+func nom_etage() -> String:
+	return Donjon.nom_etage(etage)
+
+
+## Le joueur franchit une porte (0 ou 1) : l'écran suivant dépend de la salle.
+## Renvoie faux si ce n'est pas le moment ou si la porte n'existe pas.
+func choisir_porte(index: int) -> bool:
+	var choix := portes()
+	if index < 0 or index >= choix.size():
+		return false
+	salle_courante = choix[index]
+	_relique_apres_combat = false
+	match salle_courante.type:
+		Salle.Type.COMBAT:
+			ennemi_courant = salle_courante.ennemi
+			ecran = Ecran.COMBAT
+		Salle.Type.BOUTIQUE:
+			ecran = Ecran.BOUTIQUE
+		Salle.Type.REPOS:
+			ecran = Ecran.REPOS
+		Salle.Type.COFFRE:
+			if salle_courante.mimique:
+				# La Mimique attaque par surprise ; vaincue, elle laisse quand même la relique.
+				ennemi_courant = salle_courante.ennemi
+				_relique_apres_combat = true
+				ecran = Ecran.COMBAT
+			elif peut_recevoir_relique():
+				ecran = Ecran.RELIQUE
+			else:
+				_salle_terminee()
+	return true
+
+
+## La salle qui vient d'être jouée est finie : pas suivant, ou le boss de l'étage après le 5e pas.
+func _salle_terminee() -> void:
+	salles_franchies += 1
+	salle_courante = null
+	ennemi_courant = null
+	pas += 1
+	if pas > Donjon.NB_PAS:
+		ennemi_courant = donjon.boss_de(etage)
+		ecran = Ecran.COMBAT
+	else:
+		ecran = Ecran.PORTES
+
+
+## Le boss est vaincu (et sa relique prise) : étage suivant, avec le soin d'équilibrage éventuel.
+func _etage_suivant() -> void:
+	etage += 1
+	pas = 1
+	salle_courante = null
+	ennemi_courant = null
+	var soin := ceili(pv_max * SOIN_APRES_BOSS_POURCENT / 100.0)
+	pv = mini(pv_max, pv + soin)
+	ecran = Ecran.PORTES
 
 
 ## Prépare le combat en cours avec les PV actuels du joueur.
 func creer_combat() -> Combat:
-	combat_courant = Combat.new(ennemi_actuel(), pv, pv_max, rng, nb_rouleaux, or_total)
+	combat_courant = Combat.new(ennemi_courant, pv, pv_max, rng, nb_rouleaux, or_total)
 	combat_courant.preparer_tirages(creer_machine(), sac, modificateurs())
 	# Reliques qui se renouvellent à chaque combat : Jeton porte-bonheur (mise remboursée),
 	# Dé pipé (relance gratuite), Cinquième as (garder un rouleau et relancer les autres).
@@ -171,21 +229,26 @@ func peut_recevoir_relique() -> bool:
 	return not _reliques_disponibles().is_empty()
 
 
-## Vrai juste après le combat 3 gagné, tant que la relique offerte n'a pas été choisie.
-func relique_a_offrir() -> bool:
-	return etat == Etat.EN_COURS and not relique_offerte \
-			and combats_gagnes == RELIQUE_APRES_COMBAT \
-			and not _reliques_disponibles().is_empty()
-
-
-## Le joueur choisit sa relique offerte : elle est ajoutée et l'offre est terminée.
-func choisir_relique_offerte(relique: RelicData) -> void:
-	relique_offerte = true
+## Le joueur choisit sa relique (coffre, Mimique vaincue ou boss) : elle est ajoutée et la salle est finie.
+func choisir_relique(relique: RelicData) -> void:
+	if ecran != Ecran.RELIQUE or etat != Etat.EN_COURS:
+		return
 	ajouter_relique(relique)
+	_relique_terminee()
 
 
-## Reporte le résultat d'un combat fini sur la partie : PV, or, puis suite ou fin de partie.
+func _relique_terminee() -> void:
+	if _relique_apres_boss:
+		_relique_apres_boss = false
+		_etage_suivant()
+	else:
+		_salle_terminee()
+
+
+## Reporte le résultat d'un combat fini sur la partie : PV, or, puis la suite.
 ## Un combat n'est compté qu'une fois (les appels répétés sont ignorés).
+## Victoire : récompense en symbole (combat normal), relique (Mimique, boss), ou victoire finale
+## (boss de l'étage 3). Fuite de l'ennemi : la salle est finie, sans récompense.
 func terminer_combat(combat: Combat) -> void:
 	if etat != Etat.EN_COURS or combat != combat_courant or not combat.est_fini():
 		return
@@ -195,13 +258,33 @@ func terminer_combat(combat: Combat) -> void:
 
 	if combat.etat == Combat.Etat.DEFAITE:
 		etat = Etat.DEFAITE
+		ecran = Ecran.FIN
+		return
+
+	if combat.etat == Combat.Etat.FUITE:
+		_salle_terminee()
 		return
 
 	combats_gagnes += 1
 	if combat.ennemi.est_boss:
-		etat = Etat.VICTOIRE
+		boss_vaincus += 1
+		salles_franchies += 1
+		if etage >= Donjon.NB_ETAGES:
+			etat = Etat.VICTOIRE
+			ecran = Ecran.FIN
+		elif peut_recevoir_relique():
+			_relique_apres_boss = true
+			ecran = Ecran.RELIQUE
+		else:
+			_etage_suivant()
+	elif _relique_apres_combat:
+		_relique_apres_combat = false
+		if peut_recevoir_relique():
+			ecran = Ecran.RELIQUE
+		else:
+			_salle_terminee()
 	else:
-		numero_combat += 1
+		ecran = Ecran.RECOMPENSE
 
 
 ## Trois symboles différents à proposer après un combat normal.
@@ -231,8 +314,72 @@ func choisir_recompense(symbole: SymbolData) -> void:
 	sac.ajouter(symbole)
 
 
-## Pour les tests en jeu : saute directement au boss (bouton « [test] » du combat).
+## La récompense d'un combat est réglée (symbole pris ou non) : on retourne aux portes.
+func terminer_recompense() -> void:
+	if ecran == Ecran.RECOMPENSE and etat == Etat.EN_COURS:
+		_salle_terminee()
+
+
+# --- Boutique et repos -------------------------------------------------------
+
+## Le joueur quitte la boutique : retour aux portes.
+func quitter_boutique() -> void:
+	if ecran == Ecran.BOUTIQUE and etat == Etat.EN_COURS:
+		_salle_terminee()
+
+
+## Les PV qu'un repos rendrait maintenant : 30 % des PV max (arrondi au-dessus), sans dépasser le maximum.
+func soin_du_repos() -> int:
+	var soin := ceili(pv_max * SOIN_REPOS_POURCENT / 100.0)
+	return mini(soin, pv_max - pv)
+
+
+## Repos : le joueur se soigne. Renvoie les PV rendus. La salle est finie.
+func repos_soigner() -> int:
+	if ecran != Ecran.REPOS or etat != Etat.EN_COURS:
+		return 0
+	var soin := soin_du_repos()
+	pv += soin
+	_salle_terminee()
+	return soin
+
+
+## Y a-t-il un symbole qui peut encore être doré dans le sac ?
+func peut_dorer() -> bool:
+	for symbole in sac.symboles:
+		if not symbole.doree:
+			return true
+	return false
+
+
+## Repos : le symbole d'index `index` du sac devient doré, gratuitement. La salle est finie.
+## Renvoie faux (et ne change rien) si ce n'est pas un repos ou si le symbole est déjà doré.
+func repos_dorer(index: int) -> bool:
+	if ecran != Ecran.REPOS or etat != Etat.EN_COURS or not sac.ameliorer(index):
+		return false
+	_salle_terminee()
+	return true
+
+
+# --- Pour les tests en jeu (boutons « [test] ») -------------------------------
+
+## Saute directement au boss de l'étage en cours.
 func aller_au_boss() -> void:
-	if etat == Etat.EN_COURS:
-		numero_combat = rencontres.size()
-		combat_courant = null
+	if etat != Etat.EN_COURS:
+		return
+	pas = Donjon.NB_PAS + 1
+	salle_courante = null
+	ennemi_courant = donjon.boss_de(etage)
+	combat_courant = null
+	_relique_apres_combat = false
+	ecran = Ecran.COMBAT
+
+
+## Saute au début de l'étage suivant (sans combattre le boss).
+func sauter_etage() -> void:
+	if etat != Etat.EN_COURS or etage >= Donjon.NB_ETAGES:
+		return
+	combat_courant = null
+	_relique_apres_combat = false
+	_relique_apres_boss = false
+	_etage_suivant()
