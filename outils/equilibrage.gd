@@ -1,97 +1,173 @@
 extends SceneTree
-## OUTIL : mesure le taux de victoire de « robots » qui jouent sans réfléchir, pour régler
-## la difficulté (attaques des ennemis, prix, reliques).
+## OUTIL : mesure ce que deviennent des « robots » qui traversent le donjon sans réfléchir,
+## pour régler la difficulté (valeurs des ennemis dans data/enemies/*.tres, prix, soins).
 ##
 ## Lancer :  godot --headless --path . -s res://outils/equilibrage.gd
 ## (avec `timeout` et la sortie redirigée vers un fichier : voir CLAUDE.md)
 ##
-## Les valeurs essayées sont changées EN MÉMOIRE seulement : les fichiers .tres ne bougent pas.
-## Une fois de bonnes valeurs trouvées, les recopier à la main dans data/enemies/*.tres.
+## L'outil lit les valeurs ACTUELLES des .tres : pour essayer un réglage, modifier le .tres
+## puis relancer. Pour chaque robot : le taux de victoire, la part de parties qui atteignent
+## chaque boss, et le nombre de reliques à la fin.
 ##
-## Cible : environ 50 à 60 % de victoires pour un robot sans réflexion (un vrai joueur fait mieux).
+## Cible (voir le cahier des charges, « Précisions de règles (v0.6) ») : le robot « prudent »
+## gagne environ 35 à 45 % de ses parties, le robot « hasard » au moins 10 %, et le boss de
+## l'étage 1 est atteint dans plus de 85 % des parties ; un vrai joueur fait mieux.
 
-## Les attaques à essayer : [rat, squelette, gobelin, boss]. Ajouter des lignes pour comparer.
-const REGLAGES: Array = [[8, 13, 9, 14]]
-## Nombre de parties jouées par réglage et par mode.
-const NB_PARTIES := 600
+## Nombre de parties jouées par robot.
+const NB_PARTIES := 400
 
-## Les robots : ce qu'ils font en plus de combattre.
-##  sans_relique       : ignore les reliques (la relique offerte après le combat 3 est refusée)
-##  relique_offerte    : prend la relique offerte après le combat 3
-##  reliques_et_achats : + achète les reliques de la boutique
-##  tout               : + mise 5 or quand il a au moins 25 or
-const MODES: Array[String] = ["sans_relique", "relique_offerte", "reliques_et_achats", "tout"]
-
-var machine := MachineASous.new(5, 1)
+## Essais EN MÉMOIRE (les .tres ne bougent pas) : identifiant d'ennemi -> [facteur de PV, facteur
+## d'attaque, facteur d'or de victoire]. Vide = les valeurs des .tres. Une fois de bonnes valeurs
+## trouvées, les recopier dans data/enemies/*.tres.
+const REGLAGES: Dictionary = {}
 ## Garde les ennemis modifiés en mémoire (Godot décharge sinon les ressources non utilisées).
-## Seuls les 4 ennemis de l'étage 1 sont réglés ici : un nouvel ennemi du jeu garderait ses
-## valeurs du .tres et fausserait la mesure tant qu'il n'est pas ajouté à _essayer().
 var gardees: Array[EnemyData] = []
+
+## Les robots :
+##  hasard   : choisit ses portes au hasard, n'achète aucune relique, ne mise pas
+##  prudent  : repos s'il est blessé, boutique s'il a de l'or, sinon coffre puis combat ; achète des reliques
+##  tout     : comme prudent + mise 5 or quand il a au moins 25 or
+const ROBOTS: Array[String] = ["hasard", "prudent", "tout"]
+
+var hasard := RandomNumberGenerator.new()
+## Pour chaque ennemi : combien de fois il a été affronté, et combien de fois le robot y est mort.
+var affrontements := {}
+var morts := {}
 
 
 func _initialize() -> void:
-	for reglage: Array in REGLAGES:
-		for mode in MODES:
-			_essayer(mode, reglage)
+	_appliquer_reglages()
+	for robot in ROBOTS:
+		_essayer(robot)
 	quit()
 
 
-## Change l'attaque d'un ennemi (en mémoire).
-func _regler(nom: String, attaque: int) -> void:
-	var ennemi := load("res://data/enemies/%s.tres" % nom) as EnemyData
-	gardees.append(ennemi)
-	var nouvelles: Array[Dictionary] = []
-	for intention in ennemi.intentions:
-		var copie: Dictionary = intention.duplicate()
-		if copie["type"] == "attaque":
-			copie["valeur"] = attaque
-		nouvelles.append(copie)
-	ennemi.intentions = nouvelles
+func _appliquer_reglages() -> void:
+	# Des essais peuvent aussi venir de la ligne de commande, en JSON, après « -- » :
+	#   ... -s res://outils/equilibrage.gd -- {"rat_croupier":[0.8,0.7,1.0]}
+	var reglages: Dictionary = REGLAGES
+	var arguments := OS.get_cmdline_user_args()
+	if not arguments.is_empty():
+		var lu: Variant = JSON.parse_string(arguments[0])
+		if lu is Dictionary:
+			reglages = lu
+	for id: String in reglages:
+		var facteurs: Array = reglages[id]
+		var ennemi := load("res://data/enemies/%s.tres" % id) as EnemyData
+		gardees.append(ennemi)
+		ennemi.pv_max = roundi(ennemi.pv_max * float(facteurs[0]))
+		ennemi.or_victoire = roundi(ennemi.or_victoire * float(facteurs[2]))
+		var nouvelles: Array[Dictionary] = []
+		for intention in ennemi.intentions:
+			var copie: Dictionary = intention.duplicate()
+			if copie["type"] == "attaque":
+				copie["valeur"] = roundi(int(copie["valeur"]) * float(facteurs[1]))
+			nouvelles.append(copie)
+		ennemi.intentions = nouvelles
+	print("réglages essayés : ", reglages)
 
 
-func _essayer(mode: String, reglage: Array) -> void:
-	_regler("rat_egout", reglage[0])
-	_regler("squelette", reglage[1])
-	_regler("gobelin_tricheur", reglage[2])
-	_regler("rat_croupier", reglage[3])
-
-	var prend_relique := mode != "sans_relique"
-	var achete_reliques := mode == "reliques_et_achats" or mode == "tout"
-	var mise := mode == "tout"
+func _essayer(robot: String) -> void:
+	hasard.seed = 4
+	affrontements = {}
+	morts = {}
 	var victoires := 0
 	var reliques_total := 0
-
+	var atteint_boss := [0, 0, 0]
+	var salles_total := 0
+	var fuites := 0
 	for graine in NB_PARTIES:
 		var partie := Partie.creer(graine)
-		while partie.etat == Partie.Etat.EN_COURS:
-			var combat := partie.creer_combat()
-			var tours := 0
-			while not combat.est_fini() and tours < 300:
-				var la_mise := Mise.aucune()
-				if mise and combat.peut_miser(Mise.en_or(5)) and combat.or_du_joueur() >= 25:
-					la_mise = Mise.en_or(5)
-				combat.tirer(la_mise)
-				# Relance tout s'il n'a aucun combo et qu'il peut le faire.
-				if combat.peut_relancer() and combat.resultat_courant.combos.is_empty():
-					combat.relancer_tout()
-				combat.valider()
-				tours += 1
-			partie.terminer_combat(combat)
-			if partie.etat == Partie.Etat.EN_COURS:
-				partie.choisir_recompense(partie.proposer_recompenses()[0])
-				if prend_relique and partie.relique_a_offrir():
-					partie.choisir_relique_offerte(partie.proposer_reliques(2)[0])
-				_boutique(partie, achete_reliques)
+		var gardefou := 0
+		while partie.etat == Partie.Etat.EN_COURS and gardefou < 800:
+			gardefou += 1
+			match partie.ecran:
+				Partie.Ecran.PORTES:
+					partie.choisir_porte(_porte(partie, robot))
+				Partie.Ecran.COMBAT:
+					if partie.est_combat_de_boss():
+						atteint_boss[partie.etage - 1] += 1
+					fuites += _combat(partie, robot == "tout")
+				Partie.Ecran.RECOMPENSE:
+					partie.choisir_recompense(partie.proposer_recompenses()[0])
+					partie.terminer_recompense()
+				Partie.Ecran.RELIQUE:
+					partie.choisir_relique(partie.proposer_reliques(2)[0])
+				Partie.Ecran.BOUTIQUE:
+					_boutique(partie, robot != "hasard")
+					partie.quitter_boutique()
+				Partie.Ecran.REPOS:
+					_repos(partie)
 		reliques_total += partie.reliques.size()
+		salles_total += partie.salles_franchies
 		if partie.etat == Partie.Etat.VICTOIRE:
 			victoires += 1
 
-	print("[%s] rat %d, squelette %d, gobelin %d, boss %d : %d%% de victoires, %.1f reliques par partie" % [
-		mode, reglage[0], reglage[1], reglage[2], reglage[3],
-		victoires * 100 / NB_PARTIES, reliques_total / float(NB_PARTIES)])
+	print("[%s] %d%% de victoires | boss atteints : étage 1 %d%%, étage 2 %d%%, étage 3 %d%% | %.1f salles, %.1f reliques par partie, %.2f fuites par partie" % [
+		robot, victoires * 100 / NB_PARTIES,
+		atteint_boss[0] * 100 / NB_PARTIES, atteint_boss[1] * 100 / NB_PARTIES, atteint_boss[2] * 100 / NB_PARTIES,
+		salles_total / float(NB_PARTIES), reliques_total / float(NB_PARTIES), fuites / float(NB_PARTIES)])
+	var lignes := PackedStringArray()
+	for id: String in affrontements:
+		lignes.append("%s %d/%d" % [id, int(morts.get(id, 0)), int(affrontements[id])])
+	print("    morts / combats : ", ", ".join(lignes))
 
 
-## La boutique d'un robot : se soigne, retire un crâne, achète ce qu'il peut.
+## La porte du robot.
+func _porte(partie: Partie, robot: String) -> int:
+	var portes := partie.portes()
+	if robot == "hasard":
+		return hasard.randi_range(0, portes.size() - 1)
+	var voeux: Array[Salle.Type] = []
+	if partie.pv * 100 < partie.pv_max * 55:
+		voeux.append(Salle.Type.REPOS)
+	if partie.or_total >= 30:
+		voeux.append(Salle.Type.BOUTIQUE)
+	voeux.append(Salle.Type.COFFRE)
+	voeux.append(Salle.Type.COMBAT)
+	for voulu in voeux:
+		for i in portes.size():
+			if portes[i].type == voulu:
+				return i
+	return 0
+
+
+## Un combat entier. Renvoie 1 si l'ennemi s'est enfui.
+func _combat(partie: Partie, mise: bool) -> int:
+	var combat := partie.creer_combat()
+	var id := String(combat.ennemi.id)
+	affrontements[id] = int(affrontements.get(id, 0)) + 1
+	var tours := 0
+	while not combat.est_fini() and tours < 300:
+		var la_mise := Mise.aucune()
+		if mise and combat.peut_miser(Mise.en_or(5)) and combat.or_du_joueur() >= 25:
+			la_mise = Mise.en_or(5)
+		combat.tirer(la_mise)
+		# Relance tout s'il n'a aucun combo et qu'il peut le faire.
+		if combat.peut_relancer() and combat.resultat_courant.combos.is_empty():
+			combat.relancer_tout()
+		combat.valider()
+		tours += 1
+	partie.terminer_combat(combat)
+	if combat.etat == Combat.Etat.DEFAITE:
+		morts[id] = int(morts.get(id, 0)) + 1
+	return 1 if combat.etat == Combat.Etat.FUITE else 0
+
+
+## Le repos du robot : se soigne s'il est blessé, sinon dore une épée.
+func _repos(partie: Partie) -> void:
+	if partie.soin_du_repos() > 0:
+		partie.repos_soigner()
+		return
+	for i in partie.sac.taille():
+		if partie.sac.symboles[i].id == &"epee" and partie.repos_dorer(i):
+			return
+	for i in partie.sac.taille():
+		if partie.repos_dorer(i):
+			return
+
+
+## La boutique d'un robot : achète les reliques (si voulu), se soigne, retire un crâne, achète ce qu'il peut.
 func _boutique(partie: Partie, achete_reliques: bool) -> void:
 	var boutique := Boutique.creer(partie)
 	if achete_reliques:

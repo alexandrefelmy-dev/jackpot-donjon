@@ -13,6 +13,11 @@ const DOSSIER := "user://captures/"
 ## Nombre d'images à attendre après chaque changement d'écran avant de photographier.
 const IMAGES_D_ATTENTE := 6
 
+const NOMS := ["portes_etage1", "portes_etage3", "combat_depart", "combat_attente", "combat_choix_rouleau",
+		"combat_apres_tour", "combat_grand_croupier", "combat_grand_croupier_tour2", "combat_dame_de_pique",
+		"combat_dame_de_pique_tour3", "combat_mimique", "combat_usurier", "combat_pickpocket", "combat_pickpocket_fuite",
+		"recompense", "relique", "boutique", "repos", "repos_sac", "fin_victoire", "fin_defaite"]
+
 var _etape := 0
 var _attente := 0
 var _erreurs := 0
@@ -31,7 +36,7 @@ func _process(_delta: float) -> bool:
 	_attente = 0
 	_photographier(_etape)
 	_etape += 1
-	if _etape >= 8:
+	if _etape >= NOMS.size():
 		quit(1 if _erreurs > 0 else 0)
 	else:
 		_preparer(_etape)
@@ -41,40 +46,103 @@ func _process(_delta: float) -> bool:
 ## Met le jeu dans l'état de l'écran n°etape.
 func _preparer(etape: int) -> void:
 	match etape:
-		0:  # combat au départ, sans relique
+		0:  # choix des portes, étage 1
 			GameState.nouvelle_partie()
-			GameState.aller_a(GameState.SCENE_COMBAT)
-		1:  # combat avec les 9 reliques, tirage en attente de validation
+			GameState.aller_a_suivant()
+		1:  # choix des portes, étage 3 (avec l'avertissement sur les mimiques)
+			GameState.nouvelle_partie()
+			GameState.partie.etage = 3
+			GameState.partie.pas = 3
+			GameState.aller_a_suivant()
+		2:  # combat au départ, sans relique
+			GameState.nouvelle_partie()
+			GameState.partie.choisir_porte(0)
+			GameState.aller_a_suivant()
+		3:  # combat avec les 9 reliques, tirage en attente de validation
 			_partie_avec_toutes_les_reliques()
 			GameState.partie.or_total = 50
-			GameState.aller_a(GameState.SCENE_COMBAT)
-		2:  # …choix du rouleau à garder (Cinquième as)
+			GameState.partie.choisir_porte(0)
+			GameState.aller_a_suivant()
+		4:  # …choix du rouleau à garder (Cinquième as)
 			var combat: Control = current_scene
 			combat.boutons_mise[2].pressed.emit()
 			combat._tirer()
 			combat.bouton_cinquieme_as.pressed.emit()
 			_controler(combat.combat.tirage_en_attente and combat.choix_du_rouleau,
 					"l'écran « choix du rouleau » n'est pas dans le bon état (tirage en attente, choix ouvert)")
-		3:  # …après le tour joué
+		5:  # …après le tour joué
 			var combat: Control = current_scene
 			combat._garder_rouleau(1)
 			combat._valider()
 			_controler(not combat.combat.tirage_en_attente, "le tour n'a pas été joué")
-		4:  # récompense
+		6:  # combat contre le Grand Croupier : la règle du tour s'affiche
+			_combat_contre("grand_croupier", 3)
+		7:  # …après quelques tours (la règle a changé)
+			var combat: Control = current_scene
+			combat.combat.pv_joueur = 40
+			combat._tirer()
+			_controler(combat.texte_passif.visible, "la règle du tour devrait s'afficher")
+		8:  # combat contre la Dame de Pique : crânes temporaires
+			_combat_contre("dame_de_pique", 2)
+		9:  # …après 3 tours : des crânes ont été glissés dans la machine
+			var combat: Control = current_scene
+			for i in 3:
+				combat.combat.pv_joueur = 40
+				combat._tirer()
+			_controler(combat.combat.cranes_temporaires == 3, "3 crânes temporaires attendus : %d" % combat.combat.cranes_temporaires)
+		10:  # combat contre la Mimique : l'attaque surprise est dans le journal
+			_combat_contre("mimique", 3)
+			_controler(GameState.partie.ennemi_courant != null, "la Mimique devrait être l'ennemi courant")
+		11:  # combat contre l'Usurier (renfort quand on mise)
+			_combat_contre("usurier", 3)
+		12:  # combat contre le Pickpocket
+			_combat_contre("pickpocket", 2)
+		13:  # …qui s'enfuit
+			current_scene.combat.etat = Combat.Etat.FUITE
+			current_scene._rafraichir()
+		14:  # récompense
 			GameState.nouvelle_partie()
-			GameState.aller_a(GameState.SCENE_RECOMPENSE)
-		5:  # relique offerte après le combat 3
+			GameState.partie.ecran = Partie.Ecran.RECOMPENSE
+			GameState.aller_a_suivant()
+		15:  # relique (coffre ou boss)
 			GameState.nouvelle_partie()
-			GameState.partie.combats_gagnes = 3
-			GameState.aller_a(GameState.SCENE_RELIQUE)
-		6:  # boutique
+			GameState.partie.ecran = Partie.Ecran.RELIQUE
+			GameState.aller_a_suivant()
+		16:  # boutique
 			GameState.nouvelle_partie()
 			GameState.partie.or_total = 100
-			GameState.aller_a(GameState.SCENE_BOUTIQUE)
-		7:  # fin de partie (victoire)
+			GameState.partie.ecran = Partie.Ecran.BOUTIQUE
+			GameState.aller_a_suivant()
+		17:  # repos : les deux choix
 			GameState.nouvelle_partie()
+			GameState.partie.pv = 17
+			GameState.partie.ecran = Partie.Ecran.REPOS
+			GameState.aller_a_suivant()
+		18:  # repos : le sac pour dorer un symbole
+			var repos: Control = current_scene
+			repos._choisir_symbole()
+			_controler(repos.zone_sac.visible, "le sac du repos devrait s'afficher")
+		19:  # fin de partie (victoire)
+			GameState.nouvelle_partie()
+			GameState.partie.ecran = Partie.Ecran.FIN
 			GameState.partie.etat = Partie.Etat.VICTOIRE
-			GameState.aller_a(GameState.SCENE_FIN)
+			GameState.aller_a_suivant()
+		20:  # fin de partie (défaite face à un boss)
+			GameState.nouvelle_partie()
+			GameState.partie.etage = 2
+			GameState.partie.aller_au_boss()
+			GameState.partie.ecran = Partie.Ecran.FIN
+			GameState.partie.etat = Partie.Etat.DEFAITE
+			GameState.aller_a_suivant()
+
+
+## Un combat contre l'ennemi `id`, à l'étage `etage`, avec l'ouverture jouée si l'ennemi en a une.
+func _combat_contre(id: String, etage: int) -> void:
+	GameState.nouvelle_partie()
+	GameState.partie.etage = etage
+	GameState.partie.ennemi_courant = load("res://data/enemies/%s.tres" % id) as EnemyData
+	GameState.partie.ecran = Partie.Ecran.COMBAT
+	GameState.aller_a_suivant()
 
 
 ## Si un écran n'est pas dans l'état voulu, la capture serait trompeuse : on le dit et on sort en erreur.
@@ -91,8 +159,6 @@ func _partie_avec_toutes_les_reliques() -> void:
 
 
 func _photographier(etape: int) -> void:
-	var noms := ["combat_depart", "combat_attente", "combat_choix_rouleau", "combat_apres_tour",
-			"recompense", "relique", "boutique", "fin_partie"]
 	var image := root.get_texture().get_image()
-	image.save_png(DOSSIER + noms[etape] + ".png")
-	print("capture : ", noms[etape])
+	image.save_png(DOSSIER + NOMS[etape] + ".png")
+	print("capture : ", NOMS[etape])

@@ -12,22 +12,23 @@ var bouton_passer: Button
 
 func _ready() -> void:
 	partie = GameState.partie
+	if partie.ecran != Partie.Ecran.RECOMPENSE:
+		GameState.rediriger()
+		return
 	propositions = partie.proposer_recompenses()
 	_construire_interface()
 
 
-## Le joueur prend un symbole (ou passe si `symbole` est null), puis il va à la relique
-## offerte (après le combat 3) ou directement à la boutique.
+## Le joueur prend un symbole (ou passe si `symbole` est null), puis la partie dit où aller
+## (les portes du pas suivant).
 func _choisir(symbole: SymbolData) -> void:
 	for bouton in boutons:
 		bouton.disabled = true
 	bouton_passer.disabled = true
 	if symbole != null:
 		partie.choisir_recompense(symbole)
-	if partie.relique_a_offrir():
-		GameState.aller_a(GameState.SCENE_RELIQUE)
-	else:
-		GameState.aller_a(GameState.SCENE_BOUTIQUE)
+	partie.terminer_recompense()
+	GameState.aller_a_suivant()
 
 
 func _compter_dans_le_sac(symbole: SymbolData) -> int:
@@ -59,8 +60,8 @@ func _construire_interface() -> void:
 	colonne.add_child(titre)
 
 	var infos := Label.new()
-	infos.text = tr("Combats gagnés : %d / %d   Or : %d   PV : %d / %d") % [
-		partie.combats_gagnes, Partie.NB_COMBATS_NORMAUX + 1, partie.or_total, partie.pv, partie.pv_max]
+	infos.text = tr("Combats gagnés : %d   Or : %d   PV : %d / %d") % [
+		partie.combats_gagnes, partie.or_total, partie.pv, partie.pv_max]
 	infos.add_theme_font_size_override("font_size", 18)
 	infos.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	colonne.add_child(infos)

@@ -43,6 +43,38 @@ On n'avance que vers l'avant : la seule boucle est celle des portes, jusqu'au bo
 | Coffre | Une relique gratuite ; à l'étage 3, parfois une mimique |
 | Repos | Soigner 30 % des PV max, ou rendre un symbole doré gratuitement |
 
+**Précisions de règles (v0.6)**
+
+- Structure : 3 étages (Les Cryptes, La Salle de jeu maudite, Le Coffre-fort) ; un étage = 5 salles, chacune choisie entre 2 portes, puis le boss de l'étage. Boss de l'étage 3 vaincu = victoire. On n'avance que vers l'avant.
+- Les portes montrent le type de salle (combat, boutique, coffre, repos), pas l'ennemi. Chaque porte tire son type avec ces poids : combat 50, coffre 20, boutique 15, repos 15. Contraintes du générateur (l'étage est retiré sinon) : les 2 portes d'un pas ne sont jamais identiques (deux combats sont permis contre des ennemis différents) ; la 1re salle d'un étage propose 2 combats ; un étage contient au moins un coffre, une boutique et un repos.
+- Après un combat normal gagné : récompense (1 symbole parmi 3, ou passer), puis les portes suivantes. Il n'y a plus de boutique automatique ni de relique offerte après le combat 3 : la boutique est une salle au choix, les coffres et les boss donnent les reliques.
+- Coffre : écran « Choisis 1 relique parmi 2 ». À l'étage 3, 1 coffre sur 3 est une Mimique (invisible sur la porte, mais l'écran des portes de l'étage 3 prévient que certains coffres sont des mimiques) : elle attaque par surprise avant le premier tirage (10 dégâts, jamais mortels : il reste au moins 1 PV) ; si on la bat, la relique est donnée quand même. La Mimique n'apparaît que dans les coffres.
+- Repos : soigner 30 % des PV max (arrondi au-dessus, sans dépasser le maximum), ou rendre un symbole doré gratuitement (choisi dans le sac). Une seule action, puis les portes.
+- Boss : vaincu, il donne une relique (1 parmi 2) ; à l'étage 3, c'est la victoire. À l'arrivée d'un nouvel étage, les PV remontent de 50 % des PV max (constante `SOIN_APRES_BOSS_POURCENT`, ajoutée au cahier de départ : sans elle, un robot sans réflexion perdait presque toujours à l'étage 2).
+- Hasard : le donjon (portes, ennemis, mimiques) ne dépend que de la graine de la partie : un générateur par étage, séparé de celui du jeu (tirages, récompenses, blocages). Même graine = même donjon, quoi que le joueur ait fait avant.
+- Nouvelles intentions : « Se prépare à frapper » (le Golem ne fait rien ce tour-là, puis frappe fort) et « Va s'enfuir » (le Pickpocket quitte le combat : ni or de victoire ni récompense). Le Pickpocket : vole 4 or, attaque 9, vole 4 or, puis fuit.
+- Crânes temporaires (Fantôme de joueur et Dame de Pique : 1 par tour chacun ; le cahier de départ prévoyait 2 pour la Dame, trop dur) : ajoutés au sac du combat seulement (le vrai sac n'est jamais touché), 10 au maximum par combat ; leur nombre s'affiche sous l'intention.
+- Usurier : +2 d'attaque pour le reste du combat à chaque tour où le joueur a misé (une mise annulée ne compte pas) ; l'intention affichée montre l'attaque renforcée.
+- Grand Croupier : à chaque tour une règle de la machine change, annoncée avant le tirage et valable pour ce tirage, jamais deux fois de suite la même : les épées soignent l'ennemi au lieu de le blesser ; les boucliers ne donnent pas d'armure ; les potions ne soignent pas ; les crânes comptent double.
+- Le joueur voit toujours à l'avance ce qui l'attend : intention, passif et règle du tour s'affichent avant le tirage.
+
+| Ennemi | PV | Intentions (jouées en boucle) | Or de victoire |
+| --- | --- | --- | --- |
+| Rat d'égout | 12 | attaque 8 | 8 |
+| Squelette | 22 | protection 5, attaque 13 | 13 |
+| Gobelin tricheur | 18 | attaque 9, vol 3 | 13 |
+| Rat-Croupier (boss) | 48 | attaque 10, blocage d'un rouleau | 40 |
+| Fantôme de joueur | 26 | attaque 7, protection 6 ; +1 crâne temporaire par tour | 16 |
+| Golem de jetons | 36 | se prépare, attaque 16 | 24 |
+| Pickpocket | 24 | vol 4, attaque 9, vol 4, fuite | 16 |
+| Dame de Pique (boss) | 54 | attaque 7, attaque 10 ; +1 crâne temporaire par tour | 64 |
+| Garde du coffre | 45 | protection 14, attaque 13 | 24 |
+| Mimique | 35 | surprise 10 au début, puis attaque 11 | 19 |
+| Usurier | 38 | attaque 10 (+2 par tour de mise) | 24 |
+| Grand Croupier (boss) | 63 | attaque 7, attaque 9 ; une règle de machine change à chaque tour | 60 |
+
+- Équilibrage : trois robots sans réflexion traversent le donjon (400 parties chacun). Le « prudent » (repos s'il est blessé, boutique s'il a de l'or, sinon coffre puis combat, achète les reliques) gagne 42 % de ses parties ; le « hasard » (portes au hasard, aucun achat de relique) 16 % ; le « tout » (comme le prudent, mais mise 5 or dès qu'il a 25 or) 22 %. Le boss de l'étage 1 est atteint dans 96 à 97 % des parties. Un vrai joueur fait mieux. Valeurs à régler dans les `.tres` après les essais d'Alex.
+
 ## La machine à sous
 
 La machine est une seule ligne de 5 rouleaux, comme une vraie machine à sous : à chaque tirage, 5 symboles sont tirés au hasard dans le « sac » du joueur. Le sac, c'est la collection de symboles que le joueur possède : l'agrandir, l'améliorer et le nettoyer est toute la stratégie.
@@ -107,9 +139,9 @@ Un combat oppose le joueur à un seul ennemi, au tour par tour : un tirage du jo
 
 **Précisions de règles (v0.3)**
 
-- Une partie v0.3 = 5 combats contre des ennemis de l'étage 1 (tirés au hasard, jamais le même deux fois de suite), puis le boss de l'étage. Boss vaincu = victoire (un seul étage pour l'instant ; les 3 étages arrivent en v0.6).
+- Une partie v0.3 = 5 combats contre des ennemis de l'étage 1 (tirés au hasard, jamais le même deux fois de suite), puis le boss de l'étage. Boss vaincu = victoire (depuis la v0.6, la partie traverse 3 étages : voir « Boucle de jeu »).
 - Entre deux combats, les PV ne remontent pas (sauf soins), l'armure retombe, l'or gagné et le sac sont conservés. L'or se dépense à la boutique (v0.4).
-- Après chaque combat normal, 3 symboles différents sont proposés parmi épée, bouclier, potion et pièce (jamais le crâne) : on en prend 1 pour l'ajouter au sac, ou on passe. Pas de récompense après le boss (les coffres et les boss de la v0.6 donneront des reliques).
+- Après chaque combat normal, 3 symboles différents sont proposés parmi épée, bouclier, potion et pièce (jamais le crâne) : on en prend 1 pour l'ajouter au sac, ou on passe. Pas de récompense en symbole après un boss : il donne une relique (v0.6).
 - Intention « Blocage » : à son action du tour N, l'ennemi bloque un rouleau tiré au hasard, qui reste vide au tirage du tour N+1 (un rouleau vide casse les combos). Le joueur voit « bloque un rouleau » dans l'intention dès le tour N.
 - Gobelin tricheur : alterne attaque et vol d'or (v0.4 ; en v0.3 il alternait attaque et protection, faute de boutique). Rat-Croupier : 60 PV, alterne attaque et blocage.
 - À 0 PV dans un combat : game over. Rejouer lance une nouvelle partie (nouveau sac, PV pleins, nouvelle graine).
@@ -147,8 +179,7 @@ Une seule mise par tour. Certaines reliques modifient les mises (gains plus fort
 - Quitte ou double : aucun crâne visible → les effets positifs du tirage (dégâts, armure, soin, or) sont doublés, pas le malus des crânes. Au moins un crâne visible → on perd 5 PV (l'armure ne les bloque pas).
 - Tour en deux temps : le levier affiche les rouleaux. Sans relance possible, le tour se joue aussitôt. Avec le Dé pipé ou le Cinquième as, on peut relancer, puis « Valider » (la touche Espace valide aussi). La mise est fixée au premier tirage ; les rouleaux bloqués par un ennemi restent bloqués.
 - Reliques (chacune une seule fois par partie ; prix en boutique) : Cœur de pierre (30 or) : +10 PV max et +10 PV tout de suite. Tirelire (30) : +2 or à chaque tour sans combo (un combo de crânes compte comme un combo). Lame aimantée (35) : chaque pièce visible inflige aussi 1 dégât (pièces dans un combo comprises). Trèfle à quatre feuilles (30) : chaque crâne tiré a 1 chance sur 2 de devenir une pièce, avant le calcul des combos. Jackpot maudit (40) : l'effet de tous les combos est ×2, et 2 crânes sont ajoutés au sac tout de suite. Jeton porte-bonheur (25) : la première mise d'or perdue de chaque combat est remboursée. Sixième rouleau (40) : 6 rouleaux (combo de 6 : ×8). Dé pipé (30) : une relance gratuite de tous les rouleaux par combat. Cinquième as (35) : une fois par combat, on garde 1 rouleau (clic dessus) et on relance les autres.
-- Obtention : la boutique propose 2 reliques non possédées. Après le combat 3, après la récompense en symbole, un écran « Choisis 1 relique parmi 2 » (sans « passer ») précède la boutique. Pas de relique après le boss : les coffres et les boss de la v0.6 en donneront.
-- Déroulé : combat → récompense (symbole) → [relique offerte après le combat 3] → boutique → combat suivant.
+- Obtention : la boutique propose 2 reliques non possédées. Depuis la v0.6, les coffres et les boss offrent aussi « Choisis 1 relique parmi 2 » (sans « passer ») ; la relique offerte après le combat 3 de la v0.5 a disparu.
 - Équilibrage : les valeurs des ennemis de la v0.4 sont inchangées. Un robot qui ne réfléchit pas gagne environ 55 % des parties sans relique et 56 à 61 % avec les reliques offertes et achetées.
 
 Toute la monnaie du jeu est fictive : aucun achat ni argent réel.
@@ -169,7 +200,7 @@ Le joueur progresse pendant une partie seulement : or, symboles et reliques sont
 
 **Précisions de règles (v0.4)**
 
-- Déroulé : combat → récompense (1 symbole parmi 3, ou passer) → [relique offerte après le combat 3, voir v0.5] → boutique → combat suivant. Pas de boutique après le boss. Les salles au choix entre 2 portes remplaceront cette suite en v0.6.
+- Déroulé (jusqu'à la v0.5) : combat → récompense → boutique → combat suivant. Depuis la v0.6, la boutique est une salle au choix parmi les 2 portes (voir « Boucle de jeu »).
 - Acheter un symbole : 3 symboles différents sont proposés parmi épée, bouclier, potion et pièce (jamais le crâne), chacun à son prix (épée 10, bouclier 8, potion 10, pièce 12). Une offre achetée disparaît de l'étal.
 - Retirer un symbole du sac : 10 or, puis 5 de plus à chaque retrait de la partie (10, 15, 20…). On garde toujours au moins 1 symbole dans le sac.
 - Rendre un symbole doré : 20 or. Un symbole déjà doré ne peut pas l'être deux fois.
@@ -238,7 +269,7 @@ La version 1.0 compte 3 étages, 9 ennemis normaux et 3 boss, dans un univers de
 | Gobelin tricheur | 1 | 18 | Alterne attaque et vol de 3 or |
 | Squelette | 1 | 22 | Se protège un tour sur deux |
 | Fantôme de joueur | 2 | 26 | Ajoute des crânes temporaires dans le sac |
-| Golem de jetons | 2 | 40 | Lent, très grosses attaques |
+| Golem de jetons | 2 | 36 | Lent, très grosses attaques |
 | Pickpocket | 2 | 24 | Vole de l'or, fuit au bout de 4 tours si pas tué |
 | Garde du coffre | 3 | 45 | Armure élevée |
 | Mimique | 3 | 35 | Se fait passer pour un coffre, attaque surprise |
@@ -248,9 +279,9 @@ La version 1.0 compte 3 étages, 9 ennemis normaux et 3 boss, dans un univers de
 
 | Boss | PV | Mécanique spéciale |
 | --- | --- | --- |
-| Le Rat-Croupier | 60 | Bloque un rouleau tous les 2 tours |
-| La Dame de Pique | 90 | Ajoute 2 crânes temporaires dans le sac à chaque tour |
-| Le Grand Croupier | 140 | Change une règle de la machine à chaque tour (ex. les épées soignent l'ennemi) |
+| Le Rat-Croupier | 48 | Bloque un rouleau tous les 2 tours |
+| La Dame de Pique | 54 | Ajoute 1 crâne temporaire dans le sac à chaque tour |
+| Le Grand Croupier | 63 | Change une règle de la machine à chaque tour (ex. les épées soignent l'ennemi) |
 
 ## Interface et contrôles
 
@@ -291,7 +322,7 @@ Le projet utilise Godot 4.7 et GDScript, dans le dossier `jackpot-donjon` déjà
 - **État de la partie** : une classe `GameState` (membres statiques, sans autoload : un autoload est déclaré dans `project.godot`, que l'éditeur Godot ouvert peut réécrire sans lui) garde la partie en cours (PV, or, sac, reliques, étage et salle en cours).
 - **Sauvegarde du profil** : jetons d'âme, avantages débloqués et malédictions sont enregistrés dans un fichier `user://profil.save`. Le fichier porte un numéro de version (pour migrer les anciens profils après une mise à jour) et s'écrit dans un fichier temporaire renommé ensuite, pour ne pas être corrompu par un plantage en pleine écriture.
 - **Tests** : la logique (tirage, combos, effets, combat) est testée sans interface avec `godot --headless`, dans `tests/` ; le script de test se termine avec un code d'erreur s'il échoue.
-- **Hasard** : un seul générateur aléatoire avec une graine affichée en debug, pour pouvoir rejouer exactement une partie qui a bugué.
+- **Hasard** : une graine affichée en debug, pour pouvoir rejouer exactement une partie qui a bugué. Un générateur pour le jeu (tirages, récompenses, blocages) et, séparés, un par étage du donjon (portes, ennemis, mimiques), tous dérivés de la graine : même graine = même donjon, quoi que le joueur ait fait avant.
 - **Textes** : tout texte affiché passe par la traduction de Godot (`tr()` et un fichier CSV), pour ajouter l'anglais à la fin sans tout reprendre.
 - **Taille de la grille** : nombre de rouleaux et de lignes en paramètres, jamais écrits en dur dans le code.
 - **Rendu** : le projet est en Forward+ ; on le garde tant qu'il n'y a pas de souci, le mode Compatibility suffirait pour de la 2D.
@@ -333,6 +364,8 @@ Le jeu se construit par versions jouables : la version 0.3 est le MVP, une parti
    - Fini quand : on peut miser avant un tirage et jouer avec des reliques qui changent les règles.
    - Réalisé : mises d'or et quitte ou double ; les 9 reliques ; tour en deux temps pour les relances (Dé pipé, Cinquième as) ; machine à 6 rouleaux (Sixième rouleau) ; une relique offerte après le combat 3 (1 parmi 2) ; 2 reliques en boutique.
 6. **v0.6 – Le donjon** : 3 étages, choix entre 2 portes, coffres et repos, tous les ennemis et boss.
+   - Fini quand : on traverse les 3 étages et on peut gagner la partie en battant le Grand Croupier.
+   - Réalisé : 3 étages de 5 salles au choix entre 2 portes (combat, boutique, coffre, repos) puis un boss ; donjon généré à partir de la graine ; coffres (1 relique parmi 2) et mimiques à l'étage 3 ; repos (soin ou dorure) ; 9 ennemis, la Mimique et 3 boss avec leurs mécaniques (crânes temporaires, Usurier, fuite du Pickpocket, charge du Golem, attaque surprise, règles du Grand Croupier) ; relique offerte par chaque boss ; PV remontés de 50 % à chaque nouvel étage.
 7. **v0.7 – Entre les parties** : jetons d'âme, Comptoir du Croupier, malédictions, sauvegarde du profil.
 8. **v0.8 – Habillage** : graphismes, sons, musique, animations, menu principal.
 9. **v1.0 – Sortie** : équilibrage, statistiques de fin de partie, export en .exe Windows.

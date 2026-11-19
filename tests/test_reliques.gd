@@ -313,43 +313,32 @@ func test_propositions() -> void:
 	var b := Partie.creer(11).proposer_reliques(2)
 	verifier(a[0].id == b[0].id and a[1].id == b[1].id, "même graine, mêmes reliques proposées")
 
-	# Regarder les propositions n'est pas un tirage : relique_a_offrir ne touche pas au hasard.
+	# Regarder s'il reste des reliques n'est pas un tirage : peut_recevoir_relique ne touche pas au hasard.
 	var p := Partie.creer(12)
 	var etat_rng := p.rng.state
-	p.relique_a_offrir()
-	verifier(p.rng.state == etat_rng, "relique_a_offrir ne consomme pas le hasard")
+	p.peut_recevoir_relique()
+	verifier(p.rng.state == etat_rng, "peut_recevoir_relique ne consomme pas le hasard")
 
 
 func test_relique_offerte() -> void:
+	# Une relique est offerte par un coffre ou un boss : l'écran « relique » demande un choix.
 	var partie := Partie.creer(13)
-	var epee_ok := load("res://data/symbols/epee.tres") as SymbolData
-	var jackpot: Array[SymbolData] = [epee_ok, epee_ok, epee_ok, epee_ok, epee_ok]
-	var machine := MachineASous.new(5, 1)
-	var offres := []
-	for numero in range(1, 6):
-		verifier(partie.numero_combat == numero, "on est au combat %d" % numero)
-		var combat := partie.creer_combat()
-		var tours := 0
-		while not combat.est_fini() and tours < 50:
-			combat.jouer_tour(machine.resoudre(jackpot))
-			tours += 1
-		partie.terminer_combat(combat)
-		offres.append(partie.relique_a_offrir())
-	verifier(offres == [false, false, true, false, false], "la relique est offerte après le combat 3 seulement : %s" % str(offres))
+	partie.ecran = Partie.Ecran.RELIQUE
+	var choix := partie.proposer_reliques(2)[0]
+	partie.choisir_relique(choix)
+	verifier(partie.a_relique(choix.id), "la relique choisie est possédée")
+	verifier(partie.ecran != Partie.Ecran.RELIQUE, "l'écran de relique est quitté")
 
-	# Une fois choisie, elle n'est plus offerte.
+	# Hors de l'écran de relique, choisir ne donne rien (pas de relique gratuite par erreur).
 	var partie2 := Partie.creer(14)
-	partie2.combats_gagnes = 3
-	verifier(partie2.relique_a_offrir(), "après 3 combats gagnés, une relique est à offrir")
-	var choix := partie2.proposer_reliques(2)[0]
-	partie2.choisir_relique_offerte(choix)
-	verifier(partie2.a_relique(choix.id) and not partie2.relique_a_offrir(), "la relique choisie est possédée et n'est plus offerte")
+	partie2.choisir_relique(partie2.proposer_reliques(2)[0])
+	verifier(partie2.reliques.is_empty(), "pas de relique hors de l'écran de relique")
 
-	# Jamais après une victoire ou une défaite de la partie.
+	# Plus aucune relique à offrir quand on les a toutes.
 	var partie3 := Partie.creer(15)
-	partie3.combats_gagnes = 3
-	partie3.etat = Partie.Etat.DEFAITE
-	verifier(not partie3.relique_a_offrir(), "pas de relique offerte quand la partie est finie")
+	for r in Reliques.toutes():
+		partie3.ajouter_relique(r)
+	verifier(not partie3.peut_recevoir_relique(), "toutes possédées : plus rien à offrir")
 
 
 func test_boutique_reliques() -> void:

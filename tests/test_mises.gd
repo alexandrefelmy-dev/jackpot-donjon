@@ -281,20 +281,27 @@ func test_jeton_porte_bonheur() -> void:
 	verifier(combat3.pv_joueur == 25 and combat3.remboursements_de_mise == 1, "le jeton ne rembourse pas les PV du quitte ou double")
 
 	# Chaque combat recommence : la partie remet un jeton.
-	var partie := Partie.creer(21)
+	var partie := partie_neuve(21)
 	partie.ajouter_relique(Reliques.charger(&"jeton_porte_bonheur"))
 	partie.or_total = 50
 	var premier := partie.creer_combat()
 	verifier(premier.remboursements_de_mise == 1, "un combat commence avec 1 remboursement avec le Jeton")
 	premier.jouer_tour(machine.resoudre(grille_de([epee, bouclier, null, null, null])), Mise.en_or(10))
 	verifier(premier.remboursements_de_mise == 0, "le jeton est consommé")
-	var sans := Partie.creer(22)
+	var sans := partie_neuve(22)
 	verifier(sans.creer_combat().remboursements_de_mise == 0, "sans la relique, aucun remboursement")
+
+
+## Une partie neuve qui a déjà franchi sa première porte (un combat) : prête à créer son combat.
+func partie_neuve(graine: int) -> Partie:
+	var partie := Partie.creer(graine)
+	partie.choisir_porte(0)
+	return partie
 
 
 ## Une partie avec des reliques données, prête à jouer en deux temps.
 func partie_avec_reliques(ids: Array, graine: int) -> Partie:
-	var partie := Partie.creer(graine)
+	var partie := partie_neuve(graine)
 	for id in ids:
 		partie.ajouter_relique(Reliques.charger(id))
 	return partie
@@ -303,8 +310,8 @@ func partie_avec_reliques(ids: Array, graine: int) -> Partie:
 func test_deux_temps_equivaut_a_l_ancien_tour() -> void:
 	# Sans relique, tirer() + valider() joue exactement le même tour que l'ancienne méthode
 	# (tirer à la main, calculer, jouer_tour) : même graine, même partie.
-	var ancien := Partie.creer(31)
-	var nouveau := Partie.creer(31)
+	var ancien := partie_neuve(31)
+	var nouveau := partie_neuve(31)
 	var c_ancien := ancien.creer_combat()
 	var c_nouveau := nouveau.creer_combat()
 	var identique := true
@@ -323,7 +330,7 @@ func test_deux_temps_equivaut_a_l_ancien_tour() -> void:
 
 
 func test_deux_temps_etats() -> void:
-	var partie := Partie.creer(32)
+	var partie := partie_neuve(32)
 	var combat := partie.creer_combat()
 	verifier(not combat.tirage_en_attente and not combat.peut_relancer(), "au départ, aucun tirage en attente")
 	verifier(combat.valider().is_empty(), "valider sans tirage ne fait rien")
@@ -343,12 +350,12 @@ func test_deux_temps_etats() -> void:
 	verifier(not brut.tirer(), "un combat sans machine ne peut pas tirer")
 
 	# Un combat fini ne tire plus.
-	var fini := Partie.creer(33).creer_combat()
+	var fini := partie_neuve(33).creer_combat()
 	fini.etat = Combat.Etat.VICTOIRE
 	verifier(not fini.tirer(), "un combat fini ne tire plus")
 
 	# Les rouleaux bloqués par l'ennemi restent vides pendant le tirage.
-	var combat2 := Partie.creer(34).creer_combat()
+	var combat2 := partie_neuve(34).creer_combat()
 	combat2.rouleaux_bloques = [1, 3]
 	combat2.tirer()
 	verifier(combat2.grille_courante[1] == null and combat2.grille_courante[3] == null, "les rouleaux bloqués sont vides")
@@ -404,7 +411,7 @@ func test_de_pipe() -> void:
 	premier.tirer()
 	premier.relancer_tout()
 	premier.valider()
-	var second := Partie.creer(43)
+	var second := partie_neuve(43)
 	second.ajouter_relique(Reliques.charger(&"de_pipe"))
 	verifier(second.creer_combat().relances_gratuites == 1, "chaque combat redonne la relance")
 
@@ -582,7 +589,7 @@ func test_combats_aleatoires_avec_mises() -> void:
 	var coherent := true
 	var finis := 0
 	for graine in 300:
-		var partie := Partie.creer(graine)
+		var partie := partie_neuve(graine)
 		partie.ajouter_relique(Reliques.charger(&"jeton_porte_bonheur"))
 		partie.or_total = hasard.randi_range(0, 60)
 		var combat := partie.creer_combat()
@@ -615,7 +622,7 @@ func test_combats_deux_temps_avec_toutes_les_reliques() -> void:
 	var finis := 0
 	var relances := 0
 	for graine in 200:
-		var partie := Partie.creer(graine)
+		var partie := partie_neuve(graine)
 		for r in Reliques.toutes():
 			partie.ajouter_relique(r)
 		partie.or_total = hasard.randi_range(0, 80)

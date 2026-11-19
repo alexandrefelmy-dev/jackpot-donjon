@@ -15,7 +15,7 @@ func _ready() -> void:
 
 func _rejouer() -> void:
 	GameState.nouvelle_partie()
-	GameState.aller_a(GameState.SCENE_COMBAT)
+	GameState.aller_a_suivant()
 
 
 func _construire_interface() -> void:
@@ -42,16 +42,18 @@ func _construire_interface() -> void:
 
 	var sous_titre := Label.new()
 	if victoire:
-		sous_titre.text = tr("Le Rat-Croupier est vaincu : tu as traversé les Cryptes !")
+		sous_titre.text = tr("Le Grand Croupier est vaincu : tu as dévalisé le casino maudit !")
+	elif partie.est_combat_de_boss():
+		sous_titre.text = tr("Tu es tombé face au boss de l'étage %d. Le donjon recommence à zéro.") % partie.etage
 	else:
-		sous_titre.text = tr("Tu es tombé au combat %d. Le donjon recommence à zéro.") % partie.numero_combat
+		sous_titre.text = tr("Tu es tombé à l'étage %d, salle %d. Le donjon recommence à zéro.") % [partie.etage, partie.pas]
 	sous_titre.add_theme_font_size_override("font_size", 22)
 	sous_titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	colonne.add_child(sous_titre)
 
 	var stats := Label.new()
 	stats.text = "\n".join([
-		tr("Combats gagnés : %d / %d") % [partie.combats_gagnes, Partie.NB_COMBATS_NORMAUX + 1],
+		tr("Salles franchies : %d   Boss vaincus : %d / %d") % [partie.salles_franchies, partie.boss_vaincus, Donjon.NB_ETAGES],
 		tr("Or gagné : %d") % partie.or_total,
 		tr("Symboles dans le sac : %d") % partie.sac.taille(),
 		tr("Graine : %d") % partie.graine + "     " + Version.texte(),

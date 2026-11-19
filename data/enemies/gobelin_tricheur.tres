@@ -8,7 +8,7 @@ id = &"gobelin_tricheur"
 nom = "Gobelin tricheur"
 couleur = Color(0.4, 0.7, 0.35, 1)
 pv_max = 18
-or_victoire = 8
+or_victoire = 13
 intentions = Array[Dictionary]([{
 "type": "attaque",
 "valeur": 9

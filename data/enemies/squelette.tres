@@ -8,7 +8,7 @@ id = &"squelette"
 nom = "Squelette"
 couleur = Color(0.85, 0.85, 0.78, 1)
 pv_max = 22
-or_victoire = 8
+or_victoire = 13
 intentions = Array[Dictionary]([{
 "type": "protection",
 "valeur": 5

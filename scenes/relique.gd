@@ -1,6 +1,6 @@
 extends Control
-## Écran « Choisis 1 relique parmi 2 », après le combat 3. On ne peut pas passer : une relique est
-## offerte. (Les coffres de la v0.6 remplaceront cet écran.) Ensuite : la boutique.
+## Écran « Choisis 1 relique parmi 2 » : après l'ouverture d'un coffre, d'une Mimique vaincue ou d'un
+## boss. On ne peut pas passer : une relique est offerte. Ensuite la partie dit où aller (portes ou étage suivant).
 
 const COULEUR_FOND := Color("1b1a24")
 const TAILLE_CARTE := Vector2(300, 250)
@@ -12,16 +12,19 @@ var boutons: Array[Button] = []
 
 func _ready() -> void:
 	partie = GameState.partie
+	if partie.ecran != Partie.Ecran.RELIQUE:
+		GameState.rediriger()
+		return
 	propositions = partie.proposer_reliques(Partie.NB_RELIQUES_OFFERTES)
 	_construire_interface()
 
 
-## Le joueur prend la relique : elle s'ajoute à sa partie, puis il passe à la boutique.
+## Le joueur prend la relique : elle s'ajoute à sa partie, puis la partie dit où aller.
 func _choisir(relique: RelicData) -> void:
 	for bouton in boutons:
 		bouton.disabled = true
-	partie.choisir_relique_offerte(relique)
-	GameState.aller_a(GameState.SCENE_BOUTIQUE)
+	partie.choisir_relique(relique)
+	GameState.aller_a_suivant()
 
 
 func _construire_interface() -> void:

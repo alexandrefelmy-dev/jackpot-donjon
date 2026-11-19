@@ -270,32 +270,47 @@ func test_soin() -> void:
 	verifier(not boutique3.soigner() and partie3.pv == 10 and partie3.or_total == 9, "9 or ne suffisent pas pour se soigner")
 
 
-## Des parties jouées par un robot qui passe par la boutique après chaque combat : toutes finissent,
+## Des parties jouées par un robot qui passe par la boutique quand il a de l'or : toutes finissent,
 ## l'or ne devient jamais négatif, les PV restent cohérents. Le taux de victoire est affiché
 ## pour guider l'équilibrage (ce n'est pas un critère de réussite).
 func test_parties_avec_boutique() -> void:
-	var machine := MachineASous.new(5, 1)
 	var finies := 0
 	var victoires := 0
 	var coherent := true
 	var dores_total := 0
 	var retraits_total := 0
+	var boutiques_visitees := 0
 	for graine in 200:
 		var partie := Partie.creer(graine)
 		var garde_fou := 0
-		while partie.etat == Partie.Etat.EN_COURS and garde_fou < 20:
-			var combat := partie.creer_combat()
-			var tours := 0
-			while not combat.est_fini() and tours < 300:
-				var grille := machine.tirer(partie.sac, partie.rng, combat.rouleaux_bloques)
-				combat.jouer_tour(machine.resoudre(grille))
-				tours += 1
-			partie.terminer_combat(combat)
-			if partie.etat == Partie.Etat.EN_COURS:
-				partie.choisir_recompense(partie.proposer_recompenses()[0])
-				jouer_boutique_robot(partie)
-				if partie.or_total < 0 or partie.pv < 0 or partie.pv > partie.pv_max or partie.sac.taille() < 1:
+		while partie.etat == Partie.Etat.EN_COURS and garde_fou < 600:
+			match partie.ecran:
+				Partie.Ecran.PORTES:
+					partie.choisir_porte(porte_du_robot(partie))
+				Partie.Ecran.COMBAT:
+					var combat := partie.creer_combat()
+					var tours := 0
+					while not combat.est_fini() and tours < 300:
+						combat.tirer()
+						combat.valider()
+						tours += 1
+					partie.terminer_combat(combat)
+				Partie.Ecran.RECOMPENSE:
+					partie.choisir_recompense(partie.proposer_recompenses()[0])
+					partie.terminer_recompense()
+				Partie.Ecran.RELIQUE:
+					partie.choisir_relique(partie.proposer_reliques(2)[0])
+				Partie.Ecran.BOUTIQUE:
+					boutiques_visitees += 1
+					jouer_boutique_robot(partie)
+					partie.quitter_boutique()
+				Partie.Ecran.REPOS:
+					partie.repos_soigner()
+				_:
 					coherent = false
+					break
+			if partie.or_total < 0 or partie.pv < 0 or partie.pv > partie.pv_max or partie.sac.taille() < 1:
+				coherent = false
 			garde_fou += 1
 		if partie.etat != Partie.Etat.EN_COURS:
 			finies += 1
@@ -307,8 +322,23 @@ func test_parties_avec_boutique() -> void:
 				dores_total += 1
 	verifier(finies == 200, "les 200 parties avec boutique se terminent : %d" % finies)
 	verifier(coherent, "or, PV et sac toujours cohérents dans la boutique")
+	verifier(boutiques_visitees > 100, "le robot est bien passé par des boutiques (%d)" % boutiques_visitees)
 	print("  info  parties avec boutique : %d victoires sur 200 (%d %%) ; en moyenne %.1f retraits et %.1f dorés par partie" % [
 		victoires, victoires / 2, retraits_total / 200.0, dores_total / 200.0])
+
+
+## La porte que choisit le robot : une boutique s'il a de l'or, un repos s'il est blessé, sinon un combat.
+func porte_du_robot(partie: Partie) -> int:
+	var portes := partie.portes()
+	for voulu in [Salle.Type.REPOS, Salle.Type.BOUTIQUE, Salle.Type.COMBAT]:
+		if voulu == Salle.Type.REPOS and partie.pv > partie.pv_max / 2:
+			continue
+		if voulu == Salle.Type.BOUTIQUE and partie.or_total < 20:
+			continue
+		for i in portes.size():
+			if portes[i].type == voulu:
+				return i
+	return 0
 
 
 ## Le robot : se soigne s'il manque 10 PV ou plus, retire les crânes, dore une épée,
