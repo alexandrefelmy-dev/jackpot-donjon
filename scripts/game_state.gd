@@ -30,7 +30,52 @@ static var message_profil: String = ""
 ## une vraie lecture du fichier du joueur. Un test ou un outil qui prépare son propre profil ne passe jamais
 ## par cette lecture : il n'écrit donc jamais dans le vrai profil.
 static var _ecriture_permise: bool = false
+
+## Les réglages du joueur (volumes, plein écran, accessibilité). Chargés une seule fois, comme le profil.
+static var options: Options
+static var _ecriture_options_permise: bool = false
+static var _demarre: bool = false
 static var _hasard_du_profil: RandomNumberGenerator
+
+
+## Prépare ce que tout le jeu utilise : les actions d'entrée, les bus audio, les options du joueur.
+## Idempotent : chaque écran peut l'appeler dans son _ready(). C'est ce qui fait marcher le jeu quand on
+## lance directement l'écran principal du projet.
+static func demarrer() -> void:
+	if _demarre:
+		return
+	_demarre = true
+	Entrees.enregistrer()
+	charger_options()
+	appliquer_options()
+
+
+## Charge les options (une seule fois). Sans sauvegarde possible (mode sans fenêtre), les options par défaut.
+static func charger_options() -> void:
+	if options != null:
+		return
+	if _sauvegarde_active():
+		var chargement := OptionsFichier.charger(OptionsFichier.CHEMIN_DEFAUT)
+		options = chargement.options
+		_ecriture_options_permise = chargement.ecriture_permise
+	else:
+		options = Options.new()
+
+
+## Écrit les options sur le disque (si la sauvegarde est active et permise). Renvoie faux en cas d'échec.
+static func sauver_options() -> bool:
+	if options == null or not _sauvegarde_active() or not _ecriture_options_permise:
+		return true
+	return OptionsFichier.sauver(options, OptionsFichier.CHEMIN_DEFAUT) == OK
+
+
+## Applique les options : volumes des bus et plein écran (pas de changement de fenêtre en mode sans fenêtre).
+static func appliquer_options() -> void:
+	charger_options()
+	Son.appliquer_options(options)
+	if _sauvegarde_active():
+		DisplayServer.window_set_mode(
+				DisplayServer.WINDOW_MODE_FULLSCREEN if options.plein_ecran else DisplayServer.WINDOW_MODE_WINDOWED)
 
 
 ## Commence une nouvelle partie avec le profil (s'il est chargé) : avantages et malédictions comprises.
@@ -129,6 +174,7 @@ static func aller_a_suivant() -> void:
 ## Comme aller_a_suivant, mais plus tard dans l'image : pour un écran qui s'aperçoit dans son
 ## _ready() que la partie attend un autre écran (changer de scène pendant _ready() est refusé).
 static func rediriger() -> void:
+	demarrer()
 	var arbre := Engine.get_main_loop() as SceneTree
 	arbre.call_deferred("change_scene_to_file", scene_attendue())
 
