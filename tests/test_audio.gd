@@ -17,6 +17,8 @@ func _lancer() -> void:
 	await test_evenements_sans_fichier()
 	await test_musique()
 	await test_tables_de_donnees()
+	await test_fichiers_et_manifeste()
+	await test_retour_du_tour()
 	print("TERMINÉ : %d échec(s)" % echecs)
 	quit(1 if echecs > 0 else 0)
 
@@ -165,3 +167,71 @@ func test_tables_de_donnees() -> void:
 					tous_existent = false
 					print("    fichier manquant : ", fichier)
 	verifier(tous_existent, "tous les fichiers cités par les tables existent")
+
+
+func test_fichiers_et_manifeste() -> void:
+	print("Fichiers sonores et manifeste")
+	var effets := load(Son.TABLE) as TableSons
+	var sans_fichier: Array[StringName] = []
+	for id in Son.EVENEMENTS:
+		var existent := 0
+		for chemin in effets.chemins(id):
+			if ResourceLoader.exists(chemin):
+				existent += 1
+		if existent == 0:
+			sans_fichier.append(id)
+	verifier(sans_fichier.is_empty(), "chaque événement sonore a au moins un fichier (manquants : %s)" % str(sans_fichier))
+	var musiques := load(Musique.TABLE) as TableSons
+	var toutes_les_pistes := true
+	for piste in [&"etage_1", &"etage_2", &"etage_3", &"boss"]:
+		if musiques.chemins(piste).is_empty() or not ResourceLoader.exists(musiques.chemins(piste)[0]):
+			toutes_les_pistes = false
+	verifier(toutes_les_pistes, "les 4 pistes (étages 1 à 3 et boss) ont un fichier")
+	# Chaque fichier de assets/sons et assets/musiques figure au manifeste, avec sa source et sa licence.
+	var json := JSON.new()
+	json.parse(FileAccess.get_file_as_string("res://assets/manifeste.json"))
+	var manifeste: Array = json.data if json.data is Array else []
+	var connus := {}
+	var complets := true
+	for entree: Dictionary in manifeste:
+		connus[entree.get("fichier")] = true
+		for cle in ["auteur", "source", "licence"]:
+			if String(entree.get(cle, "")).is_empty():
+				complets = false
+	verifier(complets and not manifeste.is_empty(), "chaque entrée du manifeste a un auteur, une source et une licence")
+	var oublies: Array[String] = []
+	for dossier in ["res://assets/sons/", "res://assets/musiques/"]:
+		for fichier in DirAccess.get_files_at(dossier):
+			if fichier.get_extension() in ["ogg", "wav", "mp3"] and not connus.has(dossier.trim_prefix("res://") + fichier):
+				oublies.append(dossier + fichier)
+	verifier(oublies.is_empty(), "aucun fichier sonore absent du manifeste (%s)" % str(oublies))
+	var existants := true
+	for fichier: String in connus:
+		if not FileAccess.file_exists("res://" + fichier):
+			existants = false
+			print("    cité au manifeste mais absent : ", fichier)
+	verifier(existants, "tout ce que cite le manifeste existe")
+
+
+func test_retour_du_tour() -> void:
+	print("Sons d'un tour (RetourTour)")
+	var machine := MachineASous.new(5, 1)
+	var epee := load("res://data/symbols/epee.tres") as SymbolData
+	var bouclier := load("res://data/symbols/bouclier.tres") as SymbolData
+	var potion := load("res://data/symbols/potion.tres") as SymbolData
+	var piece := load("res://data/symbols/piece.tres") as SymbolData
+	var bombe := load("res://data/symbols/bombe.tres") as SymbolData
+	var vide: Array[SymbolData] = [epee, bouclier, potion, piece, null]
+	var sons := RetourTour.sons(machine.resoudre(vide), 40, 40)
+	verifier(sons == [&"coup_donne", &"bouclier", &"soin", &"pieces"], "un tour sans combo : coup, bouclier, soin, pièces (%s)" % str(sons))
+	var combo: Array[SymbolData] = [epee, epee, epee, null, null]
+	verifier(RetourTour.sons(machine.resoudre(combo), 40, 40) == [&"ding", &"coup_donne"], "un combo : ding puis coup")
+	var jackpot: Array[SymbolData] = [epee, epee, epee, epee, epee]
+	verifier(RetourTour.sons(machine.resoudre(jackpot), 40, 40) == [&"jackpot", &"coup_donne"], "un jackpot : fanfare (pas de ding en plus)")
+	verifier(RetourTour.sons(machine.resoudre(vide), 40, 31).has(&"coup_recu"), "perdre des PV : coup reçu")
+	verifier(not RetourTour.sons(machine.resoudre(vide), 40, 40).has(&"coup_recu"), "ne rien perdre : pas de coup reçu")
+	var avec_bombe: Array[SymbolData] = [bombe, null, null, null, null]
+	verifier(RetourTour.sons(machine.resoudre(avec_bombe), 40, 40).has(&"bombe"), "une bombe visible : son de bombe")
+	var rien: Array[SymbolData] = [null, null, null, null, null]
+	verifier(RetourTour.sons(machine.resoudre(rien), 40, 40).is_empty(), "des rouleaux vides : aucun son")
+

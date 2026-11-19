@@ -26,6 +26,8 @@ var bouton_debug_reset: Button
 
 
 func _ready() -> void:
+	GameState.demarrer()
+	Musique.jouer(Musique.piste_pour(1, false))
 	GameState.charger_profil()
 	GameState.en_partie = false
 	comptoir = Comptoir.creer(GameState.profil)
@@ -40,6 +42,7 @@ func _ready() -> void:
 func _acheter(achat: Comptoir.Achat) -> void:
 	var titre := comptoir.titre(achat)
 	if comptoir.acheter(achat):
+		Son.jouer(&"achat")
 		if not GameState.sauver_profil():
 			texte_message.text = GameState.message_profil
 			_rafraichir()
@@ -55,6 +58,7 @@ func _acheter(achat: Comptoir.Achat) -> void:
 
 func _jouer() -> void:
 	bouton_jouer.disabled = true
+	Son.jouer(&"clic")
 	GameState.nouvelle_partie()
 	GameState.aller_a_suivant()
 

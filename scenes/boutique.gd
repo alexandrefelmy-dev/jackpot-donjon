@@ -31,6 +31,8 @@ func _ready() -> void:
 	if partie.ecran != Partie.Ecran.BOUTIQUE:
 		GameState.rediriger()
 		return
+	GameState.demarrer()
+	Musique.jouer_pour(partie)
 	boutique = Boutique.creer(partie)
 	_construire_interface()
 	_message(tr("Bienvenue ! Dépense ton or avec sagesse."))
@@ -42,6 +44,7 @@ func _ready() -> void:
 func _acheter(index: int) -> void:
 	var symbole := boutique.offres[index]
 	if boutique.acheter(index):
+		Son.jouer(&"achat")
 		_message(tr("%s ajouté à ton sac.") % symbole.nom_affiche())
 	else:
 		_message(tr("Achat impossible."))
@@ -51,6 +54,7 @@ func _acheter(index: int) -> void:
 func _acheter_relique(index: int) -> void:
 	var relique := boutique.offres_reliques[index]
 	if boutique.acheter_relique(index):
+		Son.jouer(&"relique")
 		_message(tr("%s : relique achetée !") % tr(relique.nom))
 	else:
 		_message(tr("Achat impossible."))
@@ -59,6 +63,7 @@ func _acheter_relique(index: int) -> void:
 
 func _soigner() -> void:
 	if boutique.soigner():
+		Son.jouer(&"soin")
 		_message(tr("Tu récupères des PV."))
 	else:
 		_message(tr("Soin impossible."))

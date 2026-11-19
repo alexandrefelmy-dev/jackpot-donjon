@@ -15,6 +15,8 @@ func _ready() -> void:
 	if partie.ecran != Partie.Ecran.RECOMPENSE:
 		GameState.rediriger()
 		return
+	GameState.demarrer()
+	Musique.jouer_pour(partie)
 	propositions = partie.proposer_recompenses()
 	_construire_interface()
 
@@ -25,6 +27,7 @@ func _choisir(symbole: SymbolData) -> void:
 	for bouton in boutons:
 		bouton.disabled = true
 	bouton_passer.disabled = true
+	Son.jouer(&"achat" if symbole != null else &"clic")
 	if symbole != null:
 		partie.choisir_recompense(symbole)
 	partie.terminer_recompense()

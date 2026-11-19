@@ -17,6 +17,9 @@ var bouton_comptoir: Button
 func _ready() -> void:
 	partie = GameState.partie
 	# Les jetons et la malédiction sont inscrits au profil une seule fois, même si l'écran est rechargé.
+	GameState.demarrer()
+	Musique.jouer(&"")
+	Son.jouer(&"victoire" if partie.etat == Partie.Etat.VICTOIRE else &"defaite")
 	GameState.enregistrer_bilan()
 	_construire_interface()
 

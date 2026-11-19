@@ -1,0 +1,227 @@
+[
+ {
+  "fichier": "assets/sons/chip-lay-1.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/chip-lay-2.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/chip-lay-3.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/chips-collide-1.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/chips-collide-2.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/chips-collide-3.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/chips-collide-4.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/chips-stack-1.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/chips-stack-2.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/chips-stack-3.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/card-place-1.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/card-place-2.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/card-place-3.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/rouleaux.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/ding.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/jackpot.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/coup_donne_1.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/coup_donne_2.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/coup_donne_3.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/coup_recu_1.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/coup_recu_2.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/bouclier.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/soin.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/bombe.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/relique.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/victoire.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/defaite.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/musiques/etage_1.ogg",
+  "titre": "Dungeon Ambience",
+  "auteur": "yd",
+  "source": "https://opengameart.org/content/dungeon-ambience",
+  "fichier_original": "dungeon002.ogg",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/musiques/etage_2.ogg",
+  "titre": "Insistent: background loop",
+  "auteur": "yd",
+  "source": "https://opengameart.org/content/insistent-background-loop",
+  "fichier_original": "Insistent.ogg",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/musiques/etage_3.ogg",
+  "titre": "Creepy",
+  "auteur": "TokyoGeisha",
+  "source": "https://opengameart.org/content/creepy",
+  "fichier_original": "CrEEP.ogg",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/musiques/boss.ogg",
+  "titre": "Fast fight / battle music (looped)",
+  "auteur": "XCVG",
+  "source": "https://opengameart.org/content/fast-fight-battle-music-looped",
+  "fichier_original": "fight_looped.ogg",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ }
+]

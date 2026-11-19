@@ -15,6 +15,8 @@ func _ready() -> void:
 	if partie.ecran != Partie.Ecran.RELIQUE:
 		GameState.rediriger()
 		return
+	GameState.demarrer()
+	Musique.jouer_pour(partie)
 	propositions = partie.proposer_reliques(Partie.NB_RELIQUES_OFFERTES)
 	_construire_interface()
 
@@ -24,6 +26,7 @@ func _choisir(relique: RelicData) -> void:
 	for bouton in boutons:
 		bouton.disabled = true
 	partie.choisir_relique(relique)
+	Son.jouer(&"relique")
 	GameState.aller_a_suivant()
 
 

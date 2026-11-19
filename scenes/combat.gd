@@ -74,6 +74,8 @@ func _ready() -> void:
 	if partie.ecran != Partie.Ecran.COMBAT:
 		GameState.rediriger()
 		return
+	GameState.demarrer()
+	Musique.jouer_pour(partie)
 	machine = partie.creer_machine()
 	combat = partie.creer_combat()
 	_construire_interface()
@@ -124,6 +126,7 @@ func _tirer() -> void:
 	var mise := mises[mise_choisie]
 	if not combat.tirer(mise):
 		return
+	Son.jouer(&"rouleaux")
 	_dessiner_grille()
 	if combat.peut_relancer():
 		_attendre_validation()
@@ -137,9 +140,16 @@ func _valider() -> void:
 		return
 	choix_du_rouleau = false
 	var numero_tour := combat.numero_tour
+	var pv_avant := combat.pv_joueur
 	var journal_combat := combat.valider()
 	_dessiner_grille()
 	_afficher_tour(numero_tour, combat.resultat_courant, journal_combat)
+	for evenement in RetourTour.sons(combat.resultat_courant, pv_avant, combat.pv_joueur):
+		Son.jouer(evenement)
+	if combat.etat == Combat.Etat.VICTOIRE:
+		Son.jouer(&"victoire")
+	elif combat.etat == Combat.Etat.DEFAITE:
+		Son.jouer(&"defaite")
 	_choisir_mise(0)
 	_rafraichir()
 

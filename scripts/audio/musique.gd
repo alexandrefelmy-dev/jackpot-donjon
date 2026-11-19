@@ -22,6 +22,11 @@ static func piste_pour(etage: int, boss: bool) -> StringName:
 	return StringName("etage_%d" % clampi(etage, 1, 3))
 
 
+## La musique de la partie en cours : la piste de son étage, ou celle du boss pendant un combat de boss.
+static func jouer_pour(partie: Partie) -> void:
+	jouer(piste_pour(partie.etage, partie.est_combat_de_boss()))
+
+
 ## Joue la piste (si ce n'est pas déjà elle), avec un fondu enchaîné. Une piste sans fichier : silence.
 static func jouer(piste: StringName, duree_fondu: float = FONDU) -> void:
 	if piste == piste_courante:

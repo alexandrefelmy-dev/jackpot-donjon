@@ -30,6 +30,8 @@ func _ready() -> void:
 	if partie.ecran != Partie.Ecran.REPOS:
 		GameState.rediriger()
 		return
+	GameState.demarrer()
+	Musique.jouer_pour(partie)
 	_construire_interface()
 	_rafraichir()
 
@@ -40,6 +42,7 @@ func _se_reposer() -> void:
 	if partie.soin_du_repos() <= 0:
 		return
 	partie.repos_soigner()
+	Son.jouer(&"soin")
 	GameState.aller_a_suivant()
 
 
@@ -61,6 +64,7 @@ func _annuler() -> void:
 
 func _dorer(index_sac: int) -> void:
 	if partie.repos_dorer(index_sac):
+		Son.jouer(&"achat")
 		GameState.aller_a_suivant()
 
 

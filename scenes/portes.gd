@@ -27,6 +27,8 @@ func _ready() -> void:
 	if partie.ecran != Partie.Ecran.PORTES:
 		GameState.rediriger()
 		return
+	GameState.demarrer()
+	Musique.jouer_pour(partie)
 	portes = partie.portes()
 	_construire_interface()
 
@@ -36,6 +38,7 @@ func _choisir(index: int) -> void:
 	for bouton in boutons_portes:
 		bouton.disabled = true
 	if partie.choisir_porte(index):
+		Son.jouer(&"clic")
 		GameState.aller_a_suivant()
 
 

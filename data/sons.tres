@@ -4,4 +4,20 @@
 
 [resource]
 script = ExtResource("1_table")
-evenements = {}
+evenements = {
+"rouleaux": ["res://assets/sons/rouleaux.wav"],
+"arret_rouleau": ["res://assets/sons/chip-lay-1.ogg", "res://assets/sons/chip-lay-2.ogg", "res://assets/sons/chip-lay-3.ogg"],
+"ding": ["res://assets/sons/ding.wav"],
+"jackpot": ["res://assets/sons/jackpot.wav"],
+"coup_donne": ["res://assets/sons/coup_donne_1.wav", "res://assets/sons/coup_donne_2.wav", "res://assets/sons/coup_donne_3.wav"],
+"coup_recu": ["res://assets/sons/coup_recu_1.wav", "res://assets/sons/coup_recu_2.wav"],
+"bouclier": ["res://assets/sons/bouclier.wav"],
+"soin": ["res://assets/sons/soin.wav"],
+"pieces": ["res://assets/sons/chips-collide-1.ogg", "res://assets/sons/chips-collide-2.ogg", "res://assets/sons/chips-collide-3.ogg", "res://assets/sons/chips-collide-4.ogg"],
+"bombe": ["res://assets/sons/bombe.wav"],
+"achat": ["res://assets/sons/chips-stack-1.ogg", "res://assets/sons/chips-stack-2.ogg", "res://assets/sons/chips-stack-3.ogg"],
+"relique": ["res://assets/sons/relique.wav"],
+"clic": ["res://assets/sons/card-place-1.ogg", "res://assets/sons/card-place-2.ogg", "res://assets/sons/card-place-3.ogg"],
+"victoire": ["res://assets/sons/victoire.wav"],
+"defaite": ["res://assets/sons/defaite.wav"]
+}

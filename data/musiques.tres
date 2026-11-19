@@ -4,4 +4,9 @@
 
 [resource]
 script = ExtResource("1_table")
-evenements = {}
+evenements = {
+"etage_1": ["res://assets/musiques/etage_1.ogg"],
+"etage_2": ["res://assets/musiques/etage_2.ogg"],
+"etage_3": ["res://assets/musiques/etage_3.ogg"],
+"boss": ["res://assets/musiques/boss.ogg"]
+}
