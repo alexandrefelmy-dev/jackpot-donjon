@@ -17,7 +17,8 @@ IMPORTANT : dès qu'une étape est terminée (ou avant qu'Alex quitte la session
 - v0.1 terminée : 16 tests en ligne de commande passent et Alex a confirmé que ça marche en jeu (F5).
 - Dépôt GitHub public : https://github.com/alexandrefelmy-dev/jackpot-donjon (branche `main`, `git push` suffit).
 - v0.2 écrite et commitée : `Combat` (logique pure), `EnemyData` + 3 ennemis (`data/enemies/`), intentions attaque/protection, écran `scenes/combat.tscn` (main scene, sélecteur d'ennemi, Rejouer). Tests en ligne de commande : 16 (machine) + 46 (combat), tous ok. La scène a aussi été simulée en headless (victoire, défaite, Rejouer) sans erreur.
-- v0.2 reste à tester en jeu : Alex teste avec F5 (gagner contre le Rat, perdre contre le Golem, armure du Bouclier, soin, intention du Squelette, bouton Rejouer, tooltips des cases). Ensuite : commit « v0.2 confirmée ».- Règles précisées en v0.2 (déjà dans la copie locale du cahier des charges, section « Précisions de règles (v0.2) ») : Alex doit les reporter dans la version en ligne.
+- v0.2 reste à tester en jeu : Alex teste avec F5 (gagner contre le Rat, perdre contre le Golem, armure du Bouclier, soin, intention du Squelette, bouton Rejouer, tooltips des cases). Ensuite : commit « v0.2 confirmée ».
+- Règles précisées en v0.2 (section « Précisions de règles (v0.2) » du cahier des charges) : reportées à la fois dans la copie locale et dans la version en ligne (fait le 2026-11-19, avec la ligne « Réalisé » du jalon v0.2).
 - Prochaine étape : v0.3 (MVP), seulement après confirmation de la v0.2 en jeu.
 
 ## Conventions
