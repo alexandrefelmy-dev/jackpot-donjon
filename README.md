@@ -6,7 +6,7 @@ Une ligne de 5 rouleaux, tirés au hasard dans le « sac » de symboles du joueu
 
 Inspirations : Luck be a Landlord, Slay the Spire, Balatro.
 
-**Statut : en développement, version 0.6 terminée** (le donjon : 3 étages, portes, coffres, repos, 12 ennemis et boss) ; prochaine étape : v0.7, entre les parties (jetons d'âme, profil). Projet personnel, développé avec l'aide de l'IA.
+**Statut : en développement, version 0.7 écrite** (profil enregistré, Comptoir du Croupier, jetons d'âme, malédictions, 4 nouveaux symboles) en attente de test ; prochaine étape : v0.8, l'habillage (graphismes, sons, menu). Projet personnel, développé avec l'aide de l'IA.
 
 ## Lancer le jeu
 
