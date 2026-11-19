@@ -12,6 +12,7 @@ var texte_jetons: Label
 var texte_malediction: Label
 var bouton_rejouer: Button
 var bouton_comptoir: Button
+var bouton_menu: Button
 
 
 func _ready() -> void:
@@ -27,6 +28,11 @@ func _ready() -> void:
 func _rejouer() -> void:
 	GameState.nouvelle_partie()
 	GameState.aller_a_suivant()
+
+
+func _aller_au_menu() -> void:
+	GameState.en_partie = false
+	GameState.aller_a(GameState.SCENE_MENU)
 
 
 func _aller_au_comptoir() -> void:
@@ -111,6 +117,9 @@ func _construire_interface() -> void:
 	boutons.add_child(bouton_rejouer)
 	bouton_comptoir = _creer_bouton(tr("Comptoir du Croupier"), _aller_au_comptoir)
 	boutons.add_child(bouton_comptoir)
+	bouton_menu = _creer_bouton(tr("Menu"), _aller_au_menu)
+	bouton_menu.custom_minimum_size = Vector2(160, 56)
+	boutons.add_child(bouton_menu)
 
 
 func _creer_bouton(texte: String, action: Callable) -> Button:

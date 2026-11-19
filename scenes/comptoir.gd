@@ -20,6 +20,7 @@ var texte_jetons: Label
 var texte_message: Label
 var texte_maledictions: Label
 var texte_debloques: Label
+var bouton_menu: Button
 var bouton_jouer: Button
 var bouton_debug_jetons: Button
 var bouton_debug_reset: Button
@@ -38,6 +39,16 @@ func _ready() -> void:
 
 
 # --- Actions -----------------------------------------------------------------
+
+func _unhandled_input(evenement: InputEvent) -> void:
+	if evenement.is_action_pressed(Entrees.RETOUR):
+		_menu()
+
+
+func _menu() -> void:
+	Son.jouer(&"clic")
+	GameState.aller_a(GameState.SCENE_MENU)
+
 
 func _acheter(achat: Comptoir.Achat) -> void:
 	var titre := comptoir.titre(achat)
@@ -198,6 +209,12 @@ func _construire_interface() -> void:
 	bouton_jouer.focus_mode = Control.FOCUS_NONE
 	bouton_jouer.pressed.connect(_jouer)
 	bas.add_child(bouton_jouer)
+	bouton_menu = Button.new()
+	bouton_menu.text = tr("Menu")
+	bouton_menu.custom_minimum_size = Vector2(140, 52)
+	bouton_menu.focus_mode = Control.FOCUS_NONE
+	bouton_menu.pressed.connect(_menu)
+	bas.add_child(bouton_menu)
 	if OS.is_debug_build():
 		bouton_debug_jetons = Button.new()
 		bouton_debug_jetons.text = tr("[test] +50 jetons")

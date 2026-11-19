@@ -28,7 +28,7 @@ Nouvelle partie (40 PV, sac de 15 symboles)
   -> Choisir une porte (2 salles proposées)
   -> Jouer la salle (combat, boutique, coffre ou repos)
   -> 5 salles faites ?  non -> retour au choix de porte
-                        oui -> Boss de l'étage (relique en récompense)
+						oui -> Boss de l'étage (relique en récompense)
   -> Étage 3 ?          non -> étage suivant, retour au choix de porte
                         oui -> Victoire
 PV à 0 dans un combat -> Game over -> Rejouer (nouvelle partie)

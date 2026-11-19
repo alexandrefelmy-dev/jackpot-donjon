@@ -7,6 +7,8 @@ extends RefCounted
 ## que l'éditeur Godot ouvert peut réécrire sans la déclaration (le jeu plantait alors avec
 ## « Identifier not found: GameState »). Une classe à membres statiques se trouve partout.
 
+const SCENE_MENU := "res://scenes/menu.tscn"
+const SCENE_OPTIONS := "res://scenes/options.tscn"
 const SCENE_COMPTOIR := "res://scenes/comptoir.tscn"
 const SCENE_PORTES := "res://scenes/portes.tscn"
 const SCENE_COMBAT := "res://scenes/combat.tscn"
@@ -45,6 +47,9 @@ static func demarrer() -> void:
 	if _demarre:
 		return
 	_demarre = true
+	(Engine.get_main_loop() as SceneTree).root.tree_exiting.connect(func() -> void:
+		Son.liberer()
+		Musique.liberer())
 	Entrees.enregistrer()
 	charger_options()
 	appliquer_options()
@@ -161,12 +166,12 @@ static func scene_de(ecran: Partie.Ecran) -> String:
 	return SCENE_PORTES
 
 
-## La scène à afficher maintenant : le Comptoir hors partie, sinon l'écran que la partie demande.
+## La scène à afficher maintenant : le menu principal hors partie, sinon l'écran que la partie demande.
 static func scene_attendue() -> String:
-	return scene_de(partie.ecran) if en_partie else SCENE_COMPTOIR
+	return scene_de(partie.ecran) if en_partie else SCENE_MENU
 
 
-## Va à l'écran attendu maintenant (Comptoir, portes, combat, boutique...).
+## Va à l'écran attendu maintenant (menu, portes, combat, boutique...).
 static func aller_a_suivant() -> void:
 	aller_a(scene_attendue())
 

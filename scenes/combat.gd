@@ -106,10 +106,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	var touche := event as InputEventKey
-	if touche == null or not touche.pressed or touche.echo:
-		return
-	if touche.keycode == KEY_SPACE:
+	if event.is_action_pressed(Entrees.LEVIER) and not event.is_echo():
 		_tirer()
 
 

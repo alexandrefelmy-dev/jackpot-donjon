@@ -99,6 +99,13 @@ func _jouer(nb_parties: int) -> void:
 	while parties < nb_parties and etapes < 40000:
 		etapes += 1
 		match _nom_scene():
+			"Menu":
+				# Tantôt « Jouer » directement, tantôt par le Comptoir.
+				if hasard.randi_range(0, 1) == 0:
+					current_scene.bouton_jouer.pressed.emit()
+				else:
+					current_scene.bouton_comptoir.pressed.emit()
+				await _attendre()
 			"Comptoir":
 				_jouer_comptoir()
 				await _attendre()

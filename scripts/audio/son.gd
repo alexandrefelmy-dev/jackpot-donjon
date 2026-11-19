@@ -86,6 +86,17 @@ static func jouer_flux(flux: AudioStream, hauteur: float = 1.0) -> bool:
 	return true
 
 
+## Lâche toutes les références (à la fermeture du jeu : sinon le moteur signale des ressources encore utilisées).
+static func liberer() -> void:
+	_table = null
+	_flux.clear()
+	for lecteur in _lecteurs:
+		if is_instance_valid(lecteur):
+			lecteur.stop()
+			lecteur.stream = null
+	_lecteurs.clear()
+
+
 ## Les lecteurs partagés (pour les tests : aucun ne doit jouer sur Master).
 static func lecteurs() -> Array[AudioStreamPlayer]:
 	return _lecteurs

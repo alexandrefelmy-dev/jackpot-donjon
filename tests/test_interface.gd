@@ -454,7 +454,67 @@ func _initialize() -> void:
 	GameState.en_partie = false
 	GameState.aller_a(GameState.SCENE_COMBAT)
 	await _attendre()
-	verifier(current_scene.name == "Comptoir", "au lancement, l'écran principal mène au Comptoir : %s" % current_scene.name)
+	verifier(current_scene.name == "Menu", "au lancement, l'écran principal mène au menu principal : %s" % current_scene.name)
+
+	# --- Menu principal ---
+	GameState.options = Options.new()
+	var menu: Control = current_scene
+	for composant in [menu.bouton_jouer, menu.bouton_comptoir, menu.bouton_options, menu.bouton_quitter, menu.texte_titre, menu.texte_version]:
+		verifier_dans_la_fenetre(composant, "menu : %s" % composant.name)
+	verifier(menu.texte_version.text == Version.texte(), "le menu affiche la version : %s" % menu.texte_version.text)
+	menu.bouton_options.pressed.emit()
+	await _attendre()
+	verifier(current_scene.name == "Options", "« Options » ouvre les options : %s" % current_scene.name)
+
+	# --- Options ---
+	var reglages: Control = current_scene
+	for composant in [reglages.curseur_musique, reglages.curseur_effets, reglages.texte_musique, reglages.texte_effets,
+			reglages.case_plein_ecran, reglages.case_tremblements, reglages.case_flashs, reglages.bouton_credits,
+			reglages.bouton_retour, reglages.texte_message]:
+		verifier_dans_la_fenetre(composant, "options : %s" % composant.name)
+	verifier(reglages.curseur_musique.value == 60 and reglages.curseur_effets.value == 80, "les curseurs montrent 60 % et 80 %")
+	reglages.curseur_musique.value = 30
+	verifier(is_equal_approx(GameState.options.volume_musique, 0.3), "un curseur change l'option")
+	verifier(is_equal_approx(AudioServer.get_bus_volume_linear(AudioServer.get_bus_index(Son.BUS_MUSIQUE)), 0.09), "…et le gain du bus Musique (0,3 au carré = 0,09)")
+	verifier(reglages.texte_musique.text.contains("30"), "…et son texte : %s" % reglages.texte_musique.text)
+	reglages.curseur_effets.value = 0
+	verifier(AudioServer.is_bus_mute(AudioServer.get_bus_index(Son.BUS_EFFETS)), "effets à 0 : le bus Effets est coupé")
+	reglages.case_tremblements.button_pressed = true
+	reglages.case_flashs.button_pressed = true
+	verifier(GameState.options.reduire_tremblements and GameState.options.reduire_flashs, "les cases d'accessibilité changent les options")
+	reglages.bouton_credits.pressed.emit()
+	verifier(reglages.texte_credits.visible, "« Crédits » affiche les crédits")
+	verifier_dans_la_fenetre(reglages.texte_credits, "texte des crédits")
+	GameState.options = Options.new()
+	GameState.appliquer_options()
+	var echap := InputEventKey.new()
+	echap.physical_keycode = KEY_ESCAPE
+	echap.pressed = true
+	reglages._unhandled_input(echap)
+	await _attendre()
+	verifier(current_scene.name == "Menu", "Échap revient au menu : %s" % current_scene.name)
+	current_scene.bouton_comptoir.pressed.emit()
+	await _attendre()
+	verifier(current_scene.name == "Comptoir", "« Comptoir du Croupier » ouvre le Comptoir : %s" % current_scene.name)
+	verifier_dans_la_fenetre(current_scene.bouton_menu, "bouton Menu du Comptoir")
+	current_scene._unhandled_input(echap)
+	await _attendre()
+	verifier(current_scene.name == "Menu", "Échap au Comptoir : retour au menu")
+	current_scene.bouton_jouer.pressed.emit()
+	await _attendre()
+	verifier(current_scene.name == "Portes" and GameState.en_partie, "« Jouer » lance une partie : %s" % current_scene.name)
+	# Espace (action « levier ») tire le levier.
+	GameState.partie.choisir_porte(0)
+	GameState.aller_a_suivant()
+	await _attendre()
+	var espace := InputEventKey.new()
+	espace.physical_keycode = KEY_SPACE
+	espace.pressed = true
+	var avant_tour: int = current_scene.combat.numero_tour
+	current_scene._unhandled_input(espace)
+	verifier(current_scene.combat.numero_tour == avant_tour + 1 or current_scene.combat.tirage_en_attente or current_scene.combat.est_fini(), "la barre d'espace tire le levier")
+	# Le menu et les options ne touchent pas à ce que le profil de test contient.
+	GameState.en_partie = false
 
 	# --- Comptoir du Croupier ---
 	var profil := Profil.nouveau()
@@ -525,7 +585,7 @@ func _initialize() -> void:
 	verifier(fin_bilan.texte_jetons != null and profil_fin.jetons == 14, "défaite après 9 salles et 1 boss : 14 jetons enregistrés (%d)" % profil_fin.jetons)
 	verifier(fin_bilan.texte_malediction != null and fin_bilan.texte_malediction.text.contains("effacée"), "l'écran dit qu'une malédiction est effacée (le boss)")
 	verifier(fin_bilan.texte_malediction.text.contains("reçue"), "…et qu'une nouvelle est reçue")
-	for composant in [fin_bilan.texte_jetons, fin_bilan.texte_malediction, fin_bilan.bouton_rejouer, fin_bilan.bouton_comptoir]:
+	for composant in [fin_bilan.texte_jetons, fin_bilan.texte_malediction, fin_bilan.bouton_rejouer, fin_bilan.bouton_comptoir, fin_bilan.bouton_menu]:
 		verifier_dans_la_fenetre(composant, "fin de partie : %s" % composant.name)
 	var jetons_apres := profil_fin.jetons
 	GameState.aller_a_suivant()

@@ -67,6 +67,22 @@ static func jouer_flux(piste: StringName, flux: AudioStream, duree_fondu: float 
 	_fondu.chain().tween_callback(sortant.stop)
 
 
+## Lâche toutes les références (à la fermeture du jeu).
+static func liberer() -> void:
+	if _fondu != null:
+		_fondu.kill()
+	_fondu = null
+	_table = null
+	# Un lecteur qui joue garde sa piste en mémoire : on l'arrête et on lui retire son flux.
+	for lecteur in [_lecteur_actuel, _lecteur_ancien]:
+		if lecteur != null and is_instance_valid(lecteur):
+			lecteur.stop()
+			lecteur.stream = null
+	_lecteur_actuel = null
+	_lecteur_ancien = null
+	piste_courante = &""
+
+
 static func lecteurs() -> Array[AudioStreamPlayer]:
 	var liste: Array[AudioStreamPlayer] = []
 	if _lecteur_actuel != null:
