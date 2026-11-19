@@ -21,6 +21,7 @@ godot --headless --path . --import
 godot --headless --path . -s res://tests/test_machine.gd
 godot --headless --path . -s res://tests/test_combat.gd
 godot --headless --path . -s res://tests/test_partie.gd
+godot --headless --path . -s res://tests/test_interface.gd
 ```
 
 Sous Windows, utiliser l'exécutable `..._console.exe` de Godot. Le script affiche `ok` ou `ÉCHEC` pour chaque test et se termine avec le code 1 en cas d'échec.

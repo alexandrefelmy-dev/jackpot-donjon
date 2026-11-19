@@ -4,7 +4,9 @@ extends Control
 ## En fin de combat, « Continuer » mène à la récompense, ou à l'écran de fin.
 ## L'interface est construite en code ; les vrais décors viendront en v0.8.
 
-const TAILLE_CASE := Vector2(120, 130)
+## La fenêtre fait 648 px de haut : toute la colonne de gauche (jusqu'au bouton Continuer)
+## doit tenir dedans. tests/test_interface.gd vérifie la position du bouton.
+const TAILLE_CASE := Vector2(120, 100)
 const COULEUR_FOND := Color("1b1a24")
 const COULEUR_CASE_VIDE := Color("2c2a38")
 const COULEUR_CASE_BLOQUEE := Color("5a2430")
@@ -30,7 +32,6 @@ var texte_intention: Label
 var barre_pv_joueur: ProgressBar
 var texte_pv_joueur: Label
 var texte_or: Label
-var texte_sac: Label
 var texte_fin: Label
 var bouton_levier: Button
 var bouton_continuer: Button
@@ -124,8 +125,8 @@ func _rafraichir() -> void:
 	barre_pv_joueur.value = combat.pv_joueur
 	texte_pv_joueur.text = tr("Toi : PV %d / %d   Armure %d") % [
 		combat.pv_joueur, combat.pv_max_joueur, combat.armure_joueur]
-	texte_or.text = tr("Or gagné : %d") % (partie.or_total + combat.or_gagne)
-	texte_sac.text = tr("Sac : %d symboles") % partie.sac.taille()
+	texte_or.text = tr("Or gagné : %d   Sac : %d symboles") % [
+		partie.or_total + combat.or_gagne, partie.sac.taille()]
 
 	# Les rouleaux que l'ennemi vient de bloquer sont déjà marqués pour le prochain tirage.
 	for index in combat.rouleaux_bloques:
@@ -226,7 +227,7 @@ func _construire_interface() -> void:
 
 func _construire_colonne_combat(parent: Control) -> void:
 	var colonne := VBoxContainer.new()
-	colonne.add_theme_constant_override("separation", 12)
+	colonne.add_theme_constant_override("separation", 8)
 	parent.add_child(colonne)
 
 	# Titre : étage et numéro du combat.
@@ -285,9 +286,6 @@ func _construire_colonne_combat(parent: Control) -> void:
 	texte_or = Label.new()
 	texte_or.add_theme_font_size_override("font_size", 18)
 	colonne.add_child(texte_or)
-	texte_sac = Label.new()
-	texte_sac.add_theme_font_size_override("font_size", 18)
-	colonne.add_child(texte_sac)
 
 	# Fin du combat.
 	texte_fin = Label.new()
