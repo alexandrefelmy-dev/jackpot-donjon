@@ -97,6 +97,14 @@ Un combat oppose le joueur à un seul ennemi, au tour par tour : un tirage du jo
 5. Si l'ennemi est encore en vie, il exécute son intention. L'armure du joueur absorbe les dégâts en premier.
 6. Fin du tour : l'armure retombe à 0, le poison agit, on repart à l'étape 1.
 
+**Précisions de règles (v0.2)**
+
+- Les effets du tirage s'appliquent dans l'ordre : dégâts à l'ennemi (son armure absorbe d'abord), armure, soin (jamais au-dessus des PV max), or, puis les crânes. Le malus d'un crâne (+1 à l'attaque ennemie) ne dure que le tour du tirage.
+- La perte de PV d'un combo de crânes est immédiate : l'armure ne la bloque pas.
+- L'armure de l'ennemi (intention « Protection ») gagnée à son action protège contre le tirage du tour suivant, puis retombe quand il agit à nouveau.
+- Si l'ennemi et le joueur tombent à 0 PV dans le même tirage, c'est la victoire. Si l'ennemi est vaincu, il n'agit pas ; si le joueur tombe à 0 PV avant son action, il n'agit pas non plus.
+- Les intentions d'un ennemi sont une liste jouée en boucle, une par tour (définie dans son fichier de données).
+
 **Fin du combat**
 
 - Ennemi à 0 PV : victoire. Le joueur gagne de l'or et choisit **1 symbole parmi 3** à ajouter à son sac (ou passe).
@@ -281,6 +289,7 @@ Le jeu se construit par versions jouables : la version 0.3 est le MVP, une parti
    - Fini quand : on tire et le résultat calculé est juste.
 2. **v0.2 – Premier combat** : un ennemi avec PV et intention, PV et armure du joueur, victoire et défaite.
    - Fini quand : on peut gagner ou perdre un combat.
+   - Réalisé : intentions « Attaque » et « Protection » ; 3 ennemis au choix pour tester (Rat d'égout, Squelette, Golem de jetons) ; bouton Rejouer. L'or n'est que compté et affiché (pas encore conservé : v0.3).
 3. **v0.3 – MVP** : 5 combats à la suite puis un boss, récompense « 1 symbole parmi 3 », écran de fin et Rejouer.
    - Fini quand : une partie entière se joue du début à la fin.
 4. **v0.4 – Économie** : or, boutique, retrait et amélioration de symboles.

@@ -16,7 +16,9 @@ IMPORTANT : dès qu'une étape est terminée (ou avant qu'Alex quitte la session
 - v0.1 écrite : machine 1×5, sac de départ (15 symboles), combos 3/4/5 n'importe où sur la ligne (×1/×2/×4), écran de test `scenes/machine_test.tscn`.
 - v0.1 terminée : 16 tests en ligne de commande passent et Alex a confirmé que ça marche en jeu (F5).
 - Dépôt GitHub public : https://github.com/alexandrefelmy-dev/jackpot-donjon (branche `main`, `git push` suffit).
-- Prochaine étape : v0.2, premier combat (voir « Périmètre et jalons » dans le cahier des charges).
+- v0.2 écrite et commitée : `Combat` (logique pure), `EnemyData` + 3 ennemis (`data/enemies/`), intentions attaque/protection, écran `scenes/combat.tscn` (main scene, sélecteur d'ennemi, Rejouer). Tests en ligne de commande : 16 (machine) + 46 (combat), tous ok. La scène a aussi été simulée en headless (victoire, défaite, Rejouer) sans erreur.
+- v0.2 reste à tester en jeu : Alex teste avec F5 (gagner contre le Rat, perdre contre le Golem, armure du Bouclier, soin, intention du Squelette, bouton Rejouer, tooltips des cases). Ensuite : commit « v0.2 confirmée ».- Règles précisées en v0.2 (déjà dans la copie locale du cahier des charges, section « Précisions de règles (v0.2) ») : Alex doit les reporter dans la version en ligne.
+- Prochaine étape : v0.3 (MVP), seulement après confirmation de la v0.2 en jeu.
 
 ## Conventions
 
@@ -30,15 +32,17 @@ IMPORTANT : dès qu'une étape est terminée (ou avant qu'Alex quitte la session
 
 - `scripts/data/` : classes de données (`SymbolData`…)
 - `scripts/machine/` : sac, tirage, détection des combos, résultat
-- `scenes/` : scènes et leur script
+- `scripts/combat/` : `Combat` (tour par tour, PV, armure, victoire/défaite), `Intentions`
+- `scenes/` : scènes et leur script (`combat.tscn` = écran principal, `machine_test.tscn` = test de la machine)
 - `data/symbols/` : un `.tres` par symbole
+- `data/enemies/` : un `.tres` par ennemi
 - `tests/` : scripts de test en ligne de commande
 - `docs/` : cahier des charges, CREDITS.md
 
 ## Vérifier son travail
 
-- Tests : `godot --headless --path . -s res://tests/test_machine.gd` (affiche ok / ÉCHEC, code de sortie 1 en cas d'échec).
-- Sous Windows, utiliser l'exécutable console de Godot (`Godot_v4.7-stable_win64_console.exe`). Il n'est pas dans le PATH ; chemin sur le PC d'Alex : `C:\Users\felmy\Downloads\Godot_v4.7.2-stable_win64.exe\Godot_v4.7.2-stable_win64_console.exe` (version 4.7.2). S'il a changé, demander le nouveau chemin à Alex.
+- Tests : `godot --headless --path . -s res://tests/test_machine.gd` et `... -s res://tests/test_combat.gd` (affichent ok / ÉCHEC, code de sortie 1 en cas d'échec).
+- Sous Windows, utiliser l'exécutable console de Godot (`Godot_v4.7.2-stable_win64_console.exe`). Il n'est pas dans le PATH ; chemin sur le PC d'Alex : `C:\Tools\Godot\Godot_v4.7.2-stable_win64_console.exe` (version 4.7.2). S'il a changé, demander le nouveau chemin à Alex.
 - Après avoir créé un fichier avec `class_name`, lancer d'abord `godot --headless --path . --import` pour mettre à jour le cache des classes.
 - Chaque nouvelle règle de calcul a son test dans `tests/`.
 

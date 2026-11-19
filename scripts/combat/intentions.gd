@@ -1,0 +1,22 @@
+class_name Intentions
+extends RefCounted
+## Outils pour lire et afficher les intentions des ennemis.
+## Une intention est un Dictionary { "type": ..., "valeur": ... }.
+
+const ATTAQUE := "attaque"
+const PROTECTION := "protection"
+
+## Texte affiché pour chaque type (%d = la valeur).
+const FORMATS: Dictionary = {
+	ATTAQUE: "Attaque %d",
+	PROTECTION: "Se protège (+%d armure)",
+}
+
+
+## Transforme une intention en texte lisible, ex. "Attaque 3".
+static func decrire(intention: Dictionary) -> String:
+	var type: String = intention.get("type", "")
+	if not FORMATS.has(type):
+		return TranslationServer.translate("Intention inconnue")
+	var format := String(TranslationServer.translate(FORMATS[type]))
+	return format % int(intention.get("valeur", 0))

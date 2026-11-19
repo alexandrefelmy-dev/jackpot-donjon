@@ -12,13 +12,14 @@ Inspirations : Luck be a Landlord, Slay the Spire, Balatro.
 
 1. Installer [Godot 4.7](https://godotengine.org/download) (version standard, GDScript).
 2. Ouvrir le dossier du projet dans Godot (`project.godot`).
-3. Appuyer sur F5 : l'écran de test de la machine s'ouvre.
+3. Appuyer sur F5 : l'écran de combat s'ouvre (l'écran de test de la machine est `scenes/machine_test.tscn`).
 
 ## Lancer les tests
 
 ```
 godot --headless --path . --import
 godot --headless --path . -s res://tests/test_machine.gd
+godot --headless --path . -s res://tests/test_combat.gd
 ```
 
 Sous Windows, utiliser l'exécutable `..._console.exe` de Godot. Le script affiche `ok` ou `ÉCHEC` pour chaque test et se termine avec le code 1 en cas d'échec.
@@ -31,8 +32,8 @@ Les règles, les valeurs et les jalons (v0.1 à v1.1) sont dans [`docs/cahier-de
 
 | Dossier | Contenu |
 | --- | --- |
-| `scenes/` | scènes et leur script (écran de test de la machine) |
-| `scripts/` | logique : sac, tirage, combos, effets |
-| `data/` | symboles, un fichier `.tres` chacun |
+| `scenes/` | scènes et leur script (écran de combat, écran de test de la machine) |
+| `scripts/` | logique : sac, tirage, combos, effets, combat |
+| `data/` | symboles et ennemis, un fichier `.tres` chacun |
 | `tests/` | tests en ligne de commande |
 | `docs/` | cahier des charges |
