@@ -47,6 +47,13 @@ static func aller_a_suivant() -> void:
 	aller_a(scene_de(partie.ecran))
 
 
+## Comme aller_a_suivant, mais plus tard dans l'image : pour un écran qui s'aperçoit dans son
+## _ready() que la partie attend un autre écran (changer de scène pendant _ready() est refusé).
+static func rediriger() -> void:
+	var arbre := Engine.get_main_loop() as SceneTree
+	arbre.call_deferred("change_scene_to_file", scene_de(partie.ecran))
+
+
 static func aller_a(chemin_scene: String) -> void:
 	var arbre := Engine.get_main_loop() as SceneTree
 	arbre.change_scene_to_file(chemin_scene)

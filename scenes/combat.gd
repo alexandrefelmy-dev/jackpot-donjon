@@ -5,7 +5,10 @@ extends Control
 ##
 ## Un tour : on choisit une mise (facultatif), on tire le levier, les rouleaux s'affichent.
 ## Sans relance disponible, le tour se joue aussitôt. Avec le Dé pipé ou le Cinquième as, on peut
-## relancer avant de « Valider ». En fin de combat, « Continuer » mène à la récompense ou à la fin.
+## relancer avant de « Valider ». En fin de combat, « Continuer » mène à l'écran que la partie demande
+## (récompense, relique, portes ou fin).
+## C'est aussi l'écran principal du projet (project.godot ne se modifie pas à la main) : si la partie
+## n'attend pas un combat (au lancement : le choix des portes), il envoie vers le bon écran.
 ## L'interface est construite en code ; les vrais décors viendront en v0.8.
 
 ## La fenêtre fait 648 px de haut : toute la colonne de gauche (jusqu'au bouton Continuer)
@@ -34,6 +37,7 @@ var texte_nom_ennemi: Label
 var barre_pv_ennemi: ProgressBar
 var texte_pv_ennemi: Label
 var texte_intention: Label
+var texte_passif: Label
 var barre_pv_joueur: ProgressBar
 var texte_pv_joueur: Label
 var texte_or: Label
@@ -62,16 +66,27 @@ var choix_du_rouleau: bool = false
 # Boutons de test (visibles seulement quand on lance depuis l'éditeur).
 var bouton_debug: Button
 var bouton_debug_relique: Button
+var bouton_debug_etage: Button
 
 
 func _ready() -> void:
 	partie = GameState.partie
+	if partie.ecran != Partie.Ecran.COMBAT:
+		GameState.rediriger()
+		return
 	machine = partie.creer_machine()
 	combat = partie.creer_combat()
 	_construire_interface()
 
 	texte_graine.text = tr("Graine : %d") % partie.graine + "     " + Version.texte()
 	texte_journal.text = tr("Tire le levier pour lancer la machine.")
+	if not combat.journal_ouverture.is_empty():
+		# Attaque surprise (Mimique) : elle a eu lieu avant le premier tirage.
+		texte_journal.text = "[b][color=#ff6b6b]%s[/color][/b]
+
+%s" % [
+			"
+".join(combat.journal_ouverture), texte_journal.text]
 	for i in machine.nb_cases():
 		_dessiner_case(i, null, false)
 
@@ -100,7 +115,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## Levier (bouton ou Espace). Pendant une relance possible, Espace valide le tirage affiché.
 func _tirer() -> void:
-	if combat.est_fini():
+	if combat == null or combat.est_fini():
 		return
 	if combat.tirage_en_attente:
 		_valider()
@@ -178,13 +193,17 @@ func _choisir_mise(index: int) -> void:
 func _continuer() -> void:
 	bouton_continuer.disabled = true
 	partie.terminer_combat(combat)
-	if partie.etat == Partie.Etat.EN_COURS:
-		GameState.aller_a(GameState.SCENE_RECOMPENSE)
-	else:
-		GameState.aller_a(GameState.SCENE_FIN)
+	GameState.aller_a_suivant()
 
 
-## Pour tester le boss sans gagner 5 combats (bouton visible seulement en test, pas dans le jeu exporté).
+## Pour passer à l'étage suivant sans combattre le boss (bouton de test).
+func _sauter_etage() -> void:
+	bouton_debug_etage.disabled = true
+	partie.sauter_etage()
+	GameState.aller_a_suivant()
+
+
+## Pour tester le boss sans traverser l'étage (bouton visible seulement en test, pas dans le jeu exporté).
 ## Ce n'est pas une touche : l'éditeur Godot garde F8 (arrêter) et d'autres touches de fonction.
 func _aller_au_boss() -> void:
 	bouton_debug.disabled = true
@@ -212,10 +231,10 @@ func _couleur_texte(fond: Color) -> Color:
 ## Met à jour tout ce qui dépend de l'état du combat.
 func _rafraichir() -> void:
 	if partie.est_combat_de_boss():
-		texte_etage.text = tr("Étage 1 — BOSS")
+		texte_etage.text = tr("Étage %d — BOSS") % partie.etage
 		texte_etage.add_theme_color_override("font_color", COULEUR_BOSS)
 	else:
-		texte_etage.text = tr("Étage 1 — Combat %d / %d") % [partie.numero_combat, Partie.NB_COMBATS_NORMAUX]
+		texte_etage.text = tr("Étage %d — Salle %d / %d") % [partie.etage, partie.pas, Donjon.NB_PAS]
 
 	texte_nom_ennemi.text = tr(combat.ennemi.nom)
 	barre_pv_ennemi.value = combat.pv_ennemi
@@ -225,7 +244,9 @@ func _rafraichir() -> void:
 	if combat.est_fini():
 		texte_intention.text = ""
 	else:
-		texte_intention.text = tr("Intention : %s") % Intentions.decrire(combat.intention_actuelle())
+		texte_intention.text = tr("Intention : %s") % Intentions.decrire(combat.intention_affichee())
+	texte_passif.text = _texte_passif()
+	texte_passif.visible = not texte_passif.text.is_empty()
 
 	barre_pv_joueur.value = combat.pv_joueur
 	texte_pv_joueur.text = tr("Toi : PV %d / %d   Armure %d") % [
@@ -245,6 +266,9 @@ func _rafraichir() -> void:
 		Combat.Etat.DEFAITE:
 			texte_fin.text = tr("DÉFAITE... tu n'as plus de PV.")
 			texte_fin.add_theme_color_override("font_color", COULEUR_DEFAITE)
+		Combat.Etat.FUITE:
+			texte_fin.text = tr("%s s'est enfui !") % tr(combat.ennemi.nom)
+			texte_fin.add_theme_color_override("font_color", COULEUR_BOSS)
 		_:
 			texte_fin.text = ""
 	bouton_levier.disabled = combat.est_fini() or combat.tirage_en_attente
@@ -252,6 +276,19 @@ func _rafraichir() -> void:
 
 	_rafraichir_mises()
 	_rafraichir_relances()
+
+
+## Ce que l'ennemi fait en plus de son intention, en une ligne (ou rien) : la règle du tour du
+## Grand Croupier, ou le passif (crânes temporaires déjà glissés dans la machine, renfort...).
+func _texte_passif() -> String:
+	if combat.est_fini():
+		return ""
+	if not combat.regle_active.is_empty():
+		return tr("Règle du tour : %s") % ReglesMachine.decrire(combat.regle_active)
+	var texte := Intentions.decrire_passif(combat.ennemi.passif)
+	if combat.cranes_temporaires > 0:
+		texte += " " + tr("(%d / %d)") % [combat.cranes_temporaires, Combat.MAX_CRANES_TEMPORAIRES]
+	return texte
 
 
 ## Les boutons de mise : grisés si la mise est impossible (pas assez d'or, trop peu de PV).
@@ -424,6 +461,7 @@ func _construire_colonne_combat(parent: Control) -> void:
 	boite_ennemi.add_child(barre_pv_ennemi)
 	texte_pv_ennemi = _etiquette_ennemi(boite_ennemi, 18)
 	texte_intention = _etiquette_ennemi(boite_ennemi, 22)
+	texte_passif = _etiquette_ennemi(boite_ennemi, 16)
 
 	# Les rouleaux (5, ou 6 avec le Sixième rouleau, un peu plus étroits).
 	var largeur_case := 120 if machine.colonnes <= 5 else 104
@@ -532,6 +570,13 @@ func _construire_colonne_journal(parent: Control) -> void:
 		bouton_debug_relique.focus_mode = Control.FOCUS_NONE
 		bouton_debug_relique.pressed.connect(_donner_relique_debug)
 		colonne.add_child(bouton_debug_relique)
+
+		bouton_debug_etage = Button.new()
+		bouton_debug_etage.text = tr("[test] Passer à l'étage suivant")
+		bouton_debug_etage.disabled = partie.etage >= Donjon.NB_ETAGES
+		bouton_debug_etage.focus_mode = Control.FOCUS_NONE
+		bouton_debug_etage.pressed.connect(_sauter_etage)
+		colonne.add_child(bouton_debug_etage)
 
 
 ## Les mises : pas de mise, 5 / 10 / 20 or, quitte ou double. Une seule choisie à la fois.

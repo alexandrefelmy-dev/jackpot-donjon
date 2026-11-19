@@ -28,6 +28,9 @@ var liste_sac: VBoxContainer
 
 func _ready() -> void:
 	partie = GameState.partie
+	if partie.ecran != Partie.Ecran.BOUTIQUE:
+		GameState.rediriger()
+		return
 	boutique = Boutique.creer(partie)
 	_construire_interface()
 	_message(tr("Bienvenue ! Dépense ton or avec sagesse."))
@@ -105,7 +108,8 @@ func _donner_or_debug() -> void:
 
 func _quitter() -> void:
 	bouton_quitter.disabled = true
-	GameState.aller_a(GameState.SCENE_COMBAT)
+	partie.quitter_boutique()
+	GameState.aller_a_suivant()
 
 
 # --- Affichage ---------------------------------------------------------------
