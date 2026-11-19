@@ -16,7 +16,7 @@ const IMAGES_D_ATTENTE := 6
 const NOMS := ["portes_etage1", "portes_etage3", "combat_depart", "combat_attente", "combat_choix_rouleau",
 		"combat_apres_tour", "combat_grand_croupier", "combat_grand_croupier_tour2", "combat_dame_de_pique",
 		"combat_dame_de_pique_tour3", "combat_mimique", "combat_usurier", "combat_pickpocket", "combat_pickpocket_fuite",
-		"recompense", "relique", "boutique", "repos", "repos_sac", "fin_victoire", "fin_defaite", "comptoir", "comptoir_epuise", "fin_bilan"]
+		"recompense", "relique", "boutique", "repos", "repos_sac", "fin_victoire", "fin_defaite", "comptoir", "comptoir_epuise", "fin_bilan", "menu", "options", "options_credits"]
 
 var _etape := 0
 var _attente := 0
@@ -69,6 +69,7 @@ func _preparer(etape: int) -> void:
 		4:  # …choix du rouleau à garder (Cinquième as)
 			var combat: Control = current_scene
 			combat.boutons_mise[2].pressed.emit()
+			combat._terminer_animation()
 			combat._tirer()
 			combat.bouton_cinquieme_as.pressed.emit()
 			_controler(combat.combat.tirage_en_attente and combat.choix_du_rouleau,
@@ -83,6 +84,7 @@ func _preparer(etape: int) -> void:
 		7:  # …après quelques tours (la règle a changé)
 			var combat: Control = current_scene
 			combat.combat.pv_joueur = 40
+			combat._terminer_animation()
 			combat._tirer()
 			_controler(combat.texte_passif.visible, "la règle du tour devrait s'afficher")
 		8:  # combat contre la Dame de Pique : crânes temporaires
@@ -91,6 +93,7 @@ func _preparer(etape: int) -> void:
 			var combat: Control = current_scene
 			for i in 3:
 				combat.combat.pv_joueur = 40
+				combat._terminer_animation()
 				combat._tirer()
 			_controler(combat.combat.cranes_temporaires == 3, "3 crânes temporaires attendus : %d" % combat.combat.cranes_temporaires)
 		10:  # combat contre la Mimique : l'attaque surprise est dans le journal
@@ -168,6 +171,13 @@ func _preparer(etape: int) -> void:
 			perdue.ecran = Partie.Ecran.FIN
 			GameState.lancer(perdue)
 			GameState.aller_a_suivant()
+		24:  # menu principal
+			GameState.en_partie = false
+			GameState.aller_a(GameState.SCENE_MENU)
+		25:  # options (la case « Crédits » ouverte)
+			GameState.aller_a(GameState.SCENE_OPTIONS)
+		26:  # …avec les crédits
+			current_scene.bouton_credits.pressed.emit()
 
 
 ## Un combat contre l'ennemi `id`, à l'étage `etage`, avec l'ouverture jouée si l'ennemi en a une.

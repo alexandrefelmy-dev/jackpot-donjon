@@ -9,9 +9,9 @@ var curseur_musique: HSlider
 var curseur_effets: HSlider
 var texte_musique: Label
 var texte_effets: Label
-var case_plein_ecran: CheckBox
-var case_tremblements: CheckBox
-var case_flashs: CheckBox
+var case_plein_ecran: Button
+var case_tremblements: Button
+var case_flashs: Button
 var bouton_credits: Button
 var bouton_retour: Button
 var texte_credits: Label
@@ -138,12 +138,21 @@ func _creer_curseur(valeur: float) -> HSlider:
 	return curseur
 
 
-func _creer_case(texte: String, cochee: bool) -> CheckBox:
-	var case := CheckBox.new()
-	case.text = texte
+## Une case à cocher : un bouton à bascule, cadre doré quand il est actif, et « oui » / « non » écrit
+## en toutes lettres (une case dessinée par défaut est presque invisible sur ce fond sombre).
+func _creer_case(texte: String, cochee: bool) -> Button:
+	var case := Button.new()
+	case.toggle_mode = true
 	case.button_pressed = cochee
+	case.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	case.custom_minimum_size = Vector2(0, 42)
 	case.add_theme_font_size_override("font_size", 20)
 	case.focus_mode = Control.FOCUS_NONE
+	Cartes.habiller_bouton_mise(case)
+	var mettre_a_jour := func(active: bool) -> void:
+		case.text = "%s : %s" % [texte, tr("oui") if active else tr("non")]
+	mettre_a_jour.call(cochee)
+	case.toggled.connect(mettre_a_jour)
 	case.toggled.connect(func(_v: bool) -> void: _changer())
 	return case
 
