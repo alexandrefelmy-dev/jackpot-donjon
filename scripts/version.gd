@@ -4,7 +4,7 @@ extends RefCounted
 ## quelle version était testée. À changer au début de chaque étape (voir « Git : une branche
 ## par étape » dans CLAUDE.md) ; l'étiquette Git de la même version est posée à la fusion.
 
-const NUMERO := "0.6"
+const NUMERO := "0.7"
 
 
 ## Le texte affiché : « v0.6 ».
