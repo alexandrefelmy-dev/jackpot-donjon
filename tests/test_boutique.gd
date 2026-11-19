@@ -305,7 +305,7 @@ func test_parties_avec_boutique() -> void:
 					jouer_boutique_robot(partie)
 					partie.quitter_boutique()
 				Partie.Ecran.REPOS:
-					partie.repos_soigner()
+					_repos_du_robot(partie)
 				_:
 					coherent = false
 					break
@@ -364,3 +364,14 @@ func verifier(condition: bool, message: String) -> void:
 	else:
 		echecs += 1
 		print("  ÉCHEC ", message)
+
+
+## Le repos du robot : se soigne s'il est blessé, sinon dore un symbole, sinon repart sans rien faire.
+func _repos_du_robot(partie: Partie) -> void:
+	if partie.soin_du_repos() > 0:
+		partie.repos_soigner()
+		return
+	for i in partie.sac.taille():
+		if partie.repos_dorer(i):
+			return
+	partie.quitter_repos()

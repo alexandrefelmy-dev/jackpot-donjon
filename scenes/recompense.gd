@@ -103,22 +103,6 @@ func _creer_carte(symbole: SymbolData) -> Button:
 	carte.add_theme_font_size_override("font_size", 18)
 	carte.tooltip_text = tr("Ajouter %s à ton sac") % tr(symbole.nom)
 
-	var couleur_texte := Color.BLACK if symbole.couleur.get_luminance() > 0.5 else Color.WHITE
-	for etat in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
-		carte.add_theme_color_override(etat, couleur_texte)
-	carte.add_theme_stylebox_override("normal", _style_carte(symbole.couleur, false))
-	carte.add_theme_stylebox_override("hover", _style_carte(symbole.couleur.lightened(0.15), true))
-	carte.add_theme_stylebox_override("pressed", _style_carte(symbole.couleur.darkened(0.15), true))
-	carte.add_theme_stylebox_override("disabled", _style_carte(symbole.couleur.darkened(0.4), false))
+	Cartes.habiller_bouton(carte, symbole.couleur)
 	carte.pressed.connect(_choisir.bind(symbole))
 	return carte
-
-
-func _style_carte(couleur: Color, en_valeur: bool) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.set_corner_radius_all(12)
-	style.bg_color = couleur
-	if en_valeur:
-		style.set_border_width_all(5)
-		style.border_color = Color("ffd34d")
-	return style

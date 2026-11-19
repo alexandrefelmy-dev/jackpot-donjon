@@ -42,7 +42,7 @@ func _construire_interface() -> void:
 
 	var sous_titre := Label.new()
 	if victoire:
-		sous_titre.text = tr("Le Grand Croupier est vaincu : tu as dévalisé le casino maudit !")
+		sous_titre.text = tr("%s est vaincu : tu as dévalisé le casino maudit !") % tr(partie.donjon.boss_de(Donjon.NB_ETAGES).nom)
 	elif partie.est_combat_de_boss():
 		sous_titre.text = tr("Tu es tombé face au boss de l'étage %d. Le donjon recommence à zéro.") % partie.etage
 	else:

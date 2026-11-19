@@ -7,7 +7,7 @@ const COULEUR_FOND := Color("1b1a24")
 const TAILLE_PORTE := Vector2(330, 290)
 const COULEUR_BOSS := Color("ff9a5c")
 
-## Couleur, texte et conseil de chaque type de salle (en attendant les vrais graphismes).
+## Couleur de chaque type de salle (en attendant les vrais graphismes).
 const COULEURS: Dictionary = {
 	Salle.Type.COMBAT: Color("8a3a3f"),
 	Salle.Type.BOUTIQUE: Color("9c7424"),
@@ -114,7 +114,7 @@ func _creer_progression() -> Control:
 		if numero < partie.pas:
 			case_pas.color = Color("7ddc7d")
 		elif numero == partie.pas:
-			case_pas.color = Color("ffd34d")
+			case_pas.color = Cartes.COULEUR_SURVOL
 		else:
 			case_pas.color = Color("3a3846")
 		rangee.add_child(case_pas)

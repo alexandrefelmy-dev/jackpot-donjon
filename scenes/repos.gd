@@ -142,7 +142,7 @@ func _construire_interface() -> void:
 
 	texte_message = Label.new()
 	texte_message.add_theme_font_size_override("font_size", 20)
-	texte_message.add_theme_color_override("font_color", Color("ffd34d"))
+	texte_message.add_theme_color_override("font_color", Cartes.COULEUR_SURVOL)
 	texte_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	page.add_child(texte_message)
 

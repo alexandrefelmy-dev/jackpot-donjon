@@ -3,6 +3,9 @@ extends RefCounted
 ## Le sac du joueur : tous les symboles qu'il possède.
 ## À chaque tirage, la machine pioche dedans au hasard.
 
+## Le crâne, chargé une fois (ajouté au sac par Jackpot maudit et par les passifs des ennemis).
+const CRANE: SymbolData = preload("res://data/symbols/crane.tres")
+
 ## Composition du sac de départ : chemin du symbole -> quantité.
 const DEPART: Dictionary = {
 	"res://data/symbols/epee.tres": 6,
