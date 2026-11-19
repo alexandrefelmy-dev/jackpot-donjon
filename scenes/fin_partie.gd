@@ -59,6 +59,7 @@ func _construire_interface() -> void:
 	titre.add_theme_font_size_override("font_size", 56)
 	titre.add_theme_color_override("font_color", COULEUR_VICTOIRE if victoire else COULEUR_DEFAITE)
 	titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	Cartes.neon(titre, COULEUR_VICTOIRE if victoire else COULEUR_DEFAITE)
 	colonne.add_child(titre)
 
 	var sous_titre := Label.new()

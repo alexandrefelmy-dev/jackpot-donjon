@@ -134,6 +134,7 @@ func _creer_porte(salle: Salle, index: int) -> Button:
 	var description := _description(salle)
 	var porte := Cartes.creer_carte(COULEURS[salle.type], salle.nom_type().to_upper(), description, TAILLE_PORTE)
 	textes_portes.append(Cartes.texte_carte(porte))
+	Cartes.neon(porte.get_meta("titre") as Label, Color("ffd34d"))
 	porte.tooltip_text = tr("Franchir cette porte : %s") % salle.nom_type()
 	porte.pressed.connect(_choisir.bind(index))
 	return porte

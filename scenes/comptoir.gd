@@ -149,6 +149,7 @@ func _construire_interface() -> void:
 	var titre := Label.new()
 	titre.text = tr("Comptoir du Croupier")
 	titre.add_theme_font_size_override("font_size", 32)
+	Cartes.neon(titre, Cartes.COULEUR_JETONS)
 	page.add_child(titre)
 
 	texte_jetons = Label.new()

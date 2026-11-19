@@ -114,3 +114,20 @@ static func changer_carte(carte: Button, titre: String, detail: String) -> void:
 ## Tout le texte d'une carte (titre, ligne vide, texte) : pour les tests.
 static func texte_carte(carte: Button) -> String:
 	return "%s\n\n%s" % [(carte.get_meta("titre") as Label).text, (carte.get_meta("detail") as Label).text]
+
+
+## Donne à un contrôle (titre, étiquette) la lumière pulsante d'un néon. Le pulsement est coupé si le joueur
+## a demandé de réduire les flashs. Le shader est chargé une fois ; chaque contrôle a son propre matériau.
+const SHADER_NEON := "res://assets/shaders/neon.gdshader"
+static var _shader_neon: Shader
+
+
+static func neon(controle: CanvasItem, couleur_halo: Color = Color("ffd34d")) -> void:
+	if _shader_neon == null:
+		_shader_neon = load(SHADER_NEON) as Shader
+	var materiau := ShaderMaterial.new()
+	materiau.shader = _shader_neon
+	materiau.set_shader_parameter("couleur_halo", couleur_halo)
+	materiau.set_shader_parameter("amplitude", 0.0 if Impacts.flashs_reduits() else 0.35)
+	controle.material = materiau
+

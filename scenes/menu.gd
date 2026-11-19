@@ -62,6 +62,9 @@ func _construire_interface() -> void:
 	texte_titre.add_theme_font_size_override("font_size", 72)
 	texte_titre.add_theme_color_override("font_color", COULEUR_OR)
 	texte_titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	texte_titre.add_theme_color_override("font_outline_color", Color("7a1f1f"))
+	texte_titre.add_theme_constant_override("outline_size", 8)
+	Cartes.neon(texte_titre, COULEUR_ROUGE)
 	colonne.add_child(texte_titre)
 
 	var sous_titre := Label.new()

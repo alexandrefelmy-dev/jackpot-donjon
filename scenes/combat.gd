@@ -68,6 +68,15 @@ var bouton_debug: Button
 var bouton_debug_relique: Button
 var bouton_debug_etage: Button
 
+## Les rouleaux s'arrêtent un par un (affichage seulement : la logique du tour est déjà calculée).
+var animation_en_cours: bool = false
+var _tween_rouleaux: Tween
+## Ce qui s'affiche une fois les rouleaux arrêtés : journal, chiffres, sons, secousse (voir _presenter_tour).
+var _presentation: Callable
+const DELAI_ENTRE_ROULEAUX := 0.12
+## Vrai pour tester l'animation même en mode sans fenêtre (par défaut elle y est sautée).
+var forcer_animation: bool = false
+
 
 func _ready() -> void:
 	partie = GameState.partie
@@ -114,7 +123,13 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## Levier (bouton ou Espace). Pendant une relance possible, Espace valide le tirage affiché.
 func _tirer() -> void:
-	if combat == null or combat.est_fini():
+	if combat == null:
+		return
+	if animation_en_cours:
+		# Espace ou un clic pendant que les rouleaux s'arrêtent : on accélère, sans rien valider de plus.
+		_terminer_animation()
+		return
+	if combat.est_fini():
 		return
 	if combat.tirage_en_attente:
 		_valider()
@@ -125,30 +140,116 @@ func _tirer() -> void:
 		return
 	Son.jouer(&"rouleaux")
 	_dessiner_grille()
+	_animer_rouleaux()
 	if combat.peut_relancer():
 		_attendre_validation()
 	else:
-		_valider()
+		_valider(true)
 
 
-## Applique le tirage affiché (et la mise) : l'ennemi agit ensuite.
-func _valider() -> void:
+## Applique le tirage affiché (et la mise) : l'ennemi agit ensuite. `pendant_le_tirage` : on vient de tirer
+## et les rouleaux s'arrêtent encore ; le résultat est calculé tout de suite mais ne s'AFFICHE (journal, chiffres,
+## sons, secousse) qu'une fois le dernier rouleau arrêté.
+func _valider(pendant_le_tirage: bool = false) -> void:
 	if not combat.tirage_en_attente:
 		return
+	if not pendant_le_tirage:
+		_terminer_animation()
 	choix_du_rouleau = false
 	var numero_tour := combat.numero_tour
 	var pv_avant := combat.pv_joueur
 	var journal_combat := combat.valider()
+	var presentation := _presenter_tour.bind(numero_tour, pv_avant, journal_combat)
+	if animation_en_cours:
+		_presentation = presentation
+	else:
+		presentation.call()
+
+
+## Tout ce que le joueur voit et entend d'un tour : grille, journal, sons, chiffres qui s'envolent, secousse,
+## flash de l'ennemi, pluie de pièces et bannière sur un jackpot.
+func _presenter_tour(numero_tour: int, pv_avant: int, journal_combat: Array[String]) -> void:
+	var resultat := combat.resultat_courant
 	_dessiner_grille()
-	_afficher_tour(numero_tour, combat.resultat_courant, journal_combat)
-	for evenement in RetourTour.sons(combat.resultat_courant, pv_avant, combat.pv_joueur):
+	_afficher_tour(numero_tour, resultat, journal_combat)
+	for evenement in RetourTour.sons(resultat, pv_avant, combat.pv_joueur):
 		Son.jouer(evenement)
 	if combat.etat == Combat.Etat.VICTOIRE:
 		Son.jouer(&"victoire")
 	elif combat.etat == Combat.Etat.DEFAITE:
 		Son.jouer(&"defaite")
+	_lancer_les_effets(resultat, pv_avant)
 	_choisir_mise(0)
 	_rafraichir()
+
+
+func _lancer_les_effets(resultat: ResultatTirage, pv_avant: int) -> void:
+	var chiffres := Impacts.chiffres_du_tour(resultat, pv_avant, combat.pv_joueur)
+	for i in chiffres.size():
+		var lieu: Control = panneau_ennemi
+		if chiffres[i]["lieu"] == "joueur":
+			lieu = barre_pv_joueur
+		elif chiffres[i]["lieu"] == "or":
+			lieu = texte_or
+		var centre := lieu.get_global_rect().get_center() - get_global_rect().position
+		Impacts.chiffre(self, chiffres[i]["texte"], centre + Vector2(-20 + 70 * (i % 3), 0), chiffres[i]["couleur"])
+	var force := Impacts.force_de_secousse(resultat, pv_avant, combat.pv_joueur)
+	if force > 0.0:
+		Impacts.secouer(self, force)
+		if force >= 0.7:
+			Impacts.arret_sur_image()
+	if resultat.total("degats") > 0:
+		Impacts.flash(panneau_ennemi)
+	for combo in resultat.combos:
+		if combo.est_jackpot():
+			Impacts.banniere(self, tr("JACKPOT !"))
+			Impacts.pluie_de_pieces(self)
+			break
+
+
+## Les rouleaux, un par un : d'abord tous « en train de tourner », puis chacun s'arrête à son tour de gauche à
+## droite avec un petit rebond et un clic un peu plus aigu. Pas d'animation en mode sans fenêtre (tests).
+func _animer_rouleaux() -> void:
+	if DisplayServer.get_name() == "headless" and not forcer_animation:
+		return
+	animation_en_cours = true
+	for i in cases.size():
+		_dessiner_case(i, null, false)
+		etiquettes[i].text = "···"
+	_tween_rouleaux = create_tween()
+	for i in cases.size():
+		_tween_rouleaux.tween_interval(DELAI_ENTRE_ROULEAUX + (0.06 if i == 0 else 0.0))
+		_tween_rouleaux.tween_callback(_reveler_rouleau.bind(i))
+	_tween_rouleaux.tween_callback(_terminer_animation)
+
+
+func _reveler_rouleau(index: int) -> void:
+	var grille := combat.grille_courante
+	if index >= grille.size():
+		return
+	_dessiner_case(index, grille[index], index in combat.resultat_courant.cases_en_combo, index in combat.bloques_du_tirage)
+	Son.jouer(&"arret_rouleau", 1.0 + 0.07 * index)
+	var case_grille := cases[index]
+	case_grille.offset_transform_enabled = true
+	case_grille.offset_transform_position = Vector2(0, -12)
+	var rebond := case_grille.create_tween()
+	rebond.tween_property(case_grille, "offset_transform_position", Vector2.ZERO, 0.18).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+
+
+## Finit l'animation tout de suite (tous les rouleaux arrêtés) puis affiche ce qui attendait.
+func _terminer_animation() -> void:
+	if not animation_en_cours:
+		return
+	animation_en_cours = false
+	if _tween_rouleaux != null:
+		_tween_rouleaux.kill()
+	for case_grille in cases:
+		case_grille.offset_transform_position = Vector2.ZERO
+	_dessiner_grille()
+	if _presentation.is_valid():
+		var presentation := _presentation
+		_presentation = Callable()
+		presentation.call()
 
 
 ## Les rouleaux sont affichés mais pas encore appliqués : on peut relancer ou valider.
@@ -159,9 +260,12 @@ func _attendre_validation() -> void:
 
 ## Dé pipé : relance tous les rouleaux.
 func _relancer_tout() -> void:
+	_terminer_animation()
 	if combat.relancer_tout():
 		choix_du_rouleau = false
+		Son.jouer(&"rouleaux")
 		_dessiner_grille()
+		_animer_rouleaux()
 		_afficher_apercu()
 		_rafraichir()
 
@@ -184,9 +288,12 @@ func _sur_case(evenement: InputEvent, index: int) -> void:
 func _garder_rouleau(index: int) -> void:
 	if not choix_du_rouleau:
 		return
+	_terminer_animation()
 	if combat.relancer_en_gardant(index):
 		choix_du_rouleau = false
+		Son.jouer(&"rouleaux")
 		_dessiner_grille()
+		_animer_rouleaux()
 		_afficher_apercu()
 		_rafraichir()
 
