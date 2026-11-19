@@ -189,7 +189,8 @@ func _nouveau_tirage(garde: int) -> void:
 		grille[garde] = grille_courante[garde]
 	_origine = origine
 	grille_courante = grille
-	resultat_courant = _machine.resoudre(grille_courante, _modificateurs.avec_regle(regle_active))
+	resultat_courant = _machine.resoudre(grille_courante,
+			_modificateurs if regle_active.is_empty() else _modificateurs.avec_regle(regle_active))
 
 
 ## L'or que le joueur possède en ce moment : celui d'avant le combat, plus les pièces
@@ -415,7 +416,7 @@ func _jouer_passif(journal: Array[String]) -> void:
 	if cranes > 0 and _sac != null:
 		var ajoutes := mini(cranes, MAX_CRANES_TEMPORAIRES - cranes_temporaires)
 		if ajoutes > 0:
-			_sac.ajouter(load("res://data/symbols/crane.tres") as SymbolData, ajoutes)
+			_sac.ajouter(Sac.CRANE, ajoutes)
 			cranes_temporaires += ajoutes
 			journal.append(tr("%s glisse %d crâne(s) dans ta machine pour ce combat") % [tr(ennemi.nom), ajoutes])
 	if bool(ennemi.passif.get("regle_par_tour", false)):

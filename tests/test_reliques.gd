@@ -123,6 +123,7 @@ func test_effets_immediats() -> void:
 	verifier(partie3.nb_rouleaux == 5 and partie3.creer_machine().nb_cases() == 5, "5 rouleaux au départ")
 	partie3.ajouter_relique(relique(&"sixieme_rouleau"))
 	verifier(partie3.nb_rouleaux == 6 and partie3.creer_machine().nb_cases() == 6, "Sixième rouleau : 6 rouleaux")
+	partie3.choisir_porte(0)
 	verifier(partie3.creer_combat().rouleaux_bloques.is_empty(), "le combat se crée avec 6 rouleaux")
 
 	# Les autres reliques n'ont pas d'effet immédiat.

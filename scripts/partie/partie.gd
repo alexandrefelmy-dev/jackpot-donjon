@@ -61,9 +61,6 @@ var nb_rouleaux: int = NB_ROULEAUX_DEPART
 var etat: Etat = Etat.EN_COURS
 ## Le combat en cours (créé par creer_combat, rendu à terminer_combat).
 var combat_courant: Combat
-## Vrai quand une relique est offerte après le combat qui vient (Mimique) ou après le boss.
-var _relique_apres_combat: bool = false
-var _relique_apres_boss: bool = false
 
 
 ## Crée une partie neuve. Une graine positive rend la partie rejouable à l'identique.
@@ -79,13 +76,23 @@ static func creer(graine_voulue: int = -1) -> Partie:
 
 # --- Avancer dans le donjon --------------------------------------------------
 
+## La partie est en cours et attend cet écran : les actions d'un écran n'ont d'effet qu'à ce moment-là.
+func _est_a(ecran_voulu: Ecran) -> bool:
+	return ecran == ecran_voulu and etat == Etat.EN_COURS
+
+
+## Un pourcentage des PV max, arrondi au-dessus (soin du repos, soin à l'arrivée d'un étage).
+func _pourcentage_des_pv_max(pourcent: int) -> int:
+	return ceili(pv_max * pourcent / 100.0)
+
+
 func est_combat_de_boss() -> bool:
 	return ennemi_courant != null and ennemi_courant.est_boss
 
 
 ## Les 2 portes à choisir maintenant (vide si on n'est pas au choix des portes).
 func portes() -> Array[Salle]:
-	if ecran != Ecran.PORTES or etat != Etat.EN_COURS:
+	if not _est_a(Ecran.PORTES):
 		return []
 	return donjon.portes(etage, pas)
 
@@ -101,7 +108,6 @@ func choisir_porte(index: int) -> bool:
 	if index < 0 or index >= choix.size():
 		return false
 	salle_courante = choix[index]
-	_relique_apres_combat = false
 	match salle_courante.type:
 		Salle.Type.COMBAT:
 			ennemi_courant = salle_courante.ennemi
@@ -114,11 +120,8 @@ func choisir_porte(index: int) -> bool:
 			if salle_courante.mimique:
 				# La Mimique attaque par surprise ; vaincue, elle laisse quand même la relique.
 				ennemi_courant = salle_courante.ennemi
-				_relique_apres_combat = true
 				ecran = Ecran.COMBAT
-			elif peut_recevoir_relique():
-				ecran = Ecran.RELIQUE
-			else:
+			elif not _proposer_relique():
 				_salle_terminee()
 	return true
 
@@ -142,7 +145,7 @@ func _etage_suivant() -> void:
 	pas = 1
 	salle_courante = null
 	ennemi_courant = null
-	var soin := ceili(pv_max * SOIN_APRES_BOSS_POURCENT / 100.0)
+	var soin := _pourcentage_des_pv_max(SOIN_APRES_BOSS_POURCENT)
 	pv = mini(pv_max, pv + soin)
 	ecran = Ecran.PORTES
 
@@ -196,7 +199,7 @@ func ajouter_relique(relique: RelicData) -> bool:
 
 	var nb_cranes := int(relique.valeur("cranes_ajoutes"))
 	if nb_cranes > 0:
-		sac.ajouter(load("res://data/symbols/crane.tres") as SymbolData, nb_cranes)
+		sac.ajouter(Sac.CRANE, nb_cranes)
 
 	nb_rouleaux += int(relique.valeur("rouleaux_en_plus"))
 	return true
@@ -226,20 +229,31 @@ func _reliques_disponibles() -> Array[RelicData]:
 
 ## Reste-t-il au moins une relique que le joueur ne possède pas ? (sans toucher au hasard)
 func peut_recevoir_relique() -> bool:
-	return not _reliques_disponibles().is_empty()
+	for relique in Reliques.toutes():
+		if not a_relique(relique.id):
+			return true
+	return false
 
 
 ## Le joueur choisit sa relique (coffre, Mimique vaincue ou boss) : elle est ajoutée et la salle est finie.
 func choisir_relique(relique: RelicData) -> void:
-	if ecran != Ecran.RELIQUE or etat != Etat.EN_COURS:
+	if not _est_a(Ecran.RELIQUE):
 		return
 	ajouter_relique(relique)
 	_relique_terminee()
 
 
+## Passe à l'écran des reliques s'il en reste une à offrir. Renvoie faux sinon (rien ne change).
+func _proposer_relique() -> bool:
+	if not peut_recevoir_relique():
+		return false
+	ecran = Ecran.RELIQUE
+	return true
+
+
+## Après le choix d'une relique : le boss de l'étage ouvre l'étage suivant, toute autre salle est finie.
 func _relique_terminee() -> void:
-	if _relique_apres_boss:
-		_relique_apres_boss = false
+	if est_combat_de_boss():
 		_etage_suivant()
 	else:
 		_salle_terminee()
@@ -272,16 +286,11 @@ func terminer_combat(combat: Combat) -> void:
 		if etage >= Donjon.NB_ETAGES:
 			etat = Etat.VICTOIRE
 			ecran = Ecran.FIN
-		elif peut_recevoir_relique():
-			_relique_apres_boss = true
-			ecran = Ecran.RELIQUE
-		else:
+		elif not _proposer_relique():
 			_etage_suivant()
-	elif _relique_apres_combat:
-		_relique_apres_combat = false
-		if peut_recevoir_relique():
-			ecran = Ecran.RELIQUE
-		else:
+	elif salle_courante != null and salle_courante.mimique:
+		# La Mimique vaincue laisse quand même la relique du coffre.
+		if not _proposer_relique():
 			_salle_terminee()
 	else:
 		ecran = Ecran.RECOMPENSE
@@ -316,7 +325,7 @@ func choisir_recompense(symbole: SymbolData) -> void:
 
 ## La récompense d'un combat est réglée (symbole pris ou non) : on retourne aux portes.
 func terminer_recompense() -> void:
-	if ecran == Ecran.RECOMPENSE and etat == Etat.EN_COURS:
+	if _est_a(Ecran.RECOMPENSE):
 		_salle_terminee()
 
 
@@ -324,21 +333,23 @@ func terminer_recompense() -> void:
 
 ## Le joueur quitte la boutique : retour aux portes.
 func quitter_boutique() -> void:
-	if ecran == Ecran.BOUTIQUE and etat == Etat.EN_COURS:
+	if _est_a(Ecran.BOUTIQUE):
 		_salle_terminee()
 
 
 ## Les PV qu'un repos rendrait maintenant : 30 % des PV max (arrondi au-dessus), sans dépasser le maximum.
 func soin_du_repos() -> int:
-	var soin := ceili(pv_max * SOIN_REPOS_POURCENT / 100.0)
+	var soin := _pourcentage_des_pv_max(SOIN_REPOS_POURCENT)
 	return mini(soin, pv_max - pv)
 
 
 ## Repos : le joueur se soigne. Renvoie les PV rendus. La salle est finie.
 func repos_soigner() -> int:
-	if ecran != Ecran.REPOS or etat != Etat.EN_COURS:
+	if not _est_a(Ecran.REPOS):
 		return 0
 	var soin := soin_du_repos()
+	if soin <= 0:
+		return 0
 	pv += soin
 	_salle_terminee()
 	return soin
@@ -347,7 +358,7 @@ func repos_soigner() -> int:
 ## Repos : le joueur part sans rien faire (seulement possible quand aucune action ne l'est : PV pleins
 ## et tous les symboles déjà dorés), pour ne jamais rester bloqué dans la salle.
 func quitter_repos() -> bool:
-	if ecran != Ecran.REPOS or etat != Etat.EN_COURS or soin_du_repos() > 0 or peut_dorer():
+	if not _est_a(Ecran.REPOS) or soin_du_repos() > 0 or peut_dorer():
 		return false
 	_salle_terminee()
 	return true
@@ -364,7 +375,7 @@ func peut_dorer() -> bool:
 ## Repos : le symbole d'index `index` du sac devient doré, gratuitement. La salle est finie.
 ## Renvoie faux (et ne change rien) si ce n'est pas un repos ou si le symbole est déjà doré.
 func repos_dorer(index: int) -> bool:
-	if ecran != Ecran.REPOS or etat != Etat.EN_COURS or not sac.ameliorer(index):
+	if not _est_a(Ecran.REPOS) or not sac.ameliorer(index):
 		return false
 	_salle_terminee()
 	return true
@@ -380,8 +391,6 @@ func aller_au_boss() -> void:
 	salle_courante = null
 	ennemi_courant = donjon.boss_de(etage)
 	combat_courant = null
-	_relique_apres_combat = false
-	_relique_apres_boss = false
 	ecran = Ecran.COMBAT
 
 
@@ -390,6 +399,4 @@ func sauter_etage() -> void:
 	if etat != Etat.EN_COURS or etage >= Donjon.NB_ETAGES:
 		return
 	combat_courant = null
-	_relique_apres_combat = false
-	_relique_apres_boss = false
 	_etage_suivant()
