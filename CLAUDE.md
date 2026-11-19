@@ -15,7 +15,7 @@ IMPORTANT : dès qu'une étape est terminée (ou avant qu'Alex quitte la session
 
 - v0.1 écrite : machine 1×5, sac de départ (15 symboles), combos 3/4/5 n'importe où sur la ligne (×1/×2/×4), écran de test `scenes/machine_test.tscn`.
 - v0.1 terminée : 16 tests en ligne de commande passent et Alex a confirmé que ça marche en jeu (F5).
-- Dépôt GitHub public : https://github.com/alexandrefelmy-dev/jackpot-donjon (branche `main`, `git push` suffit).
+- Dépôt GitHub public : https://github.com/alexandrefelmy-dev/jackpot-donjon (branche `main`, qui ne reçoit que des étapes confirmées : voir « Git : une branche par étape »).
 - v0.2 terminée : `Combat` (logique pure), `EnemyData` + 3 ennemis (`data/enemies/`), intentions attaque/protection, écran `scenes/combat.tscn` (main scene, sélecteur d'ennemi, Rejouer). Tests en ligne de commande : 16 (machine) + 46 (combat), tous ok, et Alex a confirmé que ça marche en jeu (F5, aucune erreur).
 - Règles précisées en v0.2 (section « Précisions de règles (v0.2) » du cahier des charges) : reportées à la fois dans la copie locale et dans la version en ligne (fait le 2026-11-19, avec la ligne « Réalisé » du jalon v0.2).
 - v0.3 terminée (Alex a confirmé en jeu, F5, une partie jusqu'au bout) : `Partie` (PV, or, sac, 5 rencontres d'étage 1 + boss), classe statique `GameState` (ex-autoload), écrans `combat` / `recompense` / `fin_partie`, ennemis Gobelin tricheur et boss Rat-Croupier (bloque un rouleau), rouleaux bloqués dans `MachineASous.tirer`. Tests : 20 (machine) + 66 (combat) + 51 (partie) + 18 (interface) = 155, tous ok ; 25 parties jouées à travers les vraies scènes en headless sans erreur. Règles v0.3 reportées dans le cahier des charges local ET en ligne (2026-11-19).
@@ -69,3 +69,13 @@ IMPORTANT : dès qu'une étape est terminée (ou avant qu'Alex quitte la session
 - Alex est étudiant en informatique (bases en Python et Ada) : expliquer en quelques lignes ce qui a changé et comment le tester.
 - Une version jouable à la fois : ne pas commencer la suivante tant que la précédente ne marche pas en jeu.
 - Faire un commit git après chaque étape qui marche.
+
+## Git : une branche par étape
+
+`main` ne contient que des versions confirmées en jeu par Alex : il doit toujours marcher.
+
+- **Début d'étape** : partir de `main` à jour (`git switch main`, puis `git switch -c <branche>`). Nom de la branche : la version et un sujet court (`v0.6-donjon`) ; pour une correction hors étape : `fix/<sujet>` ; pour de la documentation ou de l'outillage : `chore/<sujet>`. Ne jamais coder directement sur `main`.
+- **Pendant l'étape** : des commits sur la branche, tests verts avant chaque commit (messages courts, en français, avec la ligne `Co-Authored-By`). Alex teste avec F5 sur la branche (le dossier de travail est celui de la branche).
+- **Fin d'étape**, seulement quand Alex a confirmé que ça marche en jeu : mettre à jour l'« État actuel » de `CLAUDE.md` et le `README` sur la branche (commit « vX confirmée »), puis `git switch main`, `git merge --no-ff <branche>` (le commit de fusion garde l'étape visible dans l'historique), `git push`, et supprimer la branche (`git branch -d <branche>`).
+- Les branches d'étape ne sont pas poussées sur GitHub : seul `main` l'est. Si Alex quitte avant la confirmation, la branche reste en local et l'état de `CLAUDE.md` le dit (« branche `x` en cours »).
+- Ne pas fusionner une étape non confirmée, ne pas réécrire l'historique de `main`.

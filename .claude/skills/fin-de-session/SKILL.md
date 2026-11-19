@@ -39,8 +39,9 @@ Si une règle du jeu, une valeur ou un jalon a changé pendant la session :
 ## 5. Commit git
 
 - Vérifie qu'aucun fichier sensible (mot de passe, clé, fichier `.env`) ne part dans le commit.
-- `git add -A`, puis un commit avec un message court en français qui dit ce qui a été fait, par exemple `v0.2 : premier combat contre un ennemi`.
-- Ne pousse pas sur GitHub sauf si Alex le demande.
+- Vérifie la branche courante (`git branch --show-current`). Si on est sur `main` avec du travail non commité, ne commite pas dessus : crée d'abord une branche (voir « Git : une branche par étape » dans CLAUDE.md).
+- `git add -A`, puis un commit sur la branche avec un message court en français qui dit ce qui a été fait, par exemple `v0.2 : premier combat contre un ennemi`.
+- Ne fusionne pas dans `main` et ne pousse pas : la fusion se fait seulement quand Alex a confirmé l'étape en jeu. Dans l'état actuel de CLAUDE.md, note « branche `<nom>` en cours, pas encore fusionnée ».
 
 ## 6. Résumé pour Alex
 
