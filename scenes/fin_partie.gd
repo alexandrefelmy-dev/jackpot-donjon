@@ -54,7 +54,7 @@ func _construire_interface() -> void:
 		tr("Combats gagnés : %d / %d") % [partie.combats_gagnes, Partie.NB_COMBATS_NORMAUX + 1],
 		tr("Or gagné : %d") % partie.or_total,
 		tr("Symboles dans le sac : %d") % partie.sac.taille(),
-		tr("Graine : %d") % partie.graine,
+		tr("Graine : %d") % partie.graine + "     " + Version.texte(),
 	])
 	stats.add_theme_font_size_override("font_size", 20)
 	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

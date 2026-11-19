@@ -56,7 +56,7 @@ IMPORTANT : dès qu'une étape est terminée (ou avant qu'Alex quitte la session
 ## Vérifier son travail
 
 - Tests : `godot --headless --path . -s res://tests/test_machine.gd`, `... test_combat.gd`, `... test_partie.gd`, `... test_boutique.gd`, `... test_reliques.gd`, `... test_mises.gd` et `... test_interface.gd` (vérifie que les boutons tiennent dans la fenêtre 1152×648) (affichent ok / ÉCHEC, code de sortie 1 en cas d'échec). Les tests de règles utilisent des ennemis de test aux valeurs fixes, pas les `.tres` (qui sont réglés en jouant).
-- Pour vérifier l'aspect d'un écran : lancer un script jetable SANS `--headless` (`godot --path . -s script.gd`, fenêtre réelle) qui enregistre `root.get_texture().get_image().save_png(...)` après quelques images, puis lire le PNG. Les tests de position ne voient pas un texte coupé ou un cadre mal dimensionné. On peut aussi y envoyer de vrais clics avec `Input.parse_input_event(InputEventMouseButton)`.
+- **Outils** (`outils/`, voir `outils/README.md`) : `equilibrage.gd` (taux de victoire de robots, pour régler la difficulté), `simulation_parties.gd` (50 parties entières à travers les vraies scènes), `capture_ecrans.gd` (captures d'écran réelles de chaque écran : les ouvrir et les regarder, les tests de position ne voient pas un texte coupé ou un cadre mal dimensionné), `clics_reels.gd` (vrais clics de souris). Quand un nouvel écran ou un nouveau flux est écrit, les mettre à jour (ajouter l'écran à `capture_ecrans.gd`, le flux à `simulation_parties.gd`) plutôt que de refaire des scripts jetables.
 - Toujours lancer Godot en ligne de commande avec `timeout` et la sortie redirigée vers un fichier : un script en erreur peut bloquer Godot headless sans jamais rendre la main.
 - Script jetable qui instancie une scène : attendre `await process_frame` avant de lire ses nœuds (sinon `_ready` n'a pas tourné). Les ressources chargées par `load()` sont déchargées quand plus rien ne les référence : garder une référence si on les modifie en mémoire.
 - Éviter de modifier `project.godot` à la main : si Alex a l'éditeur Godot ouvert, celui-ci le réécrit depuis sa mémoire et efface la modification (c'est arrivé avec un autoload, et le jeu d'Alex plantait avec « Identifier not found: GameState » en v0.4). C'est pourquoi `GameState` est une classe statique et non un autoload. Si une modification de `project.godot` est vraiment nécessaire, demander à Alex de fermer et rouvrir l'éditeur avant de tester.
@@ -74,8 +74,23 @@ IMPORTANT : dès qu'une étape est terminée (ou avant qu'Alex quitte la session
 
 `main` ne contient que des versions confirmées en jeu par Alex : il doit toujours marcher.
 
-- **Début d'étape** : partir de `main` à jour (`git switch main`, puis `git switch -c <branche>`). Nom de la branche : la version et un sujet court (`v0.6-donjon`) ; pour une correction hors étape : `fix/<sujet>` ; pour de la documentation ou de l'outillage : `chore/<sujet>`. Ne jamais coder directement sur `main`.
+- **Début d'étape** : partir de `main` à jour (`git switch main`, puis `git switch -c <branche>`). Nom de la branche : la version et un sujet court (`v0.6-donjon`) ; pour une correction hors étape : `fix/<sujet>` ; pour de la documentation ou de l'outillage : `chore/<sujet>`. Ne jamais coder directement sur `main`. Pour une étape de jeu : changer `Version.NUMERO` (`scripts/version.gd`) tout de suite.
 - **Pendant l'étape** : des commits sur la branche, tests verts avant chaque commit (messages courts, en français, avec la ligne `Co-Authored-By`). Alex teste avec F5 sur la branche (le dossier de travail est celui de la branche).
-- **Fin d'étape**, seulement quand Alex a confirmé que ça marche en jeu : mettre à jour l'« État actuel » de `CLAUDE.md` et le `README` sur la branche (commit « vX confirmée »), puis `git switch main`, `git merge --no-ff <branche>` (le commit de fusion garde l'étape visible dans l'historique), `git push`, et supprimer la branche (`git branch -d <branche>`).
+- **Avant la fusion** : lancer `/code-review` sur la branche (niveau `medium`) et corriger les problèmes confirmés ; relancer les tests.
+- **Fin d'étape**, seulement quand Alex a confirmé que ça marche en jeu : mettre à jour l'« État actuel » de `CLAUDE.md` et le `README` sur la branche (commit « vX confirmée »), puis `git switch main`, `git merge --no-ff <branche>` (le commit de fusion garde l'étape visible dans l'historique), poser l'étiquette de version (`git tag -a vX.Y -m "vX.Y : <sujet>"`), `git push --follow-tags`, et supprimer la branche (`git branch -d <branche>`). Les étiquettes `v0.1` à `v0.5` existent déjà.
+
+## Checklist de fin d'étape
+
+À parcourir dans l'ordre avant de dire « l'étape est finie » à Alex (cocher mentalement, ne rien sauter) :
+
+1. Tous les tests de `tests/` passent (`test_machine`, `test_combat`, `test_partie`, `test_boutique`, `test_reliques`, `test_mises`, `test_interface`) et le jeu se lance comme avec F5 (`godot --headless --path . --quit-after 60`) sans erreur.
+2. `outils/simulation_parties.gd` : aucune erreur ; `outils/equilibrage.gd` relancé si des valeurs ont changé (cible 50 à 60 %).
+3. `outils/capture_ecrans.gd` : chaque écran nouveau ou modifié a été regardé en vrai (texte coupé, débordement, lisibilité) ; `outils/clics_reels.gd` si des boutons ont changé.
+4. Chaque nouvelle règle de calcul a son test.
+5. `docs/cahier-des-charges.md` mis à jour (bloc « Précisions de règles », jalon « Réalisé », phrases devenues fausses) ET la version en ligne mise à jour en même temps, avec le même texte.
+6. `Version.NUMERO` à jour ; `README` et « État actuel » de `CLAUDE.md` à jour.
+7. `/code-review` passé sur la branche.
+8. Résumé pour Alex : ce qui a changé, comment tester avec F5, les boutons « [test] » utiles.
+9. Alex a confirmé en jeu → fusion, étiquette, push (voir « Git : une branche par étape »).
 - Les branches d'étape ne sont pas poussées sur GitHub : seul `main` l'est. Si Alex quitte avant la confirmation, la branche reste en local et l'état de `CLAUDE.md` le dit (« branche `x` en cours »).
 - Ne pas fusionner une étape non confirmée, ne pas réécrire l'historique de `main`.
