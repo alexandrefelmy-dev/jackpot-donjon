@@ -252,7 +252,7 @@ Chaque partie, gagnée ou perdue, rapporte des avantages permanents ; chaque mor
 **Précisions de règles (v0.7)**
 
 - Jetons d'âme : calculés une seule fois en fin de partie (1 par salle franchie, 5 par boss battu, 10 pour une victoire). Une partie abandonnée (jeu fermé) ne rapporte rien.
-- Déroulé : le jeu s'ouvre sur le Comptoir du Croupier (menu provisoire jusqu'à la v0.8) ; « Jouer » lance une partie ; l'écran de fin affiche les jetons gagnés et la malédiction reçue ou effacée, puis mène au Comptoir ou relance une partie.
+- Déroulé : le jeu s'ouvre sur le Comptoir du Croupier (depuis la v0.8, il s'ouvre sur le menu principal et le Comptoir est un de ses boutons) ; « Jouer » lance une partie ; l'écran de fin affiche les jetons gagnés et la malédiction reçue ou effacée, puis mène au Comptoir ou relance une partie.
 - Déblocages : un déblocage tire au hasard un élément encore verrouillé. Au départ sont débloqués les symboles épée, bouclier, potion et pièce, et les reliques Cœur de pierre, Tirelire, Lame aimantée et Dé pipé. Restent à débloquer les symboles Bombe, Flèche, Aimant et Trèfle, et les reliques Trèfle à quatre feuilles, Jackpot maudit, Jeton porte-bonheur, Sixième rouleau et Cinquième as. Les récompenses, la boutique, les coffres et les boss ne proposent que ce qui est débloqué. Une carte du Comptoir est grisée quand on ne peut plus l'acheter (pas assez de jetons, tout débloqué, niveau maximum, déjà acheté).
 - Avantages : PV max +5 par niveau (3 niveaux au maximum, PV de départ compris) ; or de départ +10 par niveau (3 niveaux) ; une relance gratuite par partie = une relance de tous les rouleaux, utilisable dans n'importe quel combat, une seule fois, après celles des reliques ; un Trèfle dans le sac de départ.
 - Malédictions : fixées au lancement de la partie. À chaque défaite, une malédiction tirée au hasard s'ajoute (3 au maximum, toutes différentes). Chaque boss battu pendant la partie en efface une (la plus ancienne) avant l'ajout, et celle qui vient d'être effacée ne revient pas aussitôt ; une victoire les efface toutes et n'en ajoute pas.
@@ -296,13 +296,28 @@ La version 1.0 compte 3 étages, 9 ennemis normaux et 3 boss, dans un univers de
 | La Dame de Pique | 54 | Ajoute 1 crâne temporaire dans le sac à chaque tour |
 | Le Grand Croupier | 63 | Change une règle de la machine à chaque tour (ex. les épées soignent l'ennemi) |
 
+**Précisions de règles (v0.8)**
+
+- Menu principal : le jeu s'ouvre dessus. Jouer (lance une partie avec le profil), Comptoir du Croupier, Options, Quitter. Un bouton « Menu » ramène du Comptoir et de l'écran de fin au menu ; Échap revient en arrière dans les menus.
+- Options : volume Musique (60 % au départ) et volume Effets (80 %), plein écran, « Réduire les tremblements d'écran » (coupe aussi les arrêts sur image), « Réduire les flashs » (coupe aussi le pulsement des néons), et un écran de crédits. Elles sont enregistrées dans `user://options.save` (JSON versionné, même écriture sûre que le profil : fichier temporaire, `.bak`, version plus récente refusée sans être écrasée). Les tests et les outils n'écrivent jamais dans le vrai fichier d'options.
+- Touches : Espace, Entrée, Entrée du pavé numérique ou bouton A de la manette tirent le levier ; Échap ou bouton B reviennent en arrière. Les actions sont créées par le code au lancement (le fichier `project.godot` n'est pas modifié). Le jeu reste jouable à la souris seule.
+- Son : deux bus, Musique et Effets, créés au lancement ; un curseur règle le gain par le carré de sa valeur et coupe à 0. Aucun son ne joue directement sur le bus principal. Chaque effet répété a un petit décalage de hauteur (± 6 %). Sons : rouleaux, clic d'arrêt de chaque rouleau (un peu plus aigu à chaque rouleau), ding de combo, fanfare de jackpot, coup donné, coup reçu, bouclier, soin, pièces, bombe, achat, relique, clic, victoire, défaite.
+- Musique : une boucle par étage (1, 2, 3) et une pour les boss ; le menu et le Comptoir reprennent celle de l'étage 1. Changement par fondu enchaîné d'environ 1,5 s ; la musique continue d'un écran à l'autre d'un même étage.
+- Rouleaux : ils s'arrêtent un par un de gauche à droite (environ 0,12 s d'écart, avec un petit rebond). Le tirage est calculé d'un coup (les règles ne changent pas), seul l'affichage est étalé ; on ne peut pas valider avant la fin, et Espace pendant l'animation l'accélère.
+- Effets de jeu : chiffres qui s'envolent (dégâts, coup reçu, armure, soin, or, 12 au plus à l'écran), tremblement d'écran proportionnel aux gros dégâts (secousse au carré qui retombe en un peu moins d'une seconde), arrêt sur image de 0,06 s au plus sur les gros impacts, flash, pluie de pièces et bannière sur un jackpot. Jamais plus de 3 flashs par seconde.
+- Néons : un shader à halo pulsant (période de 2 s) sur les titres du menu, des portes, du Comptoir et de l'écran de fin, et sur la bannière de jackpot.
+- Graphismes : le pack DungeonTileset II de 0x72 (CC0), agrandi d'un facteur entier sans lissage. Chaque ennemi a dans son `.tres` le nom de ses images (`images`), chaque symbole le nom de son icône (`icone`) ; le chevalier est le joueur. Le bouclier, l'aimant et le trèfle, absents du pack, sont dessinés par un script du projet (16×16). Le pack n'a pas d'images d'attaque ni de mort : les coups passent par les effets. Plusieurs ennemis n'ont pas d'image exacte (le Rat d'égout est une limace, le Rat-Croupier un ogre, le Pickpocket un diablotin…) : correspondance réglable dans les `.tres`.
+- Crédits : `docs/CREDITS.md` liste chaque ressource externe (auteur, source, licence), et `assets/manifeste.json` le fait fichier par fichier ; un test vérifie que chaque image est déclarée.
+- Équilibrage : aucune valeur de jeu n'a changé.
+
 ## Interface et contrôles
 
 Le jeu se joue entièrement à la souris, avec la barre Espace comme raccourci pour tirer le levier. Résolution de base 1280 × 720, mise à l'échelle automatique en plein écran.
 
 | Écran | Contenu |
 | --- | --- |
-| Menu principal | Jouer, Options (volume, plein écran), Quitter |
+| Menu principal | Jouer, Comptoir du Croupier, Options, Quitter |
+| Options | Volume Musique et Effets, plein écran, réduire les tremblements et les flashs, crédits |
 | Comptoir du Croupier | Entre deux parties : jetons d'âme, avantages à débloquer, malédictions actives |
 | Choix de salle | 2 portes avec l'icône du type de salle, étage et salle en cours |
 | Combat | Ennemi et son intention, machine à sous, levier, mises, PV, armure, or, reliques |
@@ -317,7 +332,7 @@ Le volume se règle par bus audio séparés (Musique, Effets), avec des curseurs
 
 ## Direction artistique et son
 
-Style visé : pixel art sombre de donjon, avec des touches de néons dorés et rouges façon casino. Le développement commence avec des formes colorées et du texte à la place des images ; les vrais graphismes arrivent une fois le jeu amusant.
+Style visé : pixel art sombre de donjon, avec des touches de néons dorés et rouges façon casino. Le développement a commencé avec des formes colorées et du texte à la place des images ; les vrais graphismes sont arrivés avec la v0.8.
 
 - **Graphismes** : le pack 16x16 DungeonTileset II de 0x72 (CC0), complété au besoin par ses extensions dans le même style.
 - **Sons** : rouleaux qui tournent, clic d'arrêt de chaque rouleau, « ding » de combo, fanfare de jackpot, coups, pièces.
@@ -383,6 +398,8 @@ Le jeu se construit par versions jouables : la version 0.3 est le MVP, une parti
    - Fini quand : on gagne des jetons en jouant, on les dépense au Comptoir, et tout survit à la fermeture du jeu.
    - Réalisé : profil enregistré (écriture sûre, sauvegarde `.bak`, versions) ; Comptoir du Croupier au lancement et après chaque partie ; 6 achats (déblocage au hasard d'un symbole ou d'une relique, PV max, or de départ, relance gratuite, Trèfle) ; 5 malédictions ; bilan de fin de partie ; 4 nouveaux symboles (Bombe, Flèche, Aimant, Trèfle).
 8. **v0.8 – Habillage** : graphismes, sons, musique, animations, menu principal.
+   - Fini quand : le jeu a ses images, ses sons et sa musique, un menu principal et des options, et chaque tirage s'anime.
+   - Réalisé : menu principal et options (volumes, plein écran, réduire les tremblements et les flashs, crédits, enregistrées) ; sons et musiques CC0 (Kenney, OpenGameArt) complétés par des sons générés ; bus Musique et Effets ; rouleaux qui s'arrêtent un par un, chiffres qui s'envolent, tremblement, arrêt sur image, pluie de pièces, flash, néons ; images du pack 0x72 pour les ennemis, le chevalier, les symboles et les portes, avec trois icônes dessinées ; Espace, Entrée et manette pour le levier, Échap pour revenir. Écarts : les néons ne sont pas sur les boutons de mise ; pas d'animations d'attaque ni de mort (le pack n'en a pas) ; sons manquants générés par script.
 9. **v1.0 – Sortie** : équilibrage, statistiques de fin de partie, export en .exe Windows.
 10. **v1.1 – Version anglaise** : traduction de tous les textes, choix de la langue dans les options.
 
