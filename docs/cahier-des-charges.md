@@ -277,7 +277,7 @@ Le projet utilise Godot 4.7 et GDScript, dans le dossier `jackpot-donjon` déjà
 
 - **Langage** : GDScript avec typage statique (`var pv: int = 40`), pour attraper les erreurs plus tôt.
 - **Données** : une ressource Godot (`.tres`) par symbole, ennemi et relique, basée sur des classes `SymbolData`, `EnemyData`, `RelicData`. Ces fichiers sont partagés : l'état qui change en jeu (PV restants d'un ennemi, symbole doré) vit dans une copie (`duplicate_deep()`) ou dans `GameState`, jamais dans le `.tres` lui-même.
-- **État de la partie** : un autoload `GameState` garde PV, or, sac, reliques, étage et salle en cours.
+- **État de la partie** : une classe `GameState` (membres statiques, sans autoload : un autoload est déclaré dans `project.godot`, que l'éditeur Godot ouvert peut réécrire sans lui) garde la partie en cours (PV, or, sac, reliques, étage et salle en cours).
 - **Sauvegarde du profil** : jetons d'âme, avantages débloqués et malédictions sont enregistrés dans un fichier `user://profil.save`. Le fichier porte un numéro de version (pour migrer les anciens profils après une mise à jour) et s'écrit dans un fichier temporaire renommé ensuite, pour ne pas être corrompu par un plantage en pleine écriture.
 - **Tests** : la logique (tirage, combos, effets, combat) est testée sans interface avec `godot --headless`, dans `tests/` ; le script de test se termine avec un code d'erreur s'il échoue.
 - **Hasard** : un seul générateur aléatoire avec une graine affichée en debug, pour pouvoir rejouer exactement une partie qui a bugué.

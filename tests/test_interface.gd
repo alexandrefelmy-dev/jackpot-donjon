@@ -10,7 +10,7 @@ var largeur_fenetre: float
 
 
 func _initialize() -> void:
-	# Les autoloads (GameState) ne sont prêts qu'après la première image.
+	# Une image d'attente : la fenêtre de test doit être prête avant de mesurer.
 	await process_frame
 	# La fenêtre du mode test est minuscule : on lui donne la taille de la fenêtre du jeu,
 	# sinon les écrans centrés seraient décalés.
@@ -19,16 +19,16 @@ func _initialize() -> void:
 	root.size = Vector2i(int(largeur_fenetre), int(hauteur_fenetre))
 	await process_frame
 	print("hauteur de la fenêtre du jeu : %d" % hauteur_fenetre)
-	var gs := root.get_node("GameState")
+	pass
 	var epee := load("res://data/symbols/epee.tres") as SymbolData
 	var jackpot: Array[SymbolData] = [epee, epee, epee, epee, epee]
 
 	# Combat gagné (bouton Continuer), contre un ennemi normal puis contre le boss.
 	for boss in [false, true]:
-		gs.nouvelle_partie()
+		GameState.nouvelle_partie()
 		if boss:
-			gs.partie.aller_au_boss()
-		gs.aller_a(gs.SCENE_COMBAT)
+			GameState.partie.aller_au_boss()
+		GameState.aller_a(GameState.SCENE_COMBAT)
 		await _attendre()
 		var combat_ecran: Control = current_scene
 		var texte := "boss" if boss else "ennemi normal"
@@ -45,8 +45,8 @@ func _initialize() -> void:
 		verifier_dans_la_fenetre(combat_ecran.texte_fin, "texte de victoire (%s)" % texte)
 
 	# Combat perdu.
-	gs.nouvelle_partie()
-	gs.aller_a(gs.SCENE_COMBAT)
+	GameState.nouvelle_partie()
+	GameState.aller_a(GameState.SCENE_COMBAT)
 	await _attendre()
 	var perdu: Control = current_scene
 	perdu.combat.pv_joueur = 0
@@ -56,8 +56,8 @@ func _initialize() -> void:
 	verifier_dans_la_fenetre(perdu.bouton_continuer, "bouton Continuer après défaite")
 
 	# Écran de récompense.
-	gs.nouvelle_partie()
-	gs.aller_a(gs.SCENE_RECOMPENSE)
+	GameState.nouvelle_partie()
+	GameState.aller_a(GameState.SCENE_RECOMPENSE)
 	await _attendre()
 	var recompense: Control = current_scene
 	verifier(recompense.boutons.size() == 3, "3 cartes de récompense")
@@ -66,12 +66,12 @@ func _initialize() -> void:
 	verifier_dans_la_fenetre(recompense.bouton_passer, "bouton Passer")
 
 	# Boutique : un sac varié avec des dorés, dans chaque mode (normal, retrait, amélioration).
-	gs.nouvelle_partie()
-	gs.partie.or_total = 100
+	GameState.nouvelle_partie()
+	GameState.partie.or_total = 100
 	for index in [0, 6, 9, 11, 13]:
-		gs.partie.sac.ameliorer(index)
-	gs.partie.sac.ajouter(load("res://data/symbols/epee.tres") as SymbolData, 3)
-	gs.aller_a(gs.SCENE_BOUTIQUE)
+		GameState.partie.sac.ameliorer(index)
+	GameState.partie.sac.ajouter(load("res://data/symbols/epee.tres") as SymbolData, 3)
+	GameState.aller_a(GameState.SCENE_BOUTIQUE)
 	await _attendre()
 	var boutique_ecran: Control = current_scene
 	verifier(boutique_ecran.cartes_offres.size() == 3, "3 offres dans la boutique")
@@ -98,9 +98,9 @@ func _initialize() -> void:
 
 	# Écrans de fin.
 	for victoire in [true, false]:
-		gs.nouvelle_partie()
-		gs.partie.etat = Partie.Etat.VICTOIRE if victoire else Partie.Etat.DEFAITE
-		gs.aller_a(gs.SCENE_FIN)
+		GameState.nouvelle_partie()
+		GameState.partie.etat = Partie.Etat.VICTOIRE if victoire else Partie.Etat.DEFAITE
+		GameState.aller_a(GameState.SCENE_FIN)
 		await _attendre()
 		var fin: Control = current_scene
 		var bouton := _trouver_bouton(fin)
