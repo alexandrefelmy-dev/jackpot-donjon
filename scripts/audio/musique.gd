@@ -64,6 +64,10 @@ static func jouer_flux(piste: StringName, flux: AudioStream, duree_fondu: float 
 		entrant.volume_linear = 0.0
 		entrant.play()
 		_fondu.tween_property(entrant, "volume_linear", 1.0, maxf(duree_fondu, 0.01))
+	else:
+		# Silence : le lecteur qui finissait de s'éteindre (fondu interrompu) est coupé net, jamais oublié.
+		entrant.stop()
+		entrant.volume_linear = 0.0
 	_fondu.chain().tween_callback(sortant.stop)
 
 

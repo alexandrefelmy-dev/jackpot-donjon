@@ -124,8 +124,6 @@ static func texte_carte(carte: Button) -> String:
 	return "%s\n\n%s" % [(carte.get_meta("titre") as Label).text, (carte.get_meta("detail") as Label).text]
 
 
-## Donne à un contrôle (titre, étiquette) la lumière pulsante d'un néon. Le pulsement est coupé si le joueur
-## a demandé de réduire les flashs. Le shader est chargé une fois ; chaque contrôle a son propre matériau.
 const SHADER_NEON := "res://assets/shaders/neon.gdshader"
 static var _shader_neon: Shader
 
@@ -151,6 +149,8 @@ static func ajouter_fond(parent: Control, couleur: Color) -> void:
 		parent.add_child(sol)
 
 
+## Donne à un contrôle (titre, étiquette) la lumière pulsante d'un néon. Le pulsement est coupé si le joueur
+## a demandé de réduire les flashs. Le shader est chargé une fois ; chaque contrôle a son propre matériau.
 static func neon(controle: CanvasItem, couleur_halo: Color = Color("ffd34d")) -> void:
 	if _shader_neon == null:
 		_shader_neon = load(SHADER_NEON) as Shader

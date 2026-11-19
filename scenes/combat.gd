@@ -307,6 +307,11 @@ func _garder_rouleau(index: int) -> void:
 
 
 func _choisir_mise(index: int) -> void:
+	if animation_en_cours:
+		# Le tour est déjà calculé : la mise ne se change pas pendant que les rouleaux s'arrêtent.
+		if boutons_mise.size() > mise_choisie:
+			boutons_mise[mise_choisie].button_pressed = true
+		return
 	mise_choisie = index
 	if boutons_mise.size() > index:
 		boutons_mise[index].button_pressed = true

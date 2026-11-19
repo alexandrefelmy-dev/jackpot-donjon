@@ -118,10 +118,12 @@ static func banniere(parent: Control, texte: String) -> Label:
 	etiquette.add_theme_constant_override("outline_size", 10)
 	etiquette.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	etiquette.z_index = 60
-	etiquette.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	etiquette.position = Vector2(maxf(parent.size.x, 400.0) / 2.0 - 200.0, 140.0)
+	etiquette.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	Cartes.neon(etiquette, Color("ff5a5a"))
 	parent.add_child(etiquette)
+	# Centrée quelle que soit la longueur du texte : toute la largeur, texte au milieu.
+	etiquette.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	etiquette.offset_top = 140.0
 	var vie := etiquette.create_tween()
 	vie.tween_interval(0.9)
 	vie.tween_property(etiquette, "modulate:a", 0.0, 0.6)

@@ -150,6 +150,13 @@ func test_musique() -> void:
 	await create_timer(0.4).timeout
 	verifier(Musique.piste_courante == &"etage_3" and Musique.lecteurs()[0].playing and is_equal_approx(Musique.lecteurs()[0].volume_linear, 1.0),
 			"deux changements d'affilée : la dernière piste est celle qui joue, à plein volume")
+	# Un fondu interrompu puis le silence : aucune piste ne reste « fantôme » à mi-volume.
+	Musique.jouer_flux(&"etage_1", silence(true), 0.4)
+	Musique.jouer_flux(&"boss", silence(true), 0.4)
+	await create_timer(0.1).timeout
+	Musique.jouer_flux(&"", null, 0.1)
+	await create_timer(0.3).timeout
+	verifier(not Musique.lecteurs()[0].playing and not Musique.lecteurs()[1].playing, "fondu interrompu puis silence : plus aucune piste ne joue")
 	Musique.jouer_flux(&"", null, 0.01)
 
 

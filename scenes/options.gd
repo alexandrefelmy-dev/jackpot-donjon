@@ -16,6 +16,9 @@ var bouton_credits: Button
 var bouton_retour: Button
 var texte_credits: Label
 var texte_message: Label
+const DELAI_SAUVEGARDE := 0.5
+var _sauvegarde_demandee: bool = false
+var _id_sauvegarde: int = 0
 
 
 func _ready() -> void:
@@ -45,8 +48,32 @@ func _changer() -> void:
 	options.reduire_tremblements = case_tremblements.button_pressed
 	options.reduire_flashs = case_flashs.button_pressed
 	GameState.appliquer_options()
-	texte_message.text = "" if GameState.sauver_options() else tr("Les options n'ont pas pu être enregistrées.")
+	_sauvegarde_demandee = true
+	_planifier_sauvegarde()
 	_rafraichir()
+
+
+## Un glissement de curseur change la valeur à chaque cran : on n'écrit le fichier qu'une demi-seconde après
+## le dernier changement (et, au plus tard, en quittant l'écran).
+func _planifier_sauvegarde() -> void:
+	_id_sauvegarde += 1
+	var mon_id := _id_sauvegarde
+	await get_tree().create_timer(DELAI_SAUVEGARDE, true, false, true).timeout
+	if mon_id == _id_sauvegarde:
+		_sauvegarder_maintenant()
+
+
+func _sauvegarder_maintenant() -> void:
+	if not _sauvegarde_demandee:
+		return
+	_sauvegarde_demandee = false
+	texte_message.text = "" if GameState.sauver_options() else tr("Les options n'ont pas pu être enregistrées.")
+
+
+func _exit_tree() -> void:
+	if _sauvegarde_demandee:
+		_sauvegarde_demandee = false
+		GameState.sauver_options()
 
 
 ## Un petit « clic » à la fin du glissement du curseur des effets, pour entendre le niveau choisi.

@@ -20,7 +20,7 @@ func _ready() -> void:
 	# Les jetons et la malédiction sont inscrits au profil une seule fois, même si l'écran est rechargé.
 	GameState.demarrer()
 	Musique.jouer(&"")
-	Son.jouer(&"victoire" if partie.etat == Partie.Etat.VICTOIRE else &"defaite")
+	# Pas de jingle ici : celui de la victoire ou de la défaite a déjà sonné à la fin du dernier combat.
 	GameState.enregistrer_bilan()
 	_construire_interface()
 

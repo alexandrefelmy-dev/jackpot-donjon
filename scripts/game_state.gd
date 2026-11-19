@@ -48,6 +48,7 @@ static func demarrer() -> void:
 		return
 	_demarre = true
 	(Engine.get_main_loop() as SceneTree).root.tree_exiting.connect(func() -> void:
+		Engine.time_scale = 1.0
 		Son.liberer()
 		Musique.liberer())
 	Entrees.enregistrer()
@@ -79,8 +80,11 @@ static func appliquer_options() -> void:
 	charger_options()
 	Son.appliquer_options(options)
 	if _sauvegarde_active():
-		DisplayServer.window_set_mode(
-				DisplayServer.WINDOW_MODE_FULLSCREEN if options.plein_ecran else DisplayServer.WINDOW_MODE_WINDOWED)
+		# Le mode n'est touché que s'il doit changer : une fenêtre agrandie par le joueur le reste.
+		var en_plein_ecran := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
+		if options.plein_ecran != en_plein_ecran:
+			DisplayServer.window_set_mode(
+					DisplayServer.WINDOW_MODE_FULLSCREEN if options.plein_ecran else DisplayServer.WINDOW_MODE_WINDOWED)
 
 
 ## Commence une nouvelle partie avec le profil (s'il est chargé) : avantages et malédictions comprises.
