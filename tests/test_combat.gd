@@ -35,6 +35,7 @@ func _init() -> void:
 	test_descriptions()
 	test_nouveaux_ennemis()
 	test_blocage()
+	test_vol_d_or()
 	test_combats_aleatoires()
 
 	print("TERMINÉ : %d échec(s)" % echecs)
@@ -255,8 +256,9 @@ func test_nouveaux_ennemis() -> void:
 	var gobelin := donnees("gobelin_tricheur")
 	verifier(gobelin != null and gobelin.pv_max == 18 and gobelin.etage == 1 and not gobelin.est_boss,
 			"le gobelin tricheur : 18 PV, étage 1, pas un boss")
-	verifier(gobelin.intentions[0]["type"] == "attaque" and gobelin.intentions[1]["type"] == "protection",
-			"le gobelin alterne attaque et protection")
+	verifier(gobelin.intentions[0]["type"] == "attaque" and gobelin.intentions[1]["type"] == "vol",
+			"le gobelin alterne attaque et vol d'or")
+	verifier(gobelin.intentions[1]["valeur"] == 3, "le gobelin vole 3 or")
 	var boss := donnees("rat_croupier")
 	verifier(boss != null and boss.pv_max == 60 and boss.est_boss and boss.etage == 1,
 			"le Rat-Croupier : 60 PV, boss de l'étage 1")
@@ -338,6 +340,54 @@ func test_blocage() -> void:
 		if c.est_fini():
 			finis += 1
 	verifier(finis == 50, "50 combats contre le boss se terminent : %d" % finis)
+
+
+func test_vol_d_or() -> void:
+	var voleur := creer_ennemi(30, [{"type": "vol", "valeur": 3}])
+
+	# Le joueur a assez d'or : 3 or volés, ni PV ni armure touchés.
+	var combat := Combat.new(voleur, 40, 40, null, 5, 10)
+	verifier(combat.or_du_joueur() == 10, "le joueur commence le combat avec 10 or")
+	var journal := tour(combat, [])
+	verifier(combat.or_vole == 3 and combat.or_du_joueur() == 7, "le voleur prend 3 or : %d restants" % combat.or_du_joueur())
+	verifier(combat.pv_joueur == 40, "le vol ne fait pas de dégâts")
+	var parle_de_vol := false
+	for ligne in journal:
+		if "vole" in ligne:
+			parle_de_vol = true
+	verifier(parle_de_vol, "le journal annonce le vol")
+	verifier("3" in Intentions.decrire({"type": "vol", "valeur": 3}) and "or" in Intentions.decrire({"type": "vol", "valeur": 3}),
+			"le texte de l'intention annonce le vol d'or")
+
+	# Jamais plus que l'or possédé.
+	var combat2 := Combat.new(voleur, 40, 40, null, 5, 2)
+	tour(combat2, [])
+	verifier(combat2.or_vole == 2 and combat2.or_du_joueur() == 0, "le voleur ne prend que les 2 or du joueur")
+	tour(combat2, [])
+	verifier(combat2.or_vole == 2, "plus rien à voler : l'or volé n'augmente pas")
+
+	# Sans or du tout.
+	var combat3 := Combat.new(voleur, 40, 40)
+	var journal3 := tour(combat3, [])
+	verifier(combat3.or_vole == 0 and combat3.or_du_joueur() == 0, "sans or, rien n'est volé")
+	var tente := false
+	for ligne in journal3:
+		if "tente" in ligne:
+			tente = true
+	verifier(tente, "le journal dit que le voleur n'a rien trouvé")
+
+	# Les pièces tirées pendant le combat peuvent être volées aussi.
+	var piece := load("res://data/symbols/piece.tres") as SymbolData
+	var combat4 := Combat.new(voleur, 40, 40)
+	tour(combat4, [piece, piece])
+	verifier(combat4.or_gagne == 4 and combat4.or_vole == 3 and combat4.or_du_joueur() == 1,
+			"2 pièces (4 or) puis vol de 3 : il reste 1 or")
+
+	# Un voleur vaincu ne vole pas.
+	var fragile := creer_ennemi(3, [{"type": "vol", "valeur": 3}])
+	var combat5 := Combat.new(fragile, 40, 40, null, 5, 10)
+	tour(combat5, [epee])
+	verifier(combat5.etat == Combat.Etat.VICTOIRE and combat5.or_vole == 0, "un voleur vaincu ne vole pas")
 
 
 ## Des centaines de combats au hasard : ils se terminent tous, PV toujours cohérents.

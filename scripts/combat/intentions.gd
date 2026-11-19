@@ -7,12 +7,15 @@ const ATTAQUE := "attaque"
 const PROTECTION := "protection"
 ## Bloque des rouleaux (la valeur = leur nombre) au prochain tirage du joueur.
 const BLOCAGE := "blocage"
+## Vole de l'or au joueur (la valeur = la quantité maximale).
+const VOL := "vol"
 
 ## Texte affiché pour chaque type (%d = la valeur).
 const FORMATS: Dictionary = {
 	ATTAQUE: "Attaque %d",
 	PROTECTION: "Se protège (+%d armure)",
 	BLOCAGE: "Bloque %d rouleau au prochain tirage",
+	VOL: "Vole %d or",
 }
 
 

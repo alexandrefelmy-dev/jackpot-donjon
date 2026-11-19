@@ -7,6 +7,10 @@ extends RefCounted
 ## Nombre minimum de symboles identiques côte à côte pour faire un combo.
 const TAILLE_MIN_COMBO := 3
 
+## Chaque symbole doré dans un combo multiplie l'effet du combo par ce facteur
+## (3 épées dont 2 dorées : 15 × 2 × 2 = 60). Une seule constante : facile à régler.
+const FACTEUR_COMBO_PAR_DORE := 2
+
 var colonnes: int
 var lignes: int
 
@@ -53,7 +57,7 @@ func resoudre(grille: Array[SymbolData]) -> ResultatTirage:
 		var symbole := grille[i]
 		if symbole == null or i in resultat.cases_en_combo:
 			continue
-		resultat.appliquer(symbole.effet_base, tr(symbole.nom))
+		resultat.appliquer(symbole.effet_base, symbole.nom_affiche())
 
 	# 3. Effets de combo.
 	for combo in resultat.combos:
@@ -62,6 +66,8 @@ func resoudre(grille: Array[SymbolData]) -> ResultatTirage:
 			source = tr("JACKPOT ! %d × %s") % [combo.longueur, tr(combo.symbole.nom)]
 		else:
 			source = tr("Combo %d × %s") % [combo.longueur, tr(combo.symbole.nom)]
+		if combo.nb_dores > 0:
+			source += " " + tr("(dont %d ★)") % combo.nb_dores
 		if combo.multiplicateur > 1:
 			source += " (×%d)" % combo.multiplicateur
 		resultat.appliquer(combo.symbole.effet_combo, source, combo.multiplicateur)
@@ -87,9 +93,13 @@ func _chercher_combos(grille: Array[SymbolData], ligne: int, resultat: ResultatT
 				combo.longueur = longueur
 				combo.symbole = symbole
 				combo.multiplicateur = multiplicateur(longueur)
-				resultat.combos.append(combo)
 				for k in longueur:
+					var membre := grille[ligne * colonnes + colonne + k]
+					if membre.doree:
+						combo.nb_dores += 1
+						combo.multiplicateur *= FACTEUR_COMBO_PAR_DORE
 					resultat.cases_en_combo.append(ligne * colonnes + colonne + k)
+				resultat.combos.append(combo)
 		colonne += longueur
 
 

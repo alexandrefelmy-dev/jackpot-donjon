@@ -33,6 +33,42 @@ func taille() -> int:
 	return symboles.size()
 
 
+## Retire le symbole à cet index du sac. Renvoie faux si l'index n'existe pas.
+func retirer(index: int) -> bool:
+	if index < 0 or index >= symboles.size():
+		return false
+	symboles.remove_at(index)
+	return true
+
+
+## Remplace le symbole à cet index par sa version dorée (une copie, le .tres reste intact).
+## Renvoie faux si l'index n'existe pas ou si le symbole est déjà doré.
+func ameliorer(index: int) -> bool:
+	if index < 0 or index >= symboles.size() or symboles[index].doree:
+		return false
+	symboles[index] = symboles[index].creer_doree()
+	return true
+
+
+## Les symboles identiques regroupés (même id et même état doré), pour l'affichage du sac :
+## [{ "symbole": SymbolData, "quantite": int, "index": int (1er exemplaire dans le sac) }, ...].
+## Dans l'ordre d'apparition dans le sac.
+func groupes() -> Array[Dictionary]:
+	var resultat: Array[Dictionary] = []
+	for i in symboles.size():
+		var symbole := symboles[i]
+		var trouve := false
+		for groupe in resultat:
+			var modele: SymbolData = groupe["symbole"]
+			if modele.id == symbole.id and modele.doree == symbole.doree:
+				groupe["quantite"] = int(groupe["quantite"]) + 1
+				trouve = true
+				break
+		if not trouve:
+			resultat.append({"symbole": symbole, "quantite": 1, "index": i})
+	return resultat
+
+
 ## Pioche `nombre` symboles au hasard, sans remise.
 ## S'il n'y en a pas assez, les places restantes valent null (cases vides).
 func tirer(nombre: int, rng: RandomNumberGenerator) -> Array[SymbolData]:

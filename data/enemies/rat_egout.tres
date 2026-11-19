@@ -11,5 +11,5 @@ pv_max = 12
 or_victoire = 5
 intentions = Array[Dictionary]([{
 "type": "attaque",
-"valeur": 6
+"valeur": 8
 }])

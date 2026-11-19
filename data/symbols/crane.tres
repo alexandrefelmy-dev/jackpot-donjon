@@ -7,6 +7,7 @@ script = ExtResource("1_symbol")
 id = &"crane"
 nom = "Crâne"
 couleur = Color(0.42, 0.37, 0.48, 1)
+prix = 0
 effet_base = {
 "malus_ennemi": 1
 }

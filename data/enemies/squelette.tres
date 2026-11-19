@@ -14,5 +14,5 @@ intentions = Array[Dictionary]([{
 "valeur": 5
 }, {
 "type": "attaque",
-"valeur": 10
+"valeur": 13
 }])

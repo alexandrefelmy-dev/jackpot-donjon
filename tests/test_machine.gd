@@ -78,6 +78,37 @@ func _init() -> void:
 	var g8 := machine.tirer(sac_epees, rng3, [])
 	verifier(not g8.has(null), "sans blocage, aucun rouleau vide")
 
+	# Symboles dorés : effet de base doublé, et chaque doré double l'effet du combo.
+	var epee_doree := epee.creer_doree()
+	var g9: Array[SymbolData] = [epee_doree, piece, crane, piece, crane]
+	var r9 := machine.resoudre(g9)
+	verifier(r9.total("degats") == 6, "une épée dorée seule = 6 dégâts : %d" % r9.total("degats"))
+
+	var g10: Array[SymbolData] = [epee_doree, epee, epee, piece, crane]
+	var r10 := machine.resoudre(g10)
+	verifier(r10.combos.size() == 1 and r10.combos[0].nb_dores == 1, "un doré et deux normaux forment un combo")
+	verifier(r10.total("degats") == 30, "combo de 3 épées dont 1 dorée = 30 dégâts : %d" % r10.total("degats"))
+
+	var g11: Array[SymbolData] = [epee, epee_doree, epee_doree, piece, crane]
+	verifier(machine.resoudre(g11).total("degats") == 60, "combo de 3 épées dont 2 dorées = 60 dégâts")
+
+	var g12: Array[SymbolData] = [epee_doree, epee_doree, epee_doree, piece, crane]
+	verifier(machine.resoudre(g12).total("degats") == 120, "combo de 3 épées dorées = 120 dégâts")
+
+	var g13: Array[SymbolData] = [epee_doree, epee, epee, epee, piece]
+	verifier(machine.resoudre(g13).total("degats") == 60, "combo de 4 dont 1 doré = 15 × 2 × 2 = 60 dégâts")
+
+	var g14: Array[SymbolData] = [epee_doree, epee_doree, epee, epee, epee]
+	var r14 := machine.resoudre(g14)
+	verifier(r14.combos[0].est_jackpot() and r14.combos[0].multiplicateur == 16,
+			"jackpot dont 2 dorées : ×4 × 2 × 2 = ×16")
+	verifier(r14.total("degats") == 240, "jackpot de 5 épées dont 2 dorées = 240 dégâts : %d" % r14.total("degats"))
+
+	var piece_doree := piece.creer_doree()
+	var g15: Array[SymbolData] = [piece_doree, epee, piece, epee, crane]
+	verifier(machine.resoudre(g15).total("or") == 6, "pièce dorée (4 or) + pièce (2 or) = 6 or")
+	verifier(epee.effet_base["degats"] == 3 and not epee.doree, "le symbole d'origine n'est pas modifié par la version dorée")
+
 	print("TERMINÉ : %d échec(s)" % echecs)
 	quit(1 if echecs > 0 else 0)
 

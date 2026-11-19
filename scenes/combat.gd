@@ -125,8 +125,8 @@ func _rafraichir() -> void:
 	barre_pv_joueur.value = combat.pv_joueur
 	texte_pv_joueur.text = tr("Toi : PV %d / %d   Armure %d") % [
 		combat.pv_joueur, combat.pv_max_joueur, combat.armure_joueur]
-	texte_or.text = tr("Or gagné : %d   Sac : %d symboles") % [
-		partie.or_total + combat.or_gagne, partie.sac.taille()]
+	texte_or.text = tr("Or : %d   Sac : %d symboles") % [
+		combat.or_du_joueur(), partie.sac.taille()]
 
 	# Les rouleaux que l'ennemi vient de bloquer sont déjà marqués pour le prochain tirage.
 	for index in combat.rouleaux_bloques:
@@ -162,10 +162,10 @@ func _dessiner_case(index: int, symbole: SymbolData, en_combo: bool, bloquee: bo
 		cases[index].tooltip_text = ""
 	else:
 		style.bg_color = symbole.couleur
-		etiquette.text = tr(symbole.nom)
+		etiquette.text = symbole.nom_affiche()
 		etiquette.add_theme_color_override("font_color", _couleur_texte(symbole.couleur))
 		cases[index].tooltip_text = "%s\n%s\n%s" % [
-			tr(symbole.nom),
+			symbole.nom_affiche(),
 			Effets.decrire(symbole.effet_base),
 			tr("Combo de 3 : %s") % Effets.decrire(symbole.effet_combo),
 		]

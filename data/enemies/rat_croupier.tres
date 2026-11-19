@@ -12,7 +12,7 @@ pv_max = 60
 or_victoire = 25
 intentions = Array[Dictionary]([{
 "type": "attaque",
-"valeur": 11
+"valeur": 14
 }, {
 "type": "blocage",
 "valeur": 1

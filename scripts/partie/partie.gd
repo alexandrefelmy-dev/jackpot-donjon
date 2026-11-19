@@ -40,6 +40,8 @@ var rencontres: Array[EnemyData] = []
 ## Numéro du combat en cours ou à venir : 1 à 5 = combats normaux, 6 = boss.
 var numero_combat: int = 1
 var combats_gagnes: int = 0
+## Combien de symboles ont été retirés du sac en boutique : chaque retrait coûte plus cher.
+var nb_retraits: int = 0
 var etat: Etat = Etat.EN_COURS
 ## Le combat en cours (créé par creer_combat, rendu à terminer_combat).
 var combat_courant: Combat
@@ -79,7 +81,7 @@ func est_combat_de_boss() -> bool:
 
 ## Prépare le combat en cours avec les PV actuels du joueur.
 func creer_combat() -> Combat:
-	combat_courant = Combat.new(ennemi_actuel(), pv, pv_max, rng)
+	combat_courant = Combat.new(ennemi_actuel(), pv, pv_max, rng, 5, or_total)
 	return combat_courant
 
 
@@ -90,7 +92,7 @@ func terminer_combat(combat: Combat) -> void:
 		return
 	combat_courant = null
 	pv = combat.pv_joueur
-	or_total += combat.or_gagne
+	or_total += combat.or_gagne - combat.or_vole
 
 	if combat.etat == Combat.Etat.DEFAITE:
 		etat = Etat.DEFAITE
@@ -105,6 +107,12 @@ func terminer_combat(combat: Combat) -> void:
 
 ## Trois symboles différents à proposer après un combat normal.
 func proposer_recompenses() -> Array[SymbolData]:
+	return tirer_symboles(NB_RECOMPENSES)
+
+
+## Tire `nombre` symboles différents parmi les symboles de base (sans le crâne),
+## avec le générateur de la partie. Sert aux récompenses et aux offres de la boutique.
+func tirer_symboles(nombre: int) -> Array[SymbolData]:
 	var chemins: Array[String] = RECOMPENSES.duplicate()
 	# Mélange de Fisher-Yates avec notre générateur (Array.shuffle() utiliserait un autre hasard).
 	for i in range(chemins.size() - 1, 0, -1):
@@ -114,7 +122,7 @@ func proposer_recompenses() -> Array[SymbolData]:
 		chemins[j] = temp
 
 	var symboles: Array[SymbolData] = []
-	for i in mini(NB_RECOMPENSES, chemins.size()):
+	for i in mini(nombre, chemins.size()):
 		symboles.append(load(chemins[i]) as SymbolData)
 	return symboles
 

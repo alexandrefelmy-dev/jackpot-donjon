@@ -4,6 +4,7 @@ extends Node
 
 const SCENE_COMBAT := "res://scenes/combat.tscn"
 const SCENE_RECOMPENSE := "res://scenes/recompense.tscn"
+const SCENE_BOUTIQUE := "res://scenes/boutique.tscn"
 const SCENE_FIN := "res://scenes/fin_partie.tscn"
 
 ## La partie en cours. Une partie existe dès le lancement du jeu.

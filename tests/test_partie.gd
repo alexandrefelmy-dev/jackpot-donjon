@@ -10,6 +10,7 @@ func _init() -> void:
 	test_partie_neuve()
 	test_rencontres()
 	test_enchainement()
+	test_or_et_vol()
 	test_defaite()
 	test_victoire_du_boss()
 	test_recompenses()
@@ -129,6 +130,29 @@ func test_enchainement() -> void:
 		partie2.terminer_combat(partie2.combat_courant)
 	verifier(partie2.numero_combat == 6 and partie2.est_combat_de_boss(), "après 5 victoires, c'est le boss")
 	verifier(partie2.combats_gagnes == 5, "5 combats gagnés : %d" % partie2.combats_gagnes)
+
+
+func test_or_et_vol() -> void:
+	# L'or d'un combat (pièces + victoire) s'ajoute, ce qui a été volé s'en retranche.
+	var partie := Partie.creer(12)
+	partie.or_total = 10
+	var combat := partie.creer_combat()
+	verifier(combat.or_du_joueur() == 10, "le combat voit l'or de la partie : %d" % combat.or_du_joueur())
+	combat.or_gagne = 8
+	combat.or_vole = 3
+	combat.etat = Combat.Etat.VICTOIRE
+	partie.terminer_combat(combat)
+	verifier(partie.or_total == 15, "10 + 8 gagnés - 3 volés = 15 or : %d" % partie.or_total)
+
+	# On peut perdre de l'or sur une défaite aussi, sans passer sous zéro.
+	var partie2 := Partie.creer(13)
+	partie2.or_total = 3
+	var combat2 := partie2.creer_combat()
+	combat2.or_vole = 3
+	combat2.pv_joueur = 0
+	combat2.etat = Combat.Etat.DEFAITE
+	partie2.terminer_combat(combat2)
+	verifier(partie2.or_total == 0, "l'or volé est retranché même en cas de défaite : %d" % partie2.or_total)
 
 
 func test_defaite() -> void:

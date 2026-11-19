@@ -6,6 +6,7 @@ extends SceneTree
 
 var echecs := 0
 var hauteur_fenetre: float
+var largeur_fenetre: float
 
 
 func _initialize() -> void:
@@ -14,7 +15,8 @@ func _initialize() -> void:
 	# La fenêtre du mode test est minuscule : on lui donne la taille de la fenêtre du jeu,
 	# sinon les écrans centrés seraient décalés.
 	hauteur_fenetre = float(ProjectSettings.get_setting("display/window/size/viewport_height"))
-	root.size = Vector2i(int(ProjectSettings.get_setting("display/window/size/viewport_width")), int(hauteur_fenetre))
+	largeur_fenetre = float(ProjectSettings.get_setting("display/window/size/viewport_width"))
+	root.size = Vector2i(int(largeur_fenetre), int(hauteur_fenetre))
 	await process_frame
 	print("hauteur de la fenêtre du jeu : %d" % hauteur_fenetre)
 	var gs := root.get_node("GameState")
@@ -63,6 +65,37 @@ func _initialize() -> void:
 		verifier_dans_la_fenetre(carte, "carte de récompense")
 	verifier_dans_la_fenetre(recompense.bouton_passer, "bouton Passer")
 
+	# Boutique : un sac varié avec des dorés, dans chaque mode (normal, retrait, amélioration).
+	gs.nouvelle_partie()
+	gs.partie.or_total = 100
+	for index in [0, 6, 9, 11, 13]:
+		gs.partie.sac.ameliorer(index)
+	gs.partie.sac.ajouter(load("res://data/symbols/epee.tres") as SymbolData, 3)
+	gs.aller_a(gs.SCENE_BOUTIQUE)
+	await _attendre()
+	var boutique_ecran: Control = current_scene
+	verifier(boutique_ecran.cartes_offres.size() == 3, "3 offres dans la boutique")
+	for nom_mode in ["normal", "retrait", "amélioration"]:
+		if nom_mode == "retrait":
+			boutique_ecran._changer_mode(boutique_ecran.Mode.RETRAIT)
+		elif nom_mode == "amélioration":
+			boutique_ecran._changer_mode(boutique_ecran.Mode.RETRAIT)  # annule le retrait
+			boutique_ecran._changer_mode(boutique_ecran.Mode.AMELIORATION)
+		await _attendre()
+		var lignes_sac: int = boutique_ecran.liste_sac.get_child_count()
+		verifier(lignes_sac >= 8, "le sac affiche ses groupes en mode %s : %d lignes" % [nom_mode, lignes_sac])
+		for carte in boutique_ecran.cartes_offres:
+			verifier_dans_la_fenetre(carte, "offre de la boutique (%s)" % nom_mode)
+		verifier_dans_la_fenetre(boutique_ecran.bouton_soin, "bouton Se soigner (%s)" % nom_mode)
+		verifier_dans_la_fenetre(boutique_ecran.bouton_retrait, "bouton Retirer (%s)" % nom_mode)
+		verifier_dans_la_fenetre(boutique_ecran.bouton_amelioration, "bouton Améliorer (%s)" % nom_mode)
+		verifier_dans_la_fenetre(boutique_ecran.zone_sac, "zone du sac (%s)" % nom_mode)
+		verifier_dans_la_fenetre(boutique_ecran.texte_message, "message (%s)" % nom_mode)
+		verifier_dans_la_fenetre(boutique_ecran.texte_infos, "ressources (%s)" % nom_mode)
+		verifier_dans_la_fenetre(boutique_ecran.bouton_quitter, "bouton Quitter la boutique (%s)" % nom_mode)
+	# Les lignes du sac se défilent : la dernière doit au moins être atteignable (la zone clique-défile).
+	verifier(boutique_ecran.zone_sac.get_v_scroll_bar() != null, "le sac a une barre de défilement")
+
 	# Écrans de fin.
 	for victoire in [true, false]:
 		gs.nouvelle_partie()
@@ -95,11 +128,14 @@ func _trouver_bouton(noeud: Node) -> Button:
 	return null
 
 
-## Le contrôle doit se trouver tout entier dans la fenêtre (de 0 à la hauteur du jeu).
+## Le contrôle doit se trouver tout entier dans la fenêtre (hauteur et largeur du jeu).
 func verifier_dans_la_fenetre(controle: Control, nom: String) -> void:
 	var zone := controle.get_global_rect()
-	verifier(zone.position.y >= 0 and zone.end.y <= hauteur_fenetre,
-			"%s dans la fenêtre (de %d à %d sur %d)" % [nom, zone.position.y, zone.end.y, hauteur_fenetre])
+	verifier(zone.position.y >= 0 and zone.end.y <= hauteur_fenetre \
+			and zone.position.x >= 0 and zone.end.x <= largeur_fenetre,
+			"%s dans la fenêtre (haut %d à %d sur %d, gauche %d à %d sur %d)" % [
+				nom, zone.position.y, zone.end.y, hauteur_fenetre,
+				zone.position.x, zone.end.x, largeur_fenetre])
 
 
 func verifier(condition: bool, message: String) -> void:

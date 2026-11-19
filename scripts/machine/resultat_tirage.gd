@@ -12,7 +12,10 @@ class Combo:
 	## Nombre de symboles identiques (3, 4, 5...).
 	var longueur: int
 	var symbole: SymbolData
-	## 3 symboles ×1, 4 symboles ×2, 5 symboles ×4...
+	## Combien de symboles dorés font partie du combo.
+	var nb_dores: int = 0
+	## Multiplicateur final de l'effet du combo : 3 symboles ×1, 4 symboles ×2, 5 symboles ×4...
+	## puis ×2 par symbole doré.
 	var multiplicateur: int
 
 	func est_jackpot() -> bool:

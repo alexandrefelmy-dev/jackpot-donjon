@@ -7,6 +7,7 @@ script = ExtResource("1_symbol")
 id = &"piece"
 nom = "Pièce"
 couleur = Color(0.96, 0.78, 0.26, 1)
+prix = 12
 effet_base = {
 "or": 2
 }

@@ -33,21 +33,33 @@ var or_gagne: int = 0
 ## Rouleaux (index de cases) bloqués pour le prochain tirage du joueur.
 ## La scène les lit avant de tirer ; jouer_tour() les vide ensuite.
 var rouleaux_bloques: Array[int] = []
+## Or volé au joueur pendant ce combat (par le Gobelin tricheur, par exemple).
+var or_vole: int = 0
 
 var _hasard: RandomNumberGenerator
 var _nb_rouleaux: int
+## L'or que le joueur avait en entrant dans le combat.
+var _or_depart: int
 
 
 ## `hasard` sert à choisir les rouleaux bloqués : on passe le générateur de la partie
 ## pour garder un seul hasard rejouable. `nb_rouleaux` = nombre de cases de la machine.
+## `or_joueur` = l'or que le joueur possède, pour savoir combien un voleur peut lui prendre.
 func _init(donnees: EnemyData, pv_depart: int = PV_JOUEUR_DEPART, pv_max: int = PV_JOUEUR_DEPART,
-		hasard: RandomNumberGenerator = null, nb_rouleaux: int = 5) -> void:
+		hasard: RandomNumberGenerator = null, nb_rouleaux: int = 5, or_joueur: int = 0) -> void:
 	ennemi = donnees
 	pv_ennemi = donnees.pv_max
 	pv_joueur = pv_depart
 	pv_max_joueur = pv_max
 	_hasard = hasard if hasard != null else RandomNumberGenerator.new()
 	_nb_rouleaux = nb_rouleaux
+	_or_depart = or_joueur
+
+
+## L'or que le joueur possède en ce moment : celui d'avant le combat, plus les pièces
+## tirées, moins ce qu'on lui a volé.
+func or_du_joueur() -> int:
+	return _or_depart + or_gagne - or_vole
 
 
 func est_fini() -> bool:
@@ -156,3 +168,11 @@ func _jouer_intention(bonus_attaque: int, journal: Array[String]) -> void:
 				rouleaux_bloques.append(libres[choisi])
 				libres.remove_at(choisi)
 			journal.append(tr("%s bloque %d rouleau au prochain tirage") % [tr(ennemi.nom), valeur])
+		Intentions.VOL:
+			# Il ne peut pas voler plus que ce que le joueur possède.
+			var vole := mini(valeur, maxi(0, or_du_joueur()))
+			or_vole += vole
+			if vole > 0:
+				journal.append(tr("%s te vole %d or") % [tr(ennemi.nom), vole])
+			else:
+				journal.append(tr("%s tente de te voler mais tu n'as pas d'or") % tr(ennemi.nom))
