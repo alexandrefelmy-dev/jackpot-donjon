@@ -73,12 +73,15 @@ func resoudre(grille: Array[SymbolData], mods: Modificateurs = null) -> Resultat
 		for combo in resultat.combos:
 			combo.multiplicateur *= mods.facteur_combo
 
+	# La règle de machine du tour (Grand Croupier) change les effets de certains symboles.
+	var regle := mods.regle if mods != null else ""
+
 	# 2. Effets de base.
 	for i in grille.size():
 		var symbole := grille[i]
 		if symbole == null or i in resultat.cases_en_combo:
 			continue
-		resultat.appliquer(symbole.effet_base, symbole.nom_affiche())
+		resultat.appliquer(ReglesMachine.effet_modifie(regle, symbole, symbole.effet_base), symbole.nom_affiche())
 
 	# Effets des reliques sur le tirage.
 	if mods != null:
@@ -104,7 +107,8 @@ func resoudre(grille: Array[SymbolData], mods: Modificateurs = null) -> Resultat
 			source += " " + tr("(dont %d ★)") % combo.nb_dores
 		if combo.multiplicateur > 1:
 			source += " (×%d)" % combo.multiplicateur
-		resultat.appliquer(combo.symbole.effet_combo, source, combo.multiplicateur)
+		resultat.appliquer(ReglesMachine.effet_modifie(regle, combo.symbole, combo.symbole.effet_combo),
+				source, combo.multiplicateur)
 
 	return resultat
 

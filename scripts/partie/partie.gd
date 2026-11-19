@@ -99,6 +99,8 @@ func creer_combat() -> Combat:
 		combat_courant.remboursements_de_mise += int(relique.valeur("mise_remboursee_par_combat"))
 		combat_courant.relances_gratuites += int(relique.valeur("relances_gratuites"))
 		combat_courant.relances_cinquieme_as += int(relique.valeur("relances_cinquieme_as"))
+	# L'attaque surprise de la Mimique tombe avant le premier tirage (le journal est dans le combat).
+	combat_courant.jouer_ouverture()
 	return combat_courant
 
 

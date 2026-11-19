@@ -11,9 +11,12 @@ extends RefCounted
 ## 4. sinon l'ennemi exécute son intention ;
 ## 5. fin de tour : l'armure du joueur retombe à 0.
 
-enum Etat { EN_COURS, VICTOIRE, DEFAITE }
+## FUITE : l'ennemi s'est enfui (le Pickpocket) : le combat est fini sans victoire ni défaite.
+enum Etat { EN_COURS, VICTOIRE, DEFAITE, FUITE }
 
 const PV_JOUEUR_DEPART := 40
+## Au plus ce nombre de crânes temporaires ajoutés au sac du combat par les passifs des ennemis.
+const MAX_CRANES_TEMPORAIRES := 10
 
 var pv_max_joueur: int
 var pv_joueur: int
@@ -42,6 +45,17 @@ var remboursements_de_mise: int = 0
 var relances_gratuites: int = 0
 ## Relances « garder un rouleau, relancer les autres » disponibles (Cinquième as : 1 par combat).
 var relances_cinquieme_as: int = 0
+
+# --- Ce que les ennemis ajoutent (voir EnemyData.passif et .ouverture) -------
+## Crânes temporaires ajoutés au sac DU COMBAT (le vrai sac du joueur n'est jamais touché).
+var cranes_temporaires: int = 0
+## Attaque gagnée pour de bon par l'ennemi (Usurier : à chaque tour où le joueur a misé).
+var bonus_attaque_ennemi: int = 0
+## La règle de machine en vigueur pour le tirage en cours (Grand Croupier), "" = aucune.
+var regle_active: String = ""
+## Ce qui s'est passé avant le premier tirage (attaque surprise de la Mimique), pour l'afficher.
+var journal_ouverture: Array[String] = []
+var _ouverture_jouee: bool = false
 
 # --- Le tour en deux temps : tirer, (relancer), valider ---------------------
 ## Vrai entre tirer() et valider() : les rouleaux sont affichés, les effets pas encore appliqués.
@@ -80,13 +94,16 @@ func _init(donnees: EnemyData, pv_depart: int = PV_JOUEUR_DEPART, pv_max: int = 
 	_hasard = hasard if hasard != null else RandomNumberGenerator.new()
 	_nb_rouleaux = nb_rouleaux
 	_or_depart = or_joueur
+	if bool(donnees.passif.get("regle_par_tour", false)):
+		regle_active = _tirer_regle("")
 
 
 ## Donne au combat de quoi tirer lui-même (tour en deux temps) : la machine, le sac du joueur
 ## et ce que ses reliques changent. Sans cet appel, tirer() ne fait rien (jouer_tour() marche toujours).
 func preparer_tirages(machine: MachineASous, sac: Sac, modificateurs: Modificateurs) -> void:
 	_machine = machine
-	_sac = sac
+	# Le combat tire dans SA copie du sac : les crânes temporaires des ennemis n'y survivent pas.
+	_sac = sac.copie()
 	_modificateurs = modificateurs if modificateurs != null else Modificateurs.new()
 
 
@@ -172,7 +189,7 @@ func _nouveau_tirage(garde: int) -> void:
 		grille[garde] = grille_courante[garde]
 	_origine = origine
 	grille_courante = grille
-	resultat_courant = _machine.resoudre(grille_courante, _modificateurs)
+	resultat_courant = _machine.resoudre(grille_courante, _modificateurs.avec_regle(regle_active))
 
 
 ## L'or que le joueur possède en ce moment : celui d'avant le combat, plus les pièces
@@ -190,6 +207,32 @@ func intention_actuelle() -> Dictionary:
 	if ennemi.intentions.is_empty():
 		return {}
 	return ennemi.intentions[index_intention % ennemi.intentions.size()]
+
+
+## L'intention telle que le joueur la voit : l'attaque comprend la force gagnée par l'ennemi
+## (Usurier). Les crânes du tirage, eux, s'ajoutent au tirage (ils ne sont pas connus d'avance).
+func intention_affichee() -> Dictionary:
+	var intention := intention_actuelle().duplicate()
+	if intention.get("type", "") == Intentions.ATTAQUE:
+		intention["valeur"] = int(intention.get("valeur", 0)) + bonus_attaque_ennemi
+	return intention
+
+
+## Joue l'ouverture de l'ennemi (attaque surprise de la Mimique) avant le premier tirage.
+## À appeler une fois, quand le combat commence ; les appels suivants ne font rien.
+## L'ouverture n'achève jamais le joueur : elle lui laisse au moins 1 PV (c'est une surprise, pas
+## une exécution). Renvoie les lignes du journal (aussi gardées dans journal_ouverture).
+func jouer_ouverture() -> Array[String]:
+	var journal: Array[String] = []
+	if _ouverture_jouee or ennemi.ouverture.is_empty() or est_fini():
+		return journal
+	_ouverture_jouee = true
+	if ennemi.ouverture.get("type", "") == Intentions.ATTAQUE:
+		var degats := mini(int(ennemi.ouverture.get("valeur", 0)), pv_joueur - 1)
+		pv_joueur -= degats
+		journal.append(tr("%s attaque par surprise : %d dégâts") % [tr(ennemi.nom), degats])
+	journal_ouverture = journal
+	return journal
 
 
 ## Le joueur peut-il faire cette mise maintenant ?
@@ -220,10 +263,20 @@ func jouer_tour(resultat: ResultatTirage, mise: Mise = null) -> Array[String]:
 	if mise != null and mise.type != Mise.Type.AUCUNE:
 		if peut_miser(mise):
 			_regler_mise(mise, resultat, journal)
+			var renfort := int(ennemi.passif.get("attaque_par_mise", 0))
+			if renfort > 0:
+				bonus_attaque_ennemi += renfort
+				journal.append(tr("%s se renforce : +%d attaque pour le reste du combat") % [tr(ennemi.nom), renfort])
 		else:
 			journal.append(tr("Mise impossible : elle est annulée."))
 
 	# 1. Effets du tirage, dans l'ordre de Effets.ORDRE.
+	# (Règle du Grand Croupier : des épées soignent l'ennemi, avant que les dégâts ne tombent.)
+	var soin_ennemi := mini(resultat.total("soin_ennemi"), ennemi.pv_max - pv_ennemi)
+	if soin_ennemi > 0:
+		pv_ennemi += soin_ennemi
+		journal.append(tr("%s se soigne de %d PV") % [tr(ennemi.nom), soin_ennemi])
+
 	var degats := resultat.total("degats")
 	if degats > 0:
 		var absorbes := mini(armure_ennemi, degats)
@@ -272,10 +325,14 @@ func jouer_tour(resultat: ResultatTirage, mise: Mise = null) -> Array[String]:
 		journal.append(tr("Tu es à terre..."))
 		return journal
 
-	# 4. Fin de tour.
+	if etat == Etat.FUITE:
+		return journal
+
+	# 4. Fin de tour : l'armure retombe, les passifs de l'ennemi agissent.
 	armure_joueur = 0
 	index_intention += 1
 	numero_tour += 1
+	_jouer_passif(journal)
 	return journal
 
 
@@ -317,7 +374,7 @@ func _jouer_intention(bonus_attaque: int, journal: Array[String]) -> void:
 	var valeur := int(intention.get("valeur", 0))
 	match intention.get("type", ""):
 		Intentions.ATTAQUE:
-			var total := valeur + bonus_attaque
+			var total := valeur + bonus_attaque_ennemi + bonus_attaque
 			var absorbes := mini(armure_joueur, total)
 			armure_joueur -= absorbes
 			pv_joueur = maxi(0, pv_joueur - (total - absorbes))
@@ -337,6 +394,11 @@ func _jouer_intention(bonus_attaque: int, journal: Array[String]) -> void:
 				rouleaux_bloques.append(libres[choisi])
 				libres.remove_at(choisi)
 			journal.append(tr("%s bloque %d rouleau au prochain tirage") % [tr(ennemi.nom), valeur])
+		Intentions.CHARGE:
+			journal.append(tr("%s se prépare à frapper") % tr(ennemi.nom))
+		Intentions.FUITE:
+			etat = Etat.FUITE
+			journal.append(tr("%s s'enfuit !") % tr(ennemi.nom))
 		Intentions.VOL:
 			# Il ne peut pas voler plus que ce que le joueur possède.
 			var vole := mini(valeur, maxi(0, or_du_joueur()))
@@ -345,3 +407,26 @@ func _jouer_intention(bonus_attaque: int, journal: Array[String]) -> void:
 				journal.append(tr("%s te vole %d or") % [tr(ennemi.nom), vole])
 			else:
 				journal.append(tr("%s tente de te voler mais tu n'as pas d'or") % tr(ennemi.nom))
+
+
+## Les passifs de l'ennemi, en fin de tour : crânes temporaires dans le sac du combat, nouvelle règle.
+func _jouer_passif(journal: Array[String]) -> void:
+	var cranes := int(ennemi.passif.get("cranes_par_tour", 0))
+	if cranes > 0 and _sac != null:
+		var ajoutes := mini(cranes, MAX_CRANES_TEMPORAIRES - cranes_temporaires)
+		if ajoutes > 0:
+			_sac.ajouter(load("res://data/symbols/crane.tres") as SymbolData, ajoutes)
+			cranes_temporaires += ajoutes
+			journal.append(tr("%s glisse %d crâne(s) dans ta machine pour ce combat") % [tr(ennemi.nom), ajoutes])
+	if bool(ennemi.passif.get("regle_par_tour", false)):
+		regle_active = _tirer_regle(regle_active)
+		journal.append(tr("Nouvelle règle : %s") % ReglesMachine.decrire(regle_active))
+
+
+## Une règle de machine au hasard (avec le hasard du jeu), jamais la même deux tours de suite.
+func _tirer_regle(precedente: String) -> String:
+	var candidates: Array[String] = []
+	for regle in ReglesMachine.TOUTES:
+		if regle != precedente:
+			candidates.append(regle)
+	return candidates[_hasard.randi_range(0, candidates.size() - 1)]

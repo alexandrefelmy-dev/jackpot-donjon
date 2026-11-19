@@ -35,3 +35,16 @@ static func decrire(intention: Dictionary) -> String:
 	if not format.contains("%d"):
 		return format
 	return format % int(intention.get("valeur", 0))
+
+
+## Ce que l'ennemi fait en plus de son intention, une ligne par passif ("" s'il n'en a pas).
+## Affiché sous l'intention : le joueur sait toujours ce qui l'attend.
+static func decrire_passif(passif: Dictionary) -> String:
+	var lignes := PackedStringArray()
+	if int(passif.get("cranes_par_tour", 0)) > 0:
+		lignes.append(String(TranslationServer.translate("Chaque tour : +%d crâne(s) dans ta machine")) % int(passif["cranes_par_tour"]))
+	if int(passif.get("attaque_par_mise", 0)) > 0:
+		lignes.append(String(TranslationServer.translate("Chaque mise : +%d attaque pour de bon")) % int(passif["attaque_par_mise"]))
+	if bool(passif.get("regle_par_tour", false)):
+		lignes.append(TranslationServer.translate("Chaque tour : une règle de la machine change"))
+	return "\n".join(lignes)

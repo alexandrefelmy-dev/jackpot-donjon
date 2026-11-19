@@ -94,12 +94,14 @@ func test_donnees_ennemis() -> void:
 			and squelette.intentions[1]["type"] == "attaque", "le squelette se protège puis attaque")
 	var golem := donnees("golem_jetons")
 	verifier(golem != null and golem.pv_max == 40, "le golem a 40 PV")
-	# Les valeurs d'attaque se règlent dans les .tres : on vérifie juste qu'elles sont positives.
+	# Les valeurs d'attaque se règlent dans les .tres : on vérifie juste qu'elles sont positives
+	# (sauf « charge » et « fuite », qui n'ont pas de chiffre).
 	var valeurs_ok := true
 	for nom in ["rat_egout", "squelette", "gobelin_tricheur", "golem_jetons", "rat_croupier"]:
 		var e := donnees(nom)
 		for intention in e.intentions:
-			if int(intention["valeur"]) <= 0 or not Intentions.FORMATS.has(intention["type"]):
+			var sans_chiffre: bool = intention["type"] in [Intentions.CHARGE, Intentions.FUITE]
+			if (int(intention["valeur"]) <= 0 and not sans_chiffre) or not Intentions.FORMATS.has(intention["type"]):
 				valeurs_ok = false
 		if e.pv_max <= 0 or e.or_victoire <= 0 or e.intentions.is_empty():
 			valeurs_ok = false

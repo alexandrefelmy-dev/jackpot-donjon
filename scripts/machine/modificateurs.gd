@@ -11,6 +11,19 @@ var degats_par_piece: int = 0
 var or_sans_combo: int = 0
 ## Chance qu'un crâne devienne une pièce au tirage (Trèfle à quatre feuilles : 0,5).
 var chance_crane_en_piece: float = 0.0
+## La règle de la machine en vigueur pour ce tirage (Grand Croupier, voir ReglesMachine). "" = aucune.
+var regle: String = ""
+
+
+## Une copie de ces modificateurs avec une règle de machine en plus (les reliques ne changent pas).
+func avec_regle(regle_du_tour: String) -> Modificateurs:
+	var copie := Modificateurs.new()
+	copie.facteur_combo = facteur_combo
+	copie.degats_par_piece = degats_par_piece
+	copie.or_sans_combo = or_sans_combo
+	copie.chance_crane_en_piece = chance_crane_en_piece
+	copie.regle = regle_du_tour
+	return copie
 
 
 ## Calcule les modificateurs à partir des reliques possédées (leurs paramètres).
