@@ -1,21 +1,35 @@
 extends Control
-## Écran de fin de partie : victoire (boss vaincu) ou game over, puis Rejouer.
+## Écran de fin de partie : victoire (boss vaincu) ou game over, les jetons d'âme gagnés et la
+## malédiction reçue ou effacée, puis Rejouer ou le Comptoir du Croupier.
 
 const COULEUR_FOND := Color("1b1a24")
 const COULEUR_VICTOIRE := Color("7ddc7d")
 const COULEUR_DEFAITE := Color("ff6b6b")
 
+const COULEUR_MALEDICTION := Color("ff8a8a")
+const COULEUR_JETONS := Color("b9a4ff")
+
 var partie: Partie
+var texte_jetons: Label
+var texte_malediction: Label
+var bouton_rejouer: Button
+var bouton_comptoir: Button
 
 
 func _ready() -> void:
 	partie = GameState.partie
+	# Les jetons et la malédiction sont inscrits au profil une seule fois, même si l'écran est rechargé.
+	GameState.enregistrer_bilan()
 	_construire_interface()
 
 
 func _rejouer() -> void:
 	GameState.nouvelle_partie()
 	GameState.aller_a_suivant()
+
+
+func _aller_au_comptoir() -> void:
+	GameState.vers_le_comptoir()
 
 
 func _construire_interface() -> void:
@@ -62,10 +76,46 @@ func _construire_interface() -> void:
 	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	colonne.add_child(stats)
 
+	# Ce que la partie rapporte au profil (rien sans profil : tests et outils).
+	if not partie.bilan.is_empty():
+		texte_jetons = Label.new()
+		texte_jetons.text = tr("Jetons d'âme gagnés : %d   (total : %d)") % [int(partie.bilan["jetons"]), GameState.profil.jetons]
+		texte_jetons.add_theme_font_size_override("font_size", 22)
+		texte_jetons.add_theme_color_override("font_color", COULEUR_JETONS)
+		texte_jetons.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		colonne.add_child(texte_jetons)
+		var lignes := PackedStringArray()
+		var recue: StringName = partie.bilan["malediction_recue"]
+		if recue != &"":
+			lignes.append(tr("Malédiction reçue : %s") % Maledictions.texte(recue))
+		var effacees: Array = partie.bilan["maledictions_effacees"]
+		if not effacees.is_empty():
+			var noms := PackedStringArray()
+			for id: StringName in effacees:
+				noms.append(Maledictions.nom(id))
+			lignes.append(tr("Malédiction effacée : %s") % ", ".join(noms))
+		if not lignes.is_empty():
+			texte_malediction = Label.new()
+			texte_malediction.text = "\n".join(lignes)
+			texte_malediction.add_theme_font_size_override("font_size", 18)
+			texte_malediction.add_theme_color_override("font_color", COULEUR_MALEDICTION)
+			texte_malediction.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			colonne.add_child(texte_malediction)
+
+	var boutons := HBoxContainer.new()
+	boutons.add_theme_constant_override("separation", 16)
+	boutons.alignment = BoxContainer.ALIGNMENT_CENTER
+	colonne.add_child(boutons)
+	bouton_rejouer = _creer_bouton(tr("Rejouer"), _rejouer)
+	boutons.add_child(bouton_rejouer)
+	bouton_comptoir = _creer_bouton(tr("Comptoir du Croupier"), _aller_au_comptoir)
+	boutons.add_child(bouton_comptoir)
+
+
+func _creer_bouton(texte: String, action: Callable) -> Button:
 	var bouton := Button.new()
-	bouton.text = tr("Rejouer")
+	bouton.text = texte
 	bouton.custom_minimum_size = Vector2(240, 56)
-	bouton.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	bouton.focus_mode = Control.FOCUS_NONE
-	bouton.pressed.connect(_rejouer)
-	colonne.add_child(bouton)
+	bouton.pressed.connect(action)
+	return bouton

@@ -163,7 +163,7 @@ func _initialize() -> void:
 	# Espace valide un tirage en attente (au lieu de tirer encore).
 	var pour_espace := Partie.creer(5)
 	pour_espace.ajouter_relique(Reliques.charger(&"de_pipe"))
-	GameState.partie = pour_espace
+	GameState.lancer(pour_espace)
 	aller_au_combat()
 	await _attendre()
 	var avec_espace: Control = current_scene
@@ -316,7 +316,7 @@ func _initialize() -> void:
 	for graine in 100:
 		var donjon_coffre := Donjon.creer(graine)
 		if donjon_coffre.portes(3, 2)[0].type == Salle.Type.COFFRE or donjon_coffre.portes(3, 2)[1].type == Salle.Type.COFFRE:
-			GameState.partie = Partie.creer(graine)
+			GameState.lancer(Partie.creer(graine))
 			GameState.partie.etage = 3
 			GameState.partie.pas = 2
 			GameState.aller_a_suivant()
@@ -331,7 +331,7 @@ func _initialize() -> void:
 	var attendus := {Salle.Type.COMBAT: "Combat", Salle.Type.BOUTIQUE: "Boutique", Salle.Type.COFFRE: "Relique", Salle.Type.REPOS: "Repos"}
 	var types_testes := {}
 	for graine in 80:
-		GameState.partie = Partie.creer(graine)
+		GameState.lancer(Partie.creer(graine))
 		GameState.partie.pas = 2 + graine % 4
 		var salle: Salle = GameState.partie.portes()[graine % 2]
 		if int(types_testes.get(salle.type, 0)) >= 2:
@@ -359,7 +359,7 @@ func _initialize() -> void:
 					index_mimique = i
 					pas_mimique = pas
 	verifier(graine_mimique >= 0, "une graine avec une mimique à l'étage 3 existe")
-	GameState.partie = Partie.creer(graine_mimique)
+	GameState.lancer(Partie.creer(graine_mimique))
 	GameState.partie.etage = 3
 	GameState.partie.pas = pas_mimique
 	GameState.aller_a_suivant()
@@ -445,11 +445,96 @@ func _initialize() -> void:
 	verifier(current_scene.texte_passif.visible and current_scene.texte_passif.text.contains("Règle du tour"),
 			"le Grand Croupier annonce la règle du tour : %s" % current_scene.texte_passif.text)
 
-	# Une partie qui n'attend pas un combat : l'écran de combat (écran principal) redirige vers les portes.
+	# Une partie qui n'attend pas un combat : l'écran de combat (écran principal) redirige vers les portes...
 	GameState.nouvelle_partie()
 	GameState.aller_a(GameState.SCENE_COMBAT)
 	await _attendre()
-	verifier(current_scene.name == "Portes", "au lancement, l'écran principal mène aux portes : %s" % current_scene.name)
+	verifier(current_scene.name == "Portes", "en partie, l'écran principal redirige vers les portes : %s" % current_scene.name)
+	# ... et au lancement du jeu (hors partie) vers le Comptoir.
+	GameState.en_partie = false
+	GameState.aller_a(GameState.SCENE_COMBAT)
+	await _attendre()
+	verifier(current_scene.name == "Comptoir", "au lancement, l'écran principal mène au Comptoir : %s" % current_scene.name)
+
+	# --- Comptoir du Croupier ---
+	var profil := Profil.nouveau()
+	profil.jetons = 100
+	profil.maledictions.assign([&"sac_leste", &"croupier_rancunier", &"mauvais_oeil"] as Array[StringName])
+	GameState.profil = profil
+	GameState.en_partie = false
+	GameState.aller_a(GameState.SCENE_COMPTOIR)
+	await _attendre()
+	var comptoir_ecran: Control = current_scene
+	verifier(comptoir_ecran.boutons_achats.size() == 6, "6 achats au Comptoir")
+	for carte in comptoir_ecran.boutons_achats:
+		verifier_dans_la_fenetre(carte, "carte d'achat du Comptoir")
+	for composant in [comptoir_ecran.texte_jetons, comptoir_ecran.texte_message, comptoir_ecran.texte_maledictions,
+			comptoir_ecran.texte_debloques, comptoir_ecran.bouton_jouer, comptoir_ecran.bouton_debug_jetons, comptoir_ecran.bouton_debug_reset]:
+		verifier_dans_la_fenetre(composant, "Comptoir : %s" % composant.name)
+	verifier(comptoir_ecran.texte_maledictions.text.contains("Sac lesté") and comptoir_ecran.texte_maledictions.text.contains("Mauvais œil"),
+			"les 3 malédictions sont affichées : %s" % comptoir_ecran.texte_maledictions.text.replace("\n", " | "))
+	verifier(comptoir_ecran.texte_jetons.text.contains("100"), "les jetons s'affichent : %s" % comptoir_ecran.texte_jetons.text)
+	# Un clic sur « Débloquer un symbole » : 10 jetons dépensés, un symbole débloqué.
+	comptoir_ecran.boutons_achats[0].pressed.emit()
+	verifier(profil.jetons == 90 and profil.symboles_debloques.size() == 5, "clic sur « Débloquer un symbole » : 90 jetons, un symbole de plus")
+	verifier(comptoir_ecran.texte_message.text.contains("débloqué"), "le message annonce le déblocage : %s" % comptoir_ecran.texte_message.text)
+	verifier_dans_la_fenetre(comptoir_ecran.texte_message, "message du Comptoir après un achat")
+	# Un achat impossible est grisé.
+	profil.jetons = 5
+	comptoir_ecran._rafraichir()
+	verifier(comptoir_ecran.boutons_achats[0].disabled and comptoir_ecran.boutons_achats[5].disabled, "sans assez de jetons, les cartes sont grisées")
+	# Tout acheté : les cartes sont épuisées et le Comptoir tient toujours dans la fenêtre.
+	profil.jetons = 1000
+	for achat in Comptoir.ORDRE:
+		for i in 6:
+			comptoir_ecran.comptoir.acheter(achat)
+	comptoir_ecran._rafraichir()
+	await _attendre()
+	for carte in comptoir_ecran.boutons_achats:
+		verifier(carte.disabled, "tout acheté : la carte est grisée")
+		verifier_dans_la_fenetre(carte, "carte épuisée du Comptoir")
+	verifier_dans_la_fenetre(comptoir_ecran.texte_debloques, "liste des éléments débloqués (tout débloqué)")
+	# « Jouer » : la partie démarre avec les avantages et les malédictions du profil.
+	comptoir_ecran.bouton_jouer.pressed.emit()
+	await _attendre()
+	verifier(current_scene.name == "Portes" and GameState.en_partie, "« Jouer » mène aux portes d'une nouvelle partie : %s" % current_scene.name)
+	verifier(GameState.partie.profil == profil and GameState.partie.pv_max == 40 + 15 and GameState.partie.maledictions.size() == 3,
+			"la partie a les avantages (+15 PV) et les 3 malédictions du profil")
+	# Test du bouton de test et de la remise à zéro.
+	GameState.vers_le_comptoir()
+	await _attendre()
+	var avant_test := profil.jetons
+	current_scene.bouton_debug_jetons.pressed.emit()
+	verifier(profil.jetons == avant_test + 50, "« [test] +50 jetons » : +50 jetons")
+	current_scene.bouton_debug_reset.pressed.emit()
+	verifier(GameState.profil.jetons == 0 and GameState.profil.symboles_debloques.size() == 4, "« [test] Réinitialiser le profil » : profil neuf")
+
+	# --- Écran de fin avec le bilan du profil ---
+	var profil_fin := Profil.nouveau()
+	profil_fin.maledictions.assign([&"fatigue"] as Array[StringName])
+	GameState.profil = profil_fin
+	var perdue := Partie.creer(1, profil_fin)
+	perdue.salles_franchies = 9
+	perdue.boss_vaincus = 1
+	perdue.etat = Partie.Etat.DEFAITE
+	perdue.ecran = Partie.Ecran.FIN
+	GameState.lancer(perdue)
+	GameState.aller_a_suivant()
+	await _attendre()
+	var fin_bilan: Control = current_scene
+	verifier(fin_bilan.texte_jetons != null and profil_fin.jetons == 14, "défaite après 9 salles et 1 boss : 14 jetons enregistrés (%d)" % profil_fin.jetons)
+	verifier(fin_bilan.texte_malediction != null and fin_bilan.texte_malediction.text.contains("effacée"), "l'écran dit qu'une malédiction est effacée (le boss)")
+	verifier(fin_bilan.texte_malediction.text.contains("reçue"), "…et qu'une nouvelle est reçue")
+	for composant in [fin_bilan.texte_jetons, fin_bilan.texte_malediction, fin_bilan.bouton_rejouer, fin_bilan.bouton_comptoir]:
+		verifier_dans_la_fenetre(composant, "fin de partie : %s" % composant.name)
+	var jetons_apres := profil_fin.jetons
+	GameState.aller_a_suivant()
+	await _attendre()
+	verifier(profil_fin.jetons == jetons_apres and profil_fin.parties_jouees == 1, "recharger l'écran de fin ne crédite pas une 2e fois")
+	current_scene.bouton_comptoir.pressed.emit()
+	await _attendre()
+	verifier(current_scene.name == "Comptoir" and not GameState.en_partie, "« Comptoir du Croupier » mène au Comptoir")
+	GameState.profil = null
 
 	# Écrans de fin.
 	for victoire in [true, false]:
