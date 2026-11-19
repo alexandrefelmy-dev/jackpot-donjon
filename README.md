@@ -41,4 +41,5 @@ Les règles, les valeurs et les jalons (v0.1 à v1.1) sont dans [`docs/cahier-de
 | `scripts/` | logique : sac, tirage, combos, effets, combat, mises, partie, boutique, reliques |
 | `data/` | symboles, ennemis et reliques, un fichier `.tres` chacun |
 | `tests/` | tests en ligne de commande |
+| `outils/` | outils de vérification : équilibrage, parties simulées, captures d'écran, vrais clics |
 | `docs/` | cahier des charges |

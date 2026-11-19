@@ -45,6 +45,17 @@ func _initialize() -> void:
 		verifier_dans_la_fenetre(combat_ecran.bouton_continuer, "bouton Continuer après victoire (%s)" % texte)
 		verifier_dans_la_fenetre(combat_ecran.texte_fin, "texte de victoire (%s)" % texte)
 
+	# La version du jeu s'affiche sur l'écran de combat, à côté de la graine.
+	var expression := RegEx.create_from_string("^\\d+\\.\\d+$")
+	verifier(expression.search(Version.NUMERO) != null, "le numéro de version a la forme 0.5 : %s" % Version.NUMERO)
+	GameState.nouvelle_partie()
+	GameState.aller_a(GameState.SCENE_COMBAT)
+	await _attendre()
+	var avec_version: Control = current_scene
+	verifier(avec_version.texte_graine.text.contains(Version.texte()), "l'écran de combat affiche la version : %s" % avec_version.texte_graine.text)
+	verifier(avec_version.texte_graine.text.contains(str(GameState.partie.graine)), "…et la graine")
+	verifier_dans_la_fenetre(avec_version.texte_graine, "graine et version")
+
 	# Bouton de test « Aller au boss » : un clic mène au combat du boss (et on peut le jouer).
 	GameState.nouvelle_partie()
 	GameState.aller_a(GameState.SCENE_COMBAT)

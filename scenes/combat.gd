@@ -70,7 +70,7 @@ func _ready() -> void:
 	combat = partie.creer_combat()
 	_construire_interface()
 
-	texte_graine.text = tr("Graine : %d") % partie.graine
+	texte_graine.text = tr("Graine : %d     %s") % [partie.graine, Version.texte()]
 	texte_journal.text = tr("Tire le levier pour lancer la machine.")
 	for i in machine.nb_cases():
 		_dessiner_case(i, null, false)
