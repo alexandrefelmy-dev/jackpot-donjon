@@ -557,26 +557,35 @@ func _construire_colonne_journal(parent: Control) -> void:
 	colonne.add_child(texte_graine)
 
 	if OS.is_debug_build():
+		# Les trois boutons de test tiennent sur une ligne (le journal garde sa place).
+		var rangee_test := HFlowContainer.new()
+		rangee_test.add_theme_constant_override("h_separation", 6)
+		rangee_test.add_theme_constant_override("v_separation", 4)
+		colonne.add_child(rangee_test)
+
 		bouton_debug = Button.new()
-		bouton_debug.text = tr("[test] Aller directement au boss")
+		bouton_debug.text = tr("[test] Boss")
+		bouton_debug.tooltip_text = tr("Aller directement au boss de l'étage")
 		bouton_debug.disabled = partie.est_combat_de_boss()
 		bouton_debug.focus_mode = Control.FOCUS_NONE
 		bouton_debug.pressed.connect(_aller_au_boss)
-		colonne.add_child(bouton_debug)
+		rangee_test.add_child(bouton_debug)
 
 		bouton_debug_relique = Button.new()
-		bouton_debug_relique.text = tr("[test] Recevoir une relique au hasard")
+		bouton_debug_relique.text = tr("[test] +1 relique")
+		bouton_debug_relique.tooltip_text = tr("Recevoir une relique au hasard")
 		bouton_debug_relique.disabled = not partie.peut_recevoir_relique()
 		bouton_debug_relique.focus_mode = Control.FOCUS_NONE
 		bouton_debug_relique.pressed.connect(_donner_relique_debug)
-		colonne.add_child(bouton_debug_relique)
+		rangee_test.add_child(bouton_debug_relique)
 
 		bouton_debug_etage = Button.new()
-		bouton_debug_etage.text = tr("[test] Passer à l'étage suivant")
+		bouton_debug_etage.text = tr("[test] Étage suivant")
+		bouton_debug_etage.tooltip_text = tr("Passer à l'étage suivant sans combattre le boss")
 		bouton_debug_etage.disabled = partie.etage >= Donjon.NB_ETAGES
 		bouton_debug_etage.focus_mode = Control.FOCUS_NONE
 		bouton_debug_etage.pressed.connect(_sauter_etage)
-		colonne.add_child(bouton_debug_etage)
+		rangee_test.add_child(bouton_debug_etage)
 
 
 ## Les mises : pas de mise, 5 / 10 / 20 or, quitte ou double. Une seule choisie à la fois.

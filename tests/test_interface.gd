@@ -381,8 +381,7 @@ func _initialize() -> void:
 	verifier_dans_la_fenetre(repos.bouton_dorer, "carte Rendre un symbole doré")
 	verifier_dans_la_fenetre(repos.texte_infos, "ressources du repos")
 	verifier_dans_la_fenetre(repos.texte_message, "message du repos")
-	verifier(repos.bouton_soin.text.contains("12"), "le bouton annonce +12 PV (30 %% de 40) : %s" % repos.bouton_soin.text.replace("
-", " "))
+	verifier(Cartes.texte_carte(repos.bouton_soin).contains("12"), "le bouton annonce +12 PV (30 % de 40)")
 	repos._choisir_symbole()
 	await _attendre()
 	verifier(repos.zone_sac.visible and not repos.zone_choix.visible, "« Rendre un symbole doré » montre le sac")

@@ -5,7 +5,7 @@ extends Control
 const COULEUR_FOND := Color("1b1a24")
 const COULEUR_SOIN := Color("3f7d4f")
 const COULEUR_DORER := Color("9c7424")
-const TAILLE_CHOIX := Vector2(340, 190)
+const TAILLE_CHOIX := Vector2(340, 230)
 
 enum Mode { CHOIX, DORER }
 

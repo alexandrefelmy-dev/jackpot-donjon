@@ -6,7 +6,7 @@
 script = ExtResource("1_enemy")
 id = &"grand_croupier"
 nom = "Le Grand Croupier"
-couleur = Color(0.15, 0.15, 0.2, 1)
+couleur = Color(0.2, 0.38, 0.42, 1)
 etage = 3
 est_boss = true
 pv_max = 63
