@@ -20,6 +20,7 @@ var bouton_soin: Button
 var bouton_retrait: Button
 var bouton_amelioration: Button
 var bouton_quitter: Button
+var bouton_debug: Button
 var zone_sac: ScrollContainer
 var liste_sac: VBoxContainer
 
@@ -30,15 +31,6 @@ func _ready() -> void:
 	_construire_interface()
 	_message(tr("Bienvenue ! Dépense ton or avec sagesse."))
 	_rafraichir()
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	var touche := event as InputEventKey
-	if touche and touche.pressed and not touche.echo and touche.keycode == KEY_F8 and OS.is_debug_build():
-		# Pour tester la boutique sans attendre d'avoir de l'or.
-		partie.or_total += 30
-		_message(tr("Debug : +30 or"))
-		_rafraichir()
 
 
 # --- Actions -----------------------------------------------------------------
@@ -90,6 +82,14 @@ func _clic_sac(index_sac: int) -> void:
 		_:
 			return
 	mode = Mode.NORMAL
+	_rafraichir()
+
+
+## Pour tester la boutique sans attendre d'avoir de l'or (bouton visible seulement en test).
+## Ce n'est pas une touche : l'éditeur Godot garde F8 (arrêter) et d'autres touches de fonction.
+func _donner_or_debug() -> void:
+	partie.or_total += 30
+	_message(tr("Test : +30 or"))
 	_rafraichir()
 
 
@@ -228,10 +228,11 @@ func _construire_interface() -> void:
 	page.add_child(bouton_quitter)
 
 	if OS.is_debug_build():
-		var aide := Label.new()
-		aide.text = tr("Debug : F8 = +30 or")
-		aide.add_theme_color_override("font_color", Color(1, 1, 1, 0.4))
-		page.add_child(aide)
+		bouton_debug = Button.new()
+		bouton_debug.text = tr("[test] +30 or")
+		bouton_debug.focus_mode = Control.FOCUS_NONE
+		bouton_debug.pressed.connect(_donner_or_debug)
+		page.add_child(bouton_debug)
 
 
 func _construire_colonne_achats(parent: Control) -> void:

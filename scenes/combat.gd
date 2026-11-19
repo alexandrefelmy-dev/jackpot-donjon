@@ -35,6 +35,7 @@ var texte_or: Label
 var texte_fin: Label
 var bouton_levier: Button
 var bouton_continuer: Button
+var bouton_debug: Button
 var texte_journal: RichTextLabel
 var texte_graine: Label
 
@@ -68,10 +69,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if touche.keycode == KEY_SPACE:
 		_tirer()
-	elif touche.keycode == KEY_F9 and OS.is_debug_build():
-		# Pour tester le boss sans gagner 5 combats.
-		partie.aller_au_boss()
-		GameState.aller_a(GameState.SCENE_COMBAT)
+
+
+## Pour tester le boss sans gagner 5 combats (bouton visible seulement en test, pas dans le jeu exporté).
+## Ce n'est pas une touche : l'éditeur Godot garde F8 (arrêter) et d'autres touches de fonction.
+func _aller_au_boss() -> void:
+	bouton_debug.disabled = true
+	partie.aller_au_boss()
+	GameState.aller_a(GameState.SCENE_COMBAT)
 
 
 func _tirer() -> void:
@@ -322,10 +327,12 @@ func _construire_colonne_journal(parent: Control) -> void:
 	colonne.add_child(texte_graine)
 
 	if OS.is_debug_build():
-		var aide := Label.new()
-		aide.text = tr("Debug : F9 = aller directement au boss")
-		aide.add_theme_color_override("font_color", Color(1, 1, 1, 0.4))
-		colonne.add_child(aide)
+		bouton_debug = Button.new()
+		bouton_debug.text = tr("[test] Aller directement au boss")
+		bouton_debug.disabled = partie.est_combat_de_boss()
+		bouton_debug.focus_mode = Control.FOCUS_NONE
+		bouton_debug.pressed.connect(_aller_au_boss)
+		colonne.add_child(bouton_debug)
 
 
 func _creer_barre() -> ProgressBar:

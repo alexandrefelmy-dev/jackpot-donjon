@@ -132,7 +132,7 @@ func choisir_recompense(symbole: SymbolData) -> void:
 	sac.ajouter(symbole)
 
 
-## Pour les tests en jeu : saute directement au boss (touche F9 dans le build debug).
+## Pour les tests en jeu : saute directement au boss (bouton « [test] » du combat).
 func aller_au_boss() -> void:
 	if etat == Etat.EN_COURS:
 		numero_combat = rencontres.size()

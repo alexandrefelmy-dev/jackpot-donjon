@@ -35,6 +35,7 @@ func _initialize() -> void:
 
 		# En cours de combat : le levier est visible.
 		verifier_dans_la_fenetre(combat_ecran.bouton_levier, "bouton Tirer le levier (%s)" % texte)
+		verifier_dans_la_fenetre(combat_ecran.bouton_debug, "bouton de test du combat (%s)" % texte)
 
 		while not combat_ecran.combat.est_fini():
 			combat_ecran.combat.jouer_tour(combat_ecran.machine.resoudre(jackpot))
@@ -43,6 +44,21 @@ func _initialize() -> void:
 		verifier(combat_ecran.bouton_continuer.visible, "le bouton Continuer s'affiche après la victoire (%s)" % texte)
 		verifier_dans_la_fenetre(combat_ecran.bouton_continuer, "bouton Continuer après victoire (%s)" % texte)
 		verifier_dans_la_fenetre(combat_ecran.texte_fin, "texte de victoire (%s)" % texte)
+
+	# Bouton de test « Aller au boss » : un clic mène au combat du boss (et on peut le jouer).
+	GameState.nouvelle_partie()
+	GameState.aller_a(GameState.SCENE_COMBAT)
+	await _attendre()
+	var avant_boss: Control = current_scene
+	verifier(not avant_boss.partie.est_combat_de_boss() and not avant_boss.bouton_debug.disabled,
+			"avant le clic, le bouton de test est actif et ce n'est pas le boss")
+	avant_boss.bouton_debug.pressed.emit()
+	await _attendre()
+	var au_boss: Control = current_scene
+	verifier(au_boss.partie.est_combat_de_boss() and au_boss.combat.ennemi.id == &"rat_croupier",
+			"le clic sur le bouton de test mène au combat du boss")
+	verifier(au_boss.bouton_debug.disabled, "au boss, le bouton de test est désactivé")
+	verifier(au_boss.texte_etage.text.contains("BOSS"), "l'en-tête annonce le boss : %s" % au_boss.texte_etage.text)
 
 	# Combat perdu.
 	GameState.nouvelle_partie()
@@ -75,6 +91,11 @@ func _initialize() -> void:
 	await _attendre()
 	var boutique_ecran: Control = current_scene
 	verifier(boutique_ecran.cartes_offres.size() == 3, "3 offres dans la boutique")
+	verifier_dans_la_fenetre(boutique_ecran.bouton_debug, "bouton de test de la boutique")
+	var or_avant: int = GameState.partie.or_total
+	boutique_ecran.bouton_debug.pressed.emit()
+	verifier(GameState.partie.or_total == or_avant + 30, "le bouton de test donne 30 or : %d" % GameState.partie.or_total)
+	GameState.partie.or_total = or_avant
 	for nom_mode in ["normal", "retrait", "amélioration"]:
 		if nom_mode == "retrait":
 			boutique_ecran._changer_mode(boutique_ecran.Mode.RETRAIT)
