@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1_enemy"]
+
+[resource]
+script = ExtResource("1_enemy")
+id = &"dame_de_pique"
+nom = "La Dame de Pique"
+couleur = Color(0.3, 0.25, 0.4, 1)
+etage = 2
+est_boss = true
+pv_max = 90
+or_victoire = 40
+intentions = Array[Dictionary]([{
+"type": "attaque",
+"valeur": 14
+}, {
+"type": "attaque",
+"valeur": 20
+}])
+passif = {
+"cranes_par_tour": 2
+}

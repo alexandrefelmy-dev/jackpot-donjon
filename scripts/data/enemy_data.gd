@@ -19,5 +19,13 @@ extends Resource
 @export var or_victoire: int = 5
 ## Les intentions de l'ennemi, jouées en boucle : une par tour.
 ## Chaque intention est un Dictionary { "type": ..., "valeur": ... }.
-## Types possibles (voir Intentions) : "attaque", "protection", "blocage".
+## Types possibles (voir Intentions) : "attaque", "protection", "blocage", "vol", "charge", "fuite".
 @export var intentions: Array[Dictionary] = []
+## Intention jouée une seule fois AVANT le premier tirage du joueur (attaque surprise de la Mimique).
+## Même forme qu'une intention : { "type": ..., "valeur": ... }. Vide = aucune.
+@export var ouverture: Dictionary = {}
+## Effets qui se produisent à chaque tour en plus de l'intention. Clés connues :
+## "cranes_par_tour" (crânes temporaires ajoutés au sac du combat), "attaque_par_mise"
+## (attaque gagnée pour de bon à chaque tour où le joueur a misé), "regle_par_tour" (vrai :
+## une règle de la machine change à chaque tour, Grand Croupier).
+@export var passif: Dictionary = {}

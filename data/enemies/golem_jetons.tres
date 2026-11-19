@@ -11,6 +11,9 @@ etage = 2
 pv_max = 40
 or_victoire = 15
 intentions = Array[Dictionary]([{
+"type": "charge",
+"valeur": 0
+}, {
 "type": "attaque",
-"valeur": 14
+"valeur": 26
 }])

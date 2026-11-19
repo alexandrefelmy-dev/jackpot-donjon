@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1_enemy"]
+
+[resource]
+script = ExtResource("1_enemy")
+id = &"grand_croupier"
+nom = "Le Grand Croupier"
+couleur = Color(0.15, 0.15, 0.2, 1)
+etage = 3
+est_boss = true
+pv_max = 140
+or_victoire = 60
+intentions = Array[Dictionary]([{
+"type": "attaque",
+"valeur": 18
+}, {
+"type": "attaque",
+"valeur": 22
+}])
+passif = {
+"regle_par_tour": true
+}

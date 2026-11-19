@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1_enemy"]
+
+[resource]
+script = ExtResource("1_enemy")
+id = &"mimique"
+nom = "Mimique"
+couleur = Color(0.7, 0.45, 0.2, 1)
+etage = 3
+pv_max = 35
+or_victoire = 12
+intentions = Array[Dictionary]([{
+"type": "attaque",
+"valeur": 14
+}])
+ouverture = {
+"type": "attaque",
+"valeur": 10
+}
