@@ -1,8 +1,8 @@
 # Outils de vérification
 
 Des scripts à lancer à la main (ou par Claude) pour vérifier le jeu autrement que par les tests de `tests/`.
-Ils ne font pas partie du jeu. Sous Windows, remplacer `godot` par l'exécutable console
-(`C:\Tools\Godot\Godot_v4.7.2-stable_win64_console.exe`), et lancer avec `timeout` en redirigeant la sortie
+Ils ne font pas partie du jeu. Sous Windows, remplacer `godot` par l'exécutable console de Godot (son chemin
+est noté dans `CLAUDE.md`, section « Vérifier son travail »), et lancer avec `timeout` en redirigeant la sortie
 vers un fichier : un script en erreur peut bloquer Godot sans jamais rendre la main.
 
 | Outil | Commande | Ce qu'il fait |

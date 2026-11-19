@@ -24,10 +24,12 @@ const MODES: Array[String] = ["sans_relique", "relique_offerte", "reliques_et_ac
 
 var machine := MachineASous.new(5, 1)
 ## Garde les ennemis modifiés en mémoire (Godot décharge sinon les ressources non utilisées).
+## Seuls les 4 ennemis de l'étage 1 sont réglés ici : un nouvel ennemi du jeu garderait ses
+## valeurs du .tres et fausserait la mesure tant qu'il n'est pas ajouté à _essayer().
 var gardees: Array[EnemyData] = []
 
 
-func _init() -> void:
+func _initialize() -> void:
 	for reglage: Array in REGLAGES:
 		for mode in MODES:
 			_essayer(mode, reglage)
@@ -48,7 +50,6 @@ func _regler(nom: String, attaque: int) -> void:
 
 
 func _essayer(mode: String, reglage: Array) -> void:
-	gardees.clear()
 	_regler("rat_egout", reglage[0])
 	_regler("squelette", reglage[1])
 	_regler("gobelin_tricheur", reglage[2])

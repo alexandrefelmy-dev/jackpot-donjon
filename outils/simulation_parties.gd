@@ -23,10 +23,12 @@ func _initialize() -> void:
 	await process_frame
 	await _jouer(PARTIES_PAR_PASSE)
 	print("passe 1 (sans relique) : ", etats, " ", vu, " erreurs ", erreurs)
-	toutes_les_reliques = true
-	etats = {"victoire": 0, "defaite": 0}
-	await _jouer(PARTIES_PAR_PASSE)
-	print("passe 2 (9 reliques) : ", etats, " ", vu, " erreurs ", erreurs)
+	# Si la première passe a échoué, la seconde n'aurait pas de sens : on s'arrête là.
+	if erreurs == 0:
+		toutes_les_reliques = true
+		etats = {"victoire": 0, "defaite": 0}
+		await _jouer(PARTIES_PAR_PASSE)
+		print("passe 2 (9 reliques) : ", etats, " ", vu, " erreurs ", erreurs)
 	print("RÉSULTAT : ", "OK" if erreurs == 0 else "%d ERREUR(S)" % erreurs)
 	quit(1 if erreurs > 0 else 0)
 
@@ -81,6 +83,10 @@ func _jouer(nb_parties: int) -> void:
 				print("ERREUR : écran inattendu « %s »" % inattendue)
 				erreurs += 1
 				return
+	# Les parties demandées doivent toutes avoir été jouées : sinon un écran est bloqué.
+	if parties < nb_parties:
+		print("ERREUR : seulement %d parties sur %d ont été jouées jusqu'à l'écran de fin (écran bloqué ?)" % [parties, nb_parties])
+		erreurs += 1
 
 
 ## Un combat entier : mise au hasard, levier, relances au hasard, validation.
@@ -103,13 +109,20 @@ func _jouer_combat() -> void:
 				ecran.bouton_de_pipe.pressed.emit()
 				vu["relance_pipe"] += 1
 			if hasard.randi_range(0, 1) == 0 and ecran.bouton_cinquieme_as.visible and not ecran.bouton_cinquieme_as.disabled:
-				ecran.bouton_cinquieme_as.pressed.emit()
-				var clic := InputEventMouseButton.new()
-				clic.button_index = MOUSE_BUTTON_LEFT
-				clic.pressed = true
-				ecran.cases[hasard.randi_range(0, ecran.cases.size() - 1)].gui_input.emit(clic)
-				vu["relance_as"] += 1
-				ecran.choix_du_rouleau = false
+				# On ne peut garder qu'un rouleau qui montre un symbole (pas un rouleau vide ou bloqué).
+				var gardables: Array[int] = []
+				for i in ecran.cases.size():
+					if ecran.combat.grille_courante[i] != null:
+						gardables.append(i)
+				if not gardables.is_empty():
+					ecran.bouton_cinquieme_as.pressed.emit()
+					# Le vrai chemin du code : le clic sur un rouleau appelle _garder_rouleau
+					# (les vrais clics de souris sont vérifiés par clics_reels.gd).
+					ecran._garder_rouleau(gardables[hasard.randi_range(0, gardables.size() - 1)])
+					vu["relance_as"] += 1
+					if ecran.choix_du_rouleau:
+						print("ERREUR : le choix du rouleau reste ouvert après avoir gardé un rouleau")
+						erreurs += 1
 			ecran.bouton_valider.pressed.emit()
 			if ecran.combat.tirage_en_attente:
 				print("ERREUR : le tirage attend encore après « Valider »")

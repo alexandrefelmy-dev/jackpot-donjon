@@ -15,6 +15,7 @@ const IMAGES_D_ATTENTE := 6
 
 var _etape := 0
 var _attente := 0
+var _erreurs := 0
 
 
 func _initialize() -> void:
@@ -31,7 +32,7 @@ func _process(_delta: float) -> bool:
 	_photographier(_etape)
 	_etape += 1
 	if _etape >= 8:
-		quit()
+		quit(1 if _erreurs > 0 else 0)
 	else:
 		_preparer(_etape)
 	return false
@@ -52,10 +53,13 @@ func _preparer(etape: int) -> void:
 			combat.boutons_mise[2].pressed.emit()
 			combat._tirer()
 			combat.bouton_cinquieme_as.pressed.emit()
+			_controler(combat.combat.tirage_en_attente and combat.choix_du_rouleau,
+					"l'écran « choix du rouleau » n'est pas dans le bon état (tirage en attente, choix ouvert)")
 		3:  # …après le tour joué
 			var combat: Control = current_scene
 			combat._garder_rouleau(1)
 			combat._valider()
+			_controler(not combat.combat.tirage_en_attente, "le tour n'a pas été joué")
 		4:  # récompense
 			GameState.nouvelle_partie()
 			GameState.aller_a(GameState.SCENE_RECOMPENSE)
@@ -71,6 +75,13 @@ func _preparer(etape: int) -> void:
 			GameState.nouvelle_partie()
 			GameState.partie.etat = Partie.Etat.VICTOIRE
 			GameState.aller_a(GameState.SCENE_FIN)
+
+
+## Si un écran n'est pas dans l'état voulu, la capture serait trompeuse : on le dit et on sort en erreur.
+func _controler(condition: bool, message: String) -> void:
+	if not condition:
+		print("ERREUR : ", message)
+		_erreurs += 1
 
 
 func _partie_avec_toutes_les_reliques() -> void:
