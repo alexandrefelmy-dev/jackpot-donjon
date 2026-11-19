@@ -74,13 +74,32 @@ IMPORTANT : dès qu'une étape est terminée (ou avant qu'Alex quitte la session
 
 Avant de coder une étape de jeu (une version du cahier des charges, ex. v0.6), toujours passer par un plan, approuvé par Alex. Rien n'est modifié pendant la planification : le plan se fait avant de créer la branche.
 
-1. Relire la section concernée du cahier des charges et le code que l'étape touche.
+1. Relire la section concernée du cahier des charges et le code que l'étape touche, et choisir les skills à utiliser (voir « Skills à utiliser »).
 2. Poser à Alex les choix qui dépendent de lui (règles que le cahier des charges ne fixe pas, périmètre, contenu) : une question à la fois par sujet, avec une recommandation.
-3. Rédiger le plan : contexte, règles précisées (à reporter ensuite dans le cahier des charges local ET en ligne), architecture, fichiers à créer et à modifier, tests, étapes dans l'ordre (chacune laisse un jeu qui se lance), vérification, risques.
+3. Rédiger le plan : contexte, règles précisées (à reporter ensuite dans le cahier des charges local ET en ligne), architecture, fichiers à créer et à modifier, tests, étapes dans l'ordre (chacune laisse un jeu qui se lance), vérification, risques, et une ligne « Skills utilisés » (ceux qui ont été chargés et ce qu'ils ont apporté).
 4. Présenter le plan à Alex et attendre son accord. Le jeu n'est codé qu'ensuite.
 5. Si, en codant, il faut s'écarter du plan, le dire à Alex et le noter dans le résumé de fin d'étape.
 
 Pas de plan pour les petites corrections (un bug, un texte coupé, une valeur à régler) ni pour l'outillage et la documentation : les expliquer en quelques lignes, puis les faire.
+
+## Skills à utiliser
+
+Décision d'Alex : utiliser les skills disponibles au maximum, pour tout le projet. Ils apportent des pratiques éprouvées (Godot, genres de jeu, UI, audio, sauvegarde…) que je ne dois pas refaire de mémoire.
+
+- **Quand** : au moment du plan (pour concevoir) puis avant de coder la partie concernée (pour écrire). Les charger avec l'outil `Skill` AVANT de s'en servir, pas après coup. En cas de doute sur lesquels prendre, commencer par `router:router`.
+- **Lesquels** : tous ceux qui touchent à l'étape (tableau ci-dessous), mais pas ceux qui n'ont rien à y voir (ne pas charger pour cocher : cela coûte du contexte).
+- **Conflits** : les conventions du projet gagnent toujours sur un skill (noms en français, texte via `tr()`, contenu dans des `.tres`, tests en ligne de commande, GDScript typé, souris + Espace). Si un skill propose autre chose, adapter.
+- **Trace** : le plan et le résumé de fin d'étape disent quels skills ont été utilisés et ce qu'ils ont changé (ou « aucun apport »).
+- **À chaque étape** : `godot:godot-gdscript` (typage, pièges de syntaxe) et `godot:godot-gdscript-headless-testing` (tests en ligne de commande) pour tout code ; `godot:godot-nodes-scenes`, `godot:godot-ui-control` et `disciplines:game-ui-ux` pour tout écran ; `godot:godot-signals-groups` dès qu'il y a des événements entre objets ; `godot:godot-resources` pour les données `.tres` ; `/code-review` avant la fusion puis `/simplify` (nettoyage du code modifié, sans changer le comportement).
+
+| Étape | Skills à charger en plus |
+| --- | --- |
+| v0.6 – Le donjon | `genres:roguelike` (structure d'une partie, étages, portes), `disciplines:procedural-gen` (tirage des salles et des ennemis), `disciplines:game-ai` et `disciplines:ai-behavior-trees-utility-ai` (nouveaux ennemis et mécaniques de boss), `genres:rpg` (chiffres de combat, objets) |
+| v0.7 – Entre les parties | `disciplines:save-systems` (profil, version du fichier, écriture sûre), `genres:roguelike` (progression entre les parties) |
+| v0.8 – Habillage | `disciplines:create-game-assets` (pack 0x72, licences, CREDITS), `godot:godot-animation`, `godot:godot-shaders` et `disciplines:shader-programming` (néons), `disciplines:game-feel` (tremblements, chiffres qui s'envolent, pluie de pièces), `disciplines:audio-design` et `godot:godot-audio` (bus Musique/Effets en décibels), `disciplines:camera-systems` (tremblement d'écran), `disciplines:input-systems` (souris, Espace) |
+| v1.0 – Sortie | `godot:godot-export` (.exe Windows), `disciplines:performance-optimization`, `/security-review`, `disciplines:game-ui-ux` (accessibilité) |
+| v1.1 – Version anglaise | `godot:godot-ui-control` (textes plus longs qui débordent), `godot:godot-resources` |
+| Documents (cahier des charges en ligne) | `anthropic-skills:docs` avant tout appel au connecteur Claude Docs |
 
 ## Git : une branche par étape
 
@@ -88,7 +107,7 @@ Pas de plan pour les petites corrections (un bug, un texte coupé, une valeur à
 
 - **Début d'étape** : une fois le plan approuvé (voir « Plan avant chaque étape »), partir de `main` à jour (`git switch main`, puis `git switch -c <branche>`). Nom de la branche : la version et un sujet court (`v0.6-donjon`) ; pour une correction hors étape : `fix/<sujet>` ; pour de la documentation ou de l'outillage : `chore/<sujet>`. Ne jamais coder directement sur `main`. Pour une étape de jeu : changer `Version.NUMERO` (`scripts/version.gd`) tout de suite.
 - **Pendant l'étape** : des commits sur la branche, tests verts avant chaque commit (messages courts, en français, avec la ligne `Co-Authored-By`). Alex teste avec F5 sur la branche (le dossier de travail est celui de la branche).
-- **Avant la fusion** : lancer `/code-review` sur la branche (niveau `medium`) et corriger les problèmes confirmés ; relancer les tests.
+- **Avant la fusion** : lancer `/code-review` sur la branche (niveau `medium`) et corriger les problèmes confirmés, puis `/simplify` ; relancer les tests.
 - **Fin d'étape**, seulement quand Alex a confirmé que ça marche en jeu : mettre à jour l'« État actuel » de `CLAUDE.md` et le `README` sur la branche (commit « vX confirmée »), puis `git switch main`, `git merge --no-ff <branche>` (le commit de fusion garde l'étape visible dans l'historique), poser l'étiquette de version (`git tag -a vX.Y -m "vX.Y : <sujet>"`), `git push --follow-tags`, et supprimer la branche (`git branch -d <branche>`). Les étiquettes `v0.1` à `v0.5` existent déjà.
 
 ## Checklist de fin d'étape
@@ -102,8 +121,8 @@ Pas de plan pour les petites corrections (un bug, un texte coupé, une valeur à
 4. Chaque nouvelle règle de calcul a son test.
 5. `docs/cahier-des-charges.md` mis à jour (bloc « Précisions de règles », jalon « Réalisé », phrases devenues fausses) ET la version en ligne mise à jour en même temps, avec le même texte.
 6. `Version.NUMERO` à jour ; `README` et « État actuel » de `CLAUDE.md` à jour.
-7. `/code-review` passé sur la branche.
-8. Résumé pour Alex : ce qui a changé, comment tester avec F5, les boutons « [test] » utiles.
+7. `/code-review` puis `/simplify` passés sur la branche ; les skills prévus au plan (« Skills à utiliser ») ont bien été chargés avant de coder.
+8. Résumé pour Alex : ce qui a changé, comment tester avec F5, les boutons « [test] » utiles, les skills utilisés.
 9. Alex a confirmé en jeu → fusion, étiquette, push (voir « Git : une branche par étape »).
 - Les branches d'étape ne sont pas poussées sur GitHub : seul `main` l'est. Si Alex quitte avant la confirmation, la branche reste en local et l'état de `CLAUDE.md` le dit (« branche `x` en cours »).
 - Ne pas fusionner une étape non confirmée, ne pas réécrire l'historique de `main`.
