@@ -52,15 +52,20 @@ static func texte(id: StringName) -> String:
 	return "%s : %s" % [nom(id), description(id)]
 
 
-## Une malédiction que `actives` ne contient pas encore, tirée avec `hasard`.
+## Une malédiction que `actives` ne contient pas encore, tirée avec `hasard` (et pas une de `exclues` :
+## celles qui viennent d'être effacées ne reviennent pas aussitôt, tant qu'il en reste d'autres).
 ## Renvoie &"" si on en a déjà le maximum (ou toutes).
-static func tirer(actives: Array[StringName], hasard: RandomNumberGenerator) -> StringName:
+static func tirer(actives: Array[StringName], hasard: RandomNumberGenerator, exclues: Array[StringName] = []) -> StringName:
 	if actives.size() >= MAX:
 		return &""
 	var possibles: Array[StringName] = []
 	for id in TOUTES:
-		if not (id in actives):
+		if not (id in actives) and not (id in exclues):
 			possibles.append(id)
+	if possibles.is_empty():
+		for id in TOUTES:
+			if not (id in actives):
+				possibles.append(id)
 	if possibles.is_empty():
 		return &""
 	return possibles[hasard.randi_range(0, possibles.size() - 1)]

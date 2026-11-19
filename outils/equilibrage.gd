@@ -39,7 +39,28 @@ func _initialize() -> void:
 	_appliquer_reglages()
 	for robot in ROBOTS:
 		_essayer(robot)
+	# Le robot « prudent » avec un profil : neuf (4 reliques et 4 symboles seulement), avec 3 malédictions,
+	# et avec tous les avantages achetés. Le jeu doit rester jouable dans chaque cas.
+	for variante in ["profil neuf", "3 malédictions", "tous les avantages"]:
+		_essayer("prudent", variante)
 	quit()
+
+
+## Le profil d'une variante (null = pas de profil : le jeu de la v0.6).
+func _profil_de(variante: String) -> Profil:
+	if variante == "":
+		return null
+	var profil := Profil.nouveau()
+	if variante == "3 malédictions":
+		profil.maledictions.assign([Maledictions.FATIGUE, Maledictions.CROUPIER_RANCUNIER, Maledictions.BOURSE_TROUEE] as Array[StringName])
+	elif variante == "tous les avantages":
+		profil.niveau_pv = Profil.NIVEAU_MAX
+		profil.niveau_or = Profil.NIVEAU_MAX
+		profil.relance_de_partie = true
+		profil.trefle_au_depart = true
+		profil.symboles_debloques.assign(Profil.SYMBOLES_DE_DEPART + Profil.SYMBOLES_A_DEBLOQUER)
+		profil.reliques_debloquees.assign(Profil.RELIQUES_DE_DEPART + Profil.RELIQUES_A_DEBLOQUER)
+	return profil
 
 
 func _appliquer_reglages() -> void:
@@ -67,7 +88,7 @@ func _appliquer_reglages() -> void:
 	print("réglages essayés : ", reglages)
 
 
-func _essayer(robot: String) -> void:
+func _essayer(robot: String, variante: String = "") -> void:
 	hasard.seed = 4
 	affrontements = {}
 	morts = {}
@@ -77,7 +98,7 @@ func _essayer(robot: String) -> void:
 	var salles_total := 0
 	var fuites := 0
 	for graine in NB_PARTIES:
-		var partie := Partie.creer(graine)
+		var partie := Partie.creer(graine, _profil_de(variante))
 		var gardefou := 0
 		while partie.etat == Partie.Etat.EN_COURS and gardefou < 800:
 			gardefou += 1
@@ -103,8 +124,8 @@ func _essayer(robot: String) -> void:
 		if partie.etat == Partie.Etat.VICTOIRE:
 			victoires += 1
 
-	print("[%s] %d%% de victoires | boss atteints : étage 1 %d%%, étage 2 %d%%, étage 3 %d%% | %.1f salles, %.1f reliques par partie, %.2f fuites par partie" % [
-		robot, victoires * 100 / NB_PARTIES,
+	print("[%s%s] %d%% de victoires | boss atteints : étage 1 %d%%, étage 2 %d%%, étage 3 %d%% | %.1f salles, %.1f reliques par partie, %.2f fuites par partie" % [
+		robot, (" · " + variante) if variante != "" else "", victoires * 100 / NB_PARTIES,
 		atteint_boss[0] * 100 / NB_PARTIES, atteint_boss[1] * 100 / NB_PARTIES, atteint_boss[2] * 100 / NB_PARTIES,
 		salles_total / float(NB_PARTIES), reliques_total / float(NB_PARTIES), fuites / float(NB_PARTIES)])
 	var lignes := PackedStringArray()

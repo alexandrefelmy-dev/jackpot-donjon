@@ -13,11 +13,14 @@ var _combat: Control
 
 
 func _initialize() -> void:
+	# Vraie fenêtre : jamais le vrai profil du joueur.
+	GameState.sauvegarde_autorisee = false
+	GameState.profil = Profil.nouveau()
 	var partie := Partie.creer(77)
 	partie.or_total = 30
 	partie.ajouter_relique(Reliques.charger(&"cinquieme_as"))
 	partie.ajouter_relique(Reliques.charger(&"de_pipe"))
-	GameState.partie = partie
+	GameState.lancer(partie)
 	GameState.aller_a_suivant()  # les portes : on part de là, comme au lancement du jeu
 
 

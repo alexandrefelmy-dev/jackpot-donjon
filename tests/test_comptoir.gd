@@ -213,6 +213,16 @@ func test_bilan_maledictions() -> void:
 	p3.maledictions.assign(maledictions_de(["sac_leste"]))
 	var b3 := Bilan.appliquer(partie_finie(p3, 14, 2, Partie.Etat.DEFAITE), p3, hasard)
 	verifier(b3["maledictions_effacees"].size() == 1 and p3.maledictions.size() == 1, "2 boss mais 1 seule malédiction : elle est effacée, puis la défaite en ajoute une")
+	# La malédiction qui vient d'être effacée ne revient pas aussitôt.
+	var jamais_la_meme := true
+	for graine in 60:
+		hasard.seed = graine
+		var p5 := profil_avec(0)
+		p5.maledictions.assign(maledictions_de(["fatigue"]))
+		var b5 := Bilan.appliquer(partie_finie(p5, 8, 1, Partie.Etat.DEFAITE), p5, hasard)
+		if b5["malediction_recue"] == &"fatigue":
+			jamais_la_meme = false
+	verifier(jamais_la_meme, "la malédiction effacée par le boss ne revient pas aussitôt (60 tirages)")
 	# Une victoire efface tout et n'ajoute rien.
 	var p4 := profil_avec(0)
 	p4.maledictions.assign(maledictions_de(["fatigue", "mauvais_oeil", "sac_leste"]))

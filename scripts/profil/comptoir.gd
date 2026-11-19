@@ -101,7 +101,7 @@ func titre(achat: Achat) -> String:
 		Achat.OR_DE_DEPART:
 			return TranslationServer.translate("+%d or au départ") % Profil.OR_PAR_NIVEAU
 		Achat.RELANCE:
-			return TranslationServer.translate("Une relance gratuite par partie")
+			return TranslationServer.translate("Relance gratuite par partie")
 		Achat.TREFLE:
 			return TranslationServer.translate("Commencer avec un trèfle")
 	return ""
@@ -119,15 +119,15 @@ func detail(achat: Achat) -> String:
 				return TranslationServer.translate("Déjà acheté.")
 	match achat:
 		Achat.SYMBOLE:
-			return TranslationServer.translate("Un symbole tiré au hasard (%d encore verrouillés).") % profil.symboles_verrouilles().size()
+			return TranslationServer.translate("Au hasard : %d encore verrouillés.") % profil.symboles_verrouilles().size()
 		Achat.RELIQUE:
-			return TranslationServer.translate("Une relique tirée au hasard (%d encore verrouillées).") % profil.reliques_verrouillees().size()
+			return TranslationServer.translate("Au hasard : %d encore verrouillées.") % profil.reliques_verrouillees().size()
 		Achat.PV_MAX:
 			return TranslationServer.translate("Niveau %d / %d.") % [profil.niveau_pv, Profil.NIVEAU_MAX]
 		Achat.OR_DE_DEPART:
 			return TranslationServer.translate("Niveau %d / %d.") % [profil.niveau_or, Profil.NIVEAU_MAX]
 		Achat.RELANCE:
-			return TranslationServer.translate("Relance de tous les rouleaux, une fois par partie.")
+			return TranslationServer.translate("Tous les rouleaux, une fois par partie.")
 		Achat.TREFLE:
-			return TranslationServer.translate("Un symbole Trèfle dans le sac de départ.")
+			return TranslationServer.translate("Un Trèfle dans le sac de départ.")
 	return ""

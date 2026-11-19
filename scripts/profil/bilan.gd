@@ -40,7 +40,7 @@ static func appliquer(partie: Partie, profil: Profil, hasard: RandomNumberGenera
 
 	var recue: StringName = &""
 	if partie.etat == Partie.Etat.DEFAITE:
-		recue = Maledictions.tirer(profil.maledictions, hasard)
+		recue = Maledictions.tirer(profil.maledictions, hasard, effacees)
 		if recue != &"":
 			profil.maledictions.append(recue)
 

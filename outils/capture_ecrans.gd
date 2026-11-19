@@ -16,7 +16,7 @@ const IMAGES_D_ATTENTE := 6
 const NOMS := ["portes_etage1", "portes_etage3", "combat_depart", "combat_attente", "combat_choix_rouleau",
 		"combat_apres_tour", "combat_grand_croupier", "combat_grand_croupier_tour2", "combat_dame_de_pique",
 		"combat_dame_de_pique_tour3", "combat_mimique", "combat_usurier", "combat_pickpocket", "combat_pickpocket_fuite",
-		"recompense", "relique", "boutique", "repos", "repos_sac", "fin_victoire", "fin_defaite"]
+		"recompense", "relique", "boutique", "repos", "repos_sac", "fin_victoire", "fin_defaite", "comptoir", "comptoir_epuise", "fin_bilan"]
 
 var _etape := 0
 var _attente := 0
@@ -24,6 +24,9 @@ var _erreurs := 0
 
 
 func _initialize() -> void:
+	# Cet outil ouvre une vraie fenêtre : il ne doit JAMAIS lire ni écrire le vrai profil du joueur.
+	GameState.sauvegarde_autorisee = false
+	GameState.profil = Profil.nouveau()
 	DirAccess.make_dir_recursive_absolute(DOSSIER)
 	print("Captures écrites dans : ", ProjectSettings.globalize_path(DOSSIER))
 	_preparer(0)
@@ -133,6 +136,37 @@ func _preparer(etape: int) -> void:
 			GameState.partie.aller_au_boss()
 			GameState.partie.ecran = Partie.Ecran.FIN
 			GameState.partie.etat = Partie.Etat.DEFAITE
+			GameState.aller_a_suivant()
+		21:  # Comptoir du Croupier : des jetons, des malédictions, des déblocages
+			var profil := Profil.nouveau()
+			profil.jetons = 47
+			profil.niveau_pv = 1
+			profil.symboles_debloques.append(&"bombe")
+			profil.maledictions.assign([&"fatigue", &"croupier_rancunier", &"mauvais_oeil"] as Array[StringName])
+			profil.parties_jouees = 6
+			profil.victoires = 1
+			GameState.profil = profil
+			GameState.en_partie = false
+			GameState.aller_a(GameState.SCENE_COMPTOIR)
+		22:  # Comptoir : tout est acheté
+			var profil := Profil.nouveau()
+			profil.jetons = 999
+			var comptoir := Comptoir.creer(profil, RandomNumberGenerator.new())
+			for achat in Comptoir.ORDRE:
+				for i in 6:
+					comptoir.acheter(achat)
+			GameState.profil = profil
+			GameState.aller_a(GameState.SCENE_COMPTOIR)
+		23:  # fin de partie avec son bilan (jetons, malédiction reçue et effacée)
+			var profil := Profil.nouveau()
+			profil.maledictions.assign([&"sac_leste"] as Array[StringName])
+			GameState.profil = profil
+			var perdue := Partie.creer(3, profil)
+			perdue.salles_franchies = 9
+			perdue.boss_vaincus = 1
+			perdue.etat = Partie.Etat.DEFAITE
+			perdue.ecran = Partie.Ecran.FIN
+			GameState.lancer(perdue)
 			GameState.aller_a_suivant()
 
 

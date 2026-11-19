@@ -90,8 +90,8 @@ func _rafraichir() -> void:
 	for i in boutons_achats.size():
 		var achat: Comptoir.Achat = Comptoir.ORDRE[i]
 		var epuise := comptoir.est_epuise(achat)
-		var prix_texte := tr("Épuisé") if epuise else tr("%d jetons") % comptoir.prix(achat)
-		Cartes.changer_carte(boutons_achats[i], comptoir.titre(achat), "%s\n%s" % [comptoir.detail(achat), prix_texte])
+		var detail := comptoir.detail(achat) if epuise else "%s\n%s" % [comptoir.detail(achat), tr("%d jetons") % comptoir.prix(achat)]
+		Cartes.changer_carte(boutons_achats[i], comptoir.titre(achat), detail)
 		boutons_achats[i].disabled = not comptoir.peut_acheter(achat)
 
 	if profil.maledictions.is_empty():
