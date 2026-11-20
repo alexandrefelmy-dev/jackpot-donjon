@@ -58,7 +58,7 @@ var barre_pv_joueur: ProgressBar
 var texte_pv_joueur: Label
 var texte_or: Label
 var texte_fin: Label
-var bouton_levier: Button
+var bouton_levier: LevierMachine
 var bouton_continuer: Button
 var texte_journal: RichTextLabel
 var texte_graine: Label
@@ -91,6 +91,8 @@ var _fenetres: Array[Control] = []
 var _bandes: Array[Array] = []
 var _decalages: Array[float] = []
 var _en_rotation: Array[bool] = []
+## Le rebond de chaque rouleau à son arrêt (un seul à la fois par rouleau).
+var _rebonds: Dictionary = {}
 ## Instant d'arrêt de chaque rouleau (secondes après le levier, voir ChronologieRouleaux).
 var _arrets: Array[float] = []
 var _temps_animation: float = 0.0
@@ -298,7 +300,7 @@ func _process(delta: float) -> void:
 		_decalages[i] += VITESSE_DEFILEMENT * facteur * delta
 		_placer_bande(i)
 	if not encore:
-		_terminer_animation()
+		_terminer_animation(false)
 
 
 ## Place les icônes de la bande du rouleau `index` ; une icône qui ressort en haut change de symbole.
@@ -323,7 +325,10 @@ func _reveler_rouleau(index: int) -> void:
 	var case_grille := cases[index]
 	case_grille.offset_transform_enabled = true
 	case_grille.offset_transform_position = Vector2(0, -12)
+	if _rebonds.has(index):
+		(_rebonds[index] as Tween).kill()
 	var rebond := case_grille.create_tween()
+	_rebonds[index] = rebond
 	rebond.tween_property(case_grille, "offset_transform_position", Vector2.ZERO, 0.18).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 
 
@@ -332,11 +337,16 @@ func _ampoules_au_repos() -> void:
 		meuble.definir_ampoules(Ampoules.Mode.REPOS)
 
 
-## Finit l'animation tout de suite (tous les rouleaux arrêtés) puis affiche ce qui attendait.
-func _terminer_animation() -> void:
+## Finit l'animation tout de suite (tous les rouleaux arrêtés) puis affiche ce qui attendait. Quand on la coupe
+## avant la fin (Espace), les rebonds en cours sont coupés aussi ; à la fin naturelle le dernier finit de rebondir.
+func _terminer_animation(couper_les_rebonds: bool = true) -> void:
 	if not animation_en_cours:
 		return
 	animation_en_cours = false
+	if couper_les_rebonds:
+		for rebond: Tween in _rebonds.values():
+			rebond.kill()
+		_rebonds.clear()
 	meuble.definir_ampoules(Ampoules.Mode.REPOS)
 	for i in cases.size():
 		_en_rotation[i] = false
@@ -349,8 +359,12 @@ func _terminer_animation() -> void:
 		presentation.call()
 
 
-## Les rouleaux sont affichés mais pas encore appliqués : on peut relancer ou valider.
+## Les rouleaux sont affichés mais pas encore appliqués : on peut relancer ou valider. Pendant qu'ils s'arrêtent,
+## rien n'est annoncé (ni combo, ni boutons) : c'est fait une fois le dernier rouleau arrêté.
 func _attendre_validation() -> void:
+	if animation_en_cours:
+		_presentation = _attendre_validation
+		return
 	_afficher_apercu()
 	_rafraichir()
 
@@ -363,8 +377,7 @@ func _relancer_tout() -> void:
 		Son.jouer(&"rouleaux")
 		_dessiner_grille()
 		_animer_rouleaux()
-		_afficher_apercu()
-		_rafraichir()
+		_attendre_validation()
 
 
 ## Cinquième as, étape 1 : on active le choix du rouleau à garder (un second clic annule).
@@ -392,8 +405,7 @@ func _garder_rouleau(index: int) -> void:
 		Son.jouer(&"rouleaux")
 		_dessiner_grille()
 		_animer_rouleaux()
-		_afficher_apercu()
-		_rafraichir()
+		_attendre_validation()
 
 
 func _choisir_mise(index: int) -> void:

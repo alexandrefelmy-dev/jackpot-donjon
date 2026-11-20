@@ -155,6 +155,16 @@ static func neon(controle: CanvasItem, couleur_halo: Color = Color("ffd34d")) ->
 	var materiau := ShaderMaterial.new()
 	materiau.shader = _shader_neon
 	materiau.set_shader_parameter("couleur_halo", couleur_halo)
-	materiau.set_shader_parameter("amplitude", 0.0 if Impacts.flashs_reduits() else 0.35)
 	controle.material = materiau
+	regler_neon(controle)
+
+
+## Remet l'amplitude du pulsement d'un néon selon l'option « Réduire les flashs » (à rappeler si elle change
+## pendant que le néon est affiché).
+static func regler_neon(controle: CanvasItem) -> void:
+	if controle == null:
+		return
+	var materiau := controle.material as ShaderMaterial
+	if materiau != null:
+		materiau.set_shader_parameter("amplitude", 0.0 if Impacts.flashs_reduits() else 0.35)
 

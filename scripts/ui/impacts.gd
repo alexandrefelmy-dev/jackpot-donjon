@@ -157,11 +157,11 @@ static func chiffres_du_tour(resultat: ResultatTirage, pv_joueur_avant: int, pv_
 	if pv_joueur_apres < pv_joueur_avant:
 		liste.append({"texte": "-%d" % (pv_joueur_avant - pv_joueur_apres), "couleur": COULEUR_SUBIS, "lieu": "joueur"})
 	if resultat.total("soin") > 0:
-		liste.append({"texte": "+%d PV" % resultat.total("soin"), "couleur": COULEUR_SOIN, "lieu": "joueur"})
+		liste.append({"texte": String(TranslationServer.translate("+%d PV")) % resultat.total("soin"), "couleur": COULEUR_SOIN, "lieu": "joueur"})
 	if resultat.total("armure") > 0:
 		liste.append({"texte": "+%d" % resultat.total("armure"), "couleur": COULEUR_ARMURE, "lieu": "joueur"})
 	if resultat.total("or") > 0:
-		liste.append({"texte": "+%d or" % resultat.total("or"), "couleur": COULEUR_OR, "lieu": "or"})
+		liste.append({"texte": String(TranslationServer.translate("+%d or")) % resultat.total("or"), "couleur": COULEUR_OR, "lieu": "or"})
 	return liste
 
 

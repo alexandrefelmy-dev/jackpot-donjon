@@ -16,6 +16,7 @@ var bouton_credits: Button
 var bouton_retour: Button
 var texte_credits: Label
 var texte_message: Label
+var titre_options: Label
 const DELAI_SAUVEGARDE := 0.5
 ## Écrit le fichier une demi-seconde après le dernier changement (relancé à chaque cran de curseur).
 var _minuteur_sauvegarde: Timer
@@ -60,6 +61,7 @@ func _changer() -> void:
 	options.plein_ecran = case_plein_ecran.button_pressed
 	options.reduire_tremblements = case_tremblements.button_pressed
 	options.reduire_flashs = case_flashs.button_pressed
+	Cartes.regler_neon(titre_options)
 	GameState.appliquer_options()
 	_minuteur_sauvegarde.start()
 	_rafraichir()
@@ -69,9 +71,20 @@ func _sauvegarder_maintenant() -> void:
 	texte_message.text = "" if GameState.sauver_options() else tr("Les options n'ont pas pu être enregistrées.")
 
 
-## Un changement encore en attente d'écriture quand on quitte l'écran est écrit tout de suite.
+## Un changement encore en attente d'écriture quand on quitte l'écran, ou quand on ferme la fenêtre, est écrit
+## tout de suite.
 func _exit_tree() -> void:
+	_sauvegarder_si_en_attente()
+
+
+func _notification(quoi: int) -> void:
+	if quoi == NOTIFICATION_WM_CLOSE_REQUEST:
+		_sauvegarder_si_en_attente()
+
+
+func _sauvegarder_si_en_attente() -> void:
 	if _minuteur_sauvegarde != null and not _minuteur_sauvegarde.is_stopped():
+		_minuteur_sauvegarde.stop()
 		GameState.sauver_options()
 
 
@@ -106,6 +119,7 @@ func _construire_interface() -> void:
 	titre.text = tr("Options")
 	titre.add_theme_font_size_override("font_size", 40)
 	Habillage.titre(titre)
+	titre_options = titre
 	page.add_child(titre)
 
 	texte_musique = Label.new()

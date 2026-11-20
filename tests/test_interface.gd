@@ -501,6 +501,8 @@ func _initialize() -> void:
 	reglages.case_tremblements.button_pressed = true
 	reglages.case_flashs.button_pressed = true
 	verifier(GameState.options.reduire_tremblements and GameState.options.reduire_flashs, "les cases d'accessibilité changent les options")
+	var neon_titre := reglages.titre_options.material as ShaderMaterial
+	verifier(neon_titre != null and is_zero_approx(float(neon_titre.get_shader_parameter("amplitude"))), "« Réduire les flashs » coupe tout de suite le pulsement du titre néon")
 	reglages.bouton_credits.pressed.emit()
 	verifier(reglages.texte_credits.visible, "« Crédits » affiche les crédits")
 	verifier_dans_la_fenetre(reglages.texte_credits, "texte des crédits")
@@ -578,6 +580,20 @@ func _initialize() -> void:
 	verifier(not anime.animation_en_cours and not anime._fenetres[4].visible and anime.etiquettes[4].text != "", "Espace pendant l'animation l'accélère : tous les rouleaux sont arrêtés d'un coup")
 	verifier(anime.combat.numero_tour == tour_apres + 1 or anime.combat.est_fini(), "…sans jouer un tour de plus (un seul tour par tirage)")
 	anime.forcer_animation = false
+
+	# Avec une relique de relance, le tirage n'est annoncé (journal, boutons) qu'une fois le dernier rouleau arrêté.
+	GameState.nouvelle_partie()
+	GameState.partie.ajouter_relique(Reliques.charger(&"de_pipe"))
+	aller_au_combat()
+	await _attendre()
+	var avec_relance: Control = current_scene
+	avec_relance.forcer_animation = true
+	avec_relance._tirer()
+	verifier(avec_relance.animation_en_cours and avec_relance.combat.tirage_en_attente, "avec le Dé pipé, le tirage attend sa validation pendant que les rouleaux tournent")
+	verifier(not avec_relance.ligne_relance.visible and not avec_relance.texte_journal.text.contains("Tirage affiché"), "…mais rien n'est annoncé tant qu'ils tournent (ni boutons, ni combo dans le journal)")
+	avec_relance._terminer_animation()
+	verifier(avec_relance.ligne_relance.visible and avec_relance.texte_journal.text.contains("Tirage affiché"), "…une fois les rouleaux arrêtés, le tirage et les boutons Valider / relance apparaissent")
+	avec_relance.forcer_animation = false
 
 	# Le menu et les options ne touchent pas à ce que le profil de test contient.
 	GameState.en_partie = false

@@ -12,7 +12,7 @@ Inspirations : Luck be a Landlord, Slay the Spire, Balatro.
 
 1. Installer [Godot 4.7](https://godotengine.org/download) (version standard, GDScript).
 2. Ouvrir le dossier du projet dans Godot (`project.godot`).
-3. Appuyer sur F5 : le jeu s'ouvre sur le menu principal (Jouer lance une partie ; avec le son !). En combat, Espace tire le levier (boutons « [test] » visibles seulement quand on lance depuis l'éditeur : aller directement au boss et recevoir une relique en combat, +30 or en boutique). L'écran de test de la machine est `scenes/machine_test.tscn`.
+3. Appuyer sur F5 : le jeu s'ouvre sur le menu principal (Jouer lance une partie ; avec le son !). Le bouton ⛶ en haut à droite ou Alt+Entrée passe en plein écran. En combat, Espace (ou un clic sur le levier) tire le levier (boutons « [test] » visibles seulement quand on lance depuis l'éditeur : aller directement au boss et recevoir une relique en combat, +30 or en boutique). L'écran de test de la machine est `scenes/machine_test.tscn`.
 
 ## Lancer les tests
 
