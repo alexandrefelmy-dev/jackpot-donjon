@@ -243,6 +243,17 @@ func test_records() -> void:
 			"la première partie fixe les records")
 	verifier((bilan["records_battus"] as Array).is_empty(), "…sans rien annoncer comme battu (tout serait un record)")
 
+	# Un ancien profil migré (beaucoup de parties jouées, records à 0) : sa première partie n'annonce aucun record.
+	var migre := Profil.nouveau()
+	migre.parties_jouees = 9
+	var apres_migration := Partie.creer(7, migre)
+	apres_migration.etat = Partie.Etat.DEFAITE
+	apres_migration.salles_franchies = 5
+	apres_migration.stats.degats_infliges = 40
+	var bilan_migre := Bilan.appliquer(apres_migration, migre, hasard)
+	verifier((bilan_migre["records_battus"] as Array).is_empty() and migre.record_degats == 40,
+			"après la migration d'un ancien profil, la première partie pose les records sans les annoncer")
+
 	var seconde := Partie.creer(2, profil)
 	seconde.etat = Partie.Etat.DEFAITE
 	seconde.salles_franchies = 6

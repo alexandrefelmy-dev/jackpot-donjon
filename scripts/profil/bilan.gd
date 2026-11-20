@@ -23,8 +23,9 @@ static func jetons_gagnes(partie: Partie) -> int:
 ## Renvoie le détail, aussi gardé dans partie.bilan, pour l'écran de fin :
 ## { "jetons": int, "malediction_recue": StringName, "maledictions_effacees": Array[StringName],
 ##   "records_battus": Array[StringName] }.
-## Les records (voir Profil) sont mis à jour ; un record n'est « battu » que s'il y en avait déjà un (pas à la
-## toute première partie, où tout serait un record).
+## Les records (voir Profil) sont mis à jour ; un record n'est « battu » que s'il y en avait déjà un (au-dessus de 0) :
+## ni à la toute première partie, ni à la première après la migration d'un ancien profil (records à 0), où tout
+## serait un record.
 static func appliquer(partie: Partie, profil: Profil, hasard: RandomNumberGenerator) -> Dictionary:
 	if partie.bilan_applique or partie.etat == Partie.Etat.EN_COURS:
 		return partie.bilan
@@ -58,7 +59,8 @@ static func appliquer(partie: Partie, profil: Profil, hasard: RandomNumberGenera
 ## (&"salles", &"degats", &"combo", &"jackpots").
 static func _mettre_a_jour_records(partie: Partie, profil: Profil) -> Array[StringName]:
 	var battus: Array[StringName] = []
-	var deja_joue := profil.parties_jouees > 1
+	var deja_joue := profil.record_salles > 0 or profil.record_degats > 0 or profil.record_combo > 0 \
+			or profil.record_jackpots > 0
 	if partie.salles_franchies > profil.record_salles:
 		profil.record_salles = partie.salles_franchies
 		if deja_joue:

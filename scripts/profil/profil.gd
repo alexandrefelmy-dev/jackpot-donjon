@@ -8,8 +8,9 @@ extends RefCounted
 ## (voir ProfilFichier.migrations_reelles). Version 2 : les records.
 const VERSION := 2
 
-## Le plus long combo possible : la machine a 6 rouleaux avec le Sixième rouleau.
-const RECORD_COMBO_MAX := 6
+## Borne de bon sens du record de plus long combo (la machine a 5 ou 6 rouleaux aujourd'hui) : large, pour qu'une
+## machine plus grande plus tard ne fasse jamais passer un profil pour abîmé.
+const RECORD_COMBO_MAX := 20
 const NIVEAU_MAX := 3
 const PV_PAR_NIVEAU := 5
 const OR_PAR_NIVEAU := 10
@@ -127,7 +128,7 @@ static func depuis_dictionnaire(donnees: Dictionary) -> Profil:
 		return null
 	if not (donnees.get("relance_de_partie") is bool) or not (donnees.get("trefle_au_depart") is bool):
 		return null
-	# Les records : des entiers positifs ou nuls (le plus long combo ne dépasse pas la largeur de la machine).
+	# Les records : des entiers positifs ou nuls (le plus long combo reste sous une borne de bon sens).
 	for record in records_lus:
 		if record == null or record < 0:
 			return null

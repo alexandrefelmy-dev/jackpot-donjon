@@ -37,7 +37,7 @@ class Chargement:
 
 
 ## Lit le profil à `chemin` (le « .bak » en secours). Ne plante jamais : au pire, profil neuf.
-static func charger(chemin: String, migrations: Dictionary = {}) -> Chargement:
+static func charger(chemin: String, migrations: Dictionary = migrations_reelles()) -> Chargement:
 	var resultat := Chargement.new()
 	resultat.profil = Profil.nouveau()
 	var un_fichier_existe := false
@@ -68,16 +68,15 @@ static func charger(chemin: String, migrations: Dictionary = {}) -> Chargement:
 
 
 ## Amène des données lues à la version actuelle, une version à la fois. `migrations` : la chaîne à utiliser
-## (vide = les vraies, voir migrations_reelles ; les tests en passent une à eux).
+## (par défaut les vraies, voir migrations_reelles ; les tests en passent une à eux, `{}` = aucune).
 ## Renvoie un dictionnaire vide si une migration manque (données inutilisables).
-static func migrer(donnees: Dictionary, migrations: Dictionary = {}) -> Dictionary:
-	var chaine := migrations if not migrations.is_empty() else migrations_reelles()
+static func migrer(donnees: Dictionary, migrations: Dictionary = migrations_reelles()) -> Dictionary:
 	var courant := donnees.duplicate(true)
 	var version := _entier_ou(courant.get("version"), -1)
 	while version < Profil.VERSION:
-		if not chaine.has(version):
+		if not migrations.has(version):
 			return {}
-		courant = (chaine[version] as Callable).call(courant)
+		courant = (migrations[version] as Callable).call(courant)
 		version += 1
 		courant["version"] = version
 	return courant

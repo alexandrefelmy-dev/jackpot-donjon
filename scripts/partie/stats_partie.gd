@@ -13,7 +13,7 @@ var plus_long_combo: int = 0
 ## Mises jouées, et mises gagnées parmi elles (or ou quitte ou double).
 var mises_jouees: int = 0
 var mises_gagnees: int = 0
-## Or dépensé en boutique.
+## Or dépensé en boutique (compté par Partie.depenser, au niveau de la partie : un combat ne dépense rien).
 var or_depense: int = 0
 
 
@@ -40,4 +40,3 @@ func ajouter(autre: StatsPartie) -> void:
 	plus_long_combo = maxi(plus_long_combo, autre.plus_long_combo)
 	mises_jouees += autre.mises_jouees
 	mises_gagnees += autre.mises_gagnees
-	or_depense += autre.or_depense

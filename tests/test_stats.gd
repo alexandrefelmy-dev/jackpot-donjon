@@ -63,11 +63,10 @@ func test_une_instance() -> void:
 	autre.jackpots = 1
 	autre.mises_jouees = 2
 	autre.mises_gagnees = 1
-	autre.or_depense = 7
 	stats.plus_long_combo = 3
 	stats.ajouter(autre)
 	stats.ajouter(autre)
-	verifier(stats.degats_infliges == 20 and stats.jackpots == 2 and stats.mises_jouees == 4 and stats.mises_gagnees == 2 and stats.or_depense == 14,
+	verifier(stats.degats_infliges == 20 and stats.jackpots == 2 and stats.mises_jouees == 4 and stats.mises_gagnees == 2,
 			"ajouter additionne les compteurs")
 	verifier(stats.plus_long_combo == 4, "…mais garde le plus long combo (un maximum, pas une somme)")
 
