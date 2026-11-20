@@ -16,11 +16,15 @@ const IMAGES_D_ATTENTE := 6
 const NOMS := ["portes_etage1", "portes_etage3", "combat_depart", "combat_attente", "combat_choix_rouleau",
 		"combat_apres_tour", "combat_grand_croupier", "combat_grand_croupier_tour2", "combat_dame_de_pique",
 		"combat_dame_de_pique_tour3", "combat_mimique", "combat_usurier", "combat_pickpocket", "combat_pickpocket_fuite",
-		"recompense", "relique", "boutique", "repos", "repos_sac", "fin_victoire", "fin_defaite", "comptoir", "comptoir_epuise", "fin_bilan"]
+		"recompense", "relique", "boutique", "repos", "repos_sac", "fin_victoire", "fin_defaite", "comptoir", "comptoir_epuise", "fin_bilan", "menu", "options", "options_credits",
+		"combat_avant_tirage", "combat_rouleaux_tournent", "combat_dernier_rouleau", "combat_squelette", "combat_victoire"]
+## Captures prises plus tard qu'après 6 images : durée à attendre (ms) depuis la préparation de l'écran.
+const ATTENTE_MS := {"combat_dernier_rouleau": 2000}
 
 var _etape := 0
 var _attente := 0
 var _erreurs := 0
+var _debut_etape_ms := 0
 
 
 func _initialize() -> void:
@@ -36,6 +40,8 @@ func _process(_delta: float) -> bool:
 	_attente += 1
 	if _attente < IMAGES_D_ATTENTE:
 		return false
+	if Time.get_ticks_msec() - _debut_etape_ms < int(ATTENTE_MS.get(NOMS[_etape], 0)):
+		return false
 	_attente = 0
 	_photographier(_etape)
 	_etape += 1
@@ -48,27 +54,30 @@ func _process(_delta: float) -> bool:
 
 ## Met le jeu dans l'état de l'écran n°etape.
 func _preparer(etape: int) -> void:
+	_debut_etape_ms = Time.get_ticks_msec()
 	match etape:
-		0:  # choix des portes, étage 1
+		0:  # les 2 salles bonus, après le combat du pas 2 de l'étage 1
 			GameState.nouvelle_partie()
+			GameState.partie.pas = 2
+			GameState.partie.ecran = Partie.Ecran.PORTES
 			GameState.aller_a_suivant()
-		1:  # choix des portes, étage 3 (avec l'avertissement sur les mimiques)
+		1:  # les 2 salles bonus de l'étage 3 (avec l'avertissement sur les mimiques)
 			GameState.nouvelle_partie()
 			GameState.partie.etage = 3
-			GameState.partie.pas = 3
+			GameState.partie.pas = 4
+			GameState.partie.ecran = Partie.Ecran.PORTES
 			GameState.aller_a_suivant()
-		2:  # combat au départ, sans relique
+		2:  # combat au départ (obligatoire : la partie s'ouvre dessus), sans relique
 			GameState.nouvelle_partie()
-			GameState.partie.choisir_porte(0)
 			GameState.aller_a_suivant()
 		3:  # combat avec les 9 reliques, tirage en attente de validation
 			_partie_avec_toutes_les_reliques()
 			GameState.partie.or_total = 50
-			GameState.partie.choisir_porte(0)
 			GameState.aller_a_suivant()
 		4:  # …choix du rouleau à garder (Cinquième as)
 			var combat: Control = current_scene
 			combat.boutons_mise[2].pressed.emit()
+			combat._terminer_animation()
 			combat._tirer()
 			combat.bouton_cinquieme_as.pressed.emit()
 			_controler(combat.combat.tirage_en_attente and combat.choix_du_rouleau,
@@ -83,6 +92,7 @@ func _preparer(etape: int) -> void:
 		7:  # …après quelques tours (la règle a changé)
 			var combat: Control = current_scene
 			combat.combat.pv_joueur = 40
+			combat._terminer_animation()
 			combat._tirer()
 			_controler(combat.texte_passif.visible, "la règle du tour devrait s'afficher")
 		8:  # combat contre la Dame de Pique : crânes temporaires
@@ -91,6 +101,7 @@ func _preparer(etape: int) -> void:
 			var combat: Control = current_scene
 			for i in 3:
 				combat.combat.pv_joueur = 40
+				combat._terminer_animation()
 				combat._tirer()
 			_controler(combat.combat.cranes_temporaires == 3, "3 crânes temporaires attendus : %d" % combat.combat.cranes_temporaires)
 		10:  # combat contre la Mimique : l'attaque surprise est dans le journal
@@ -168,6 +179,31 @@ func _preparer(etape: int) -> void:
 			perdue.ecran = Partie.Ecran.FIN
 			GameState.lancer(perdue)
 			GameState.aller_a_suivant()
+		24:  # menu principal
+			GameState.en_partie = false
+			GameState.aller_a(GameState.SCENE_MENU)
+		25:  # options (la case « Crédits » ouverte)
+			GameState.aller_a(GameState.SCENE_OPTIONS)
+		26:  # …avec les crédits
+			current_scene.bouton_credits.pressed.emit()
+		27:  # combat avant le levier
+			GameState.nouvelle_partie()
+			GameState.aller_a_suivant()
+		28:  # …levier tiré : les 5 rouleaux tournent
+			var combat: Control = current_scene
+			combat._tirer()
+			_controler(combat.animation_en_cours, "les rouleaux devraient tourner")
+		29:  # …2 s plus tard : les quatre premiers sont arrêtés, le dernier tourne encore (suspense)
+			var combat: Control = current_scene
+			_controler(combat.animation_en_cours and combat._en_rotation[4], "le dernier rouleau devrait encore tourner")
+		30:  # un autre ennemi (le squelette), en grand derrière la machine
+			_combat_contre("squelette", 1)
+		31:  # …vaincu : le texte de victoire et « Continuer »
+			var combat: Control = current_scene
+			combat.combat.pv_ennemi = 0
+			combat.combat.etat = Combat.Etat.VICTOIRE
+			combat._rafraichir()
+			_controler(combat.bouton_continuer.visible, "« Continuer » devrait s'afficher")
 
 
 ## Un combat contre l'ennemi `id`, à l'étage `etage`, avec l'ouverture jouée si l'ennemi en a une.

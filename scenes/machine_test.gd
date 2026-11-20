@@ -5,7 +5,7 @@ extends Control
 const TAILLE_CASE := Vector2(120, 160)
 const COULEUR_FOND := Color("1b1a24")
 const COULEUR_CASE_VIDE := Color("2c2a38")
-const COULEUR_COMBO := Color("ffd34d")
+const COULEUR_COMBO := Habillage.COULEUR_OR
 
 var machine := MachineASous.new(5, 1)
 var sac: Sac
@@ -76,7 +76,7 @@ func _afficher_resultat(resultat: ResultatTirage) -> void:
 	else:
 		for combo in resultat.combos:
 			var titre := tr("JACKPOT !!!") if combo.est_jackpot() else tr("COMBO !")
-			texte.append("[color=#ffd34d][b]%s[/b] %s[/color]" % [
+			texte.append("[color=#%s][b]%s[/b] %s[/color]" % [COULEUR_COMBO.to_html(false), 
 				titre, tr("%d × %s, effet ×%d") % [
 					combo.longueur, tr(combo.symbole.nom), combo.multiplicateur]])
 

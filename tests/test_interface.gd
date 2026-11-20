@@ -71,6 +71,25 @@ func _initialize() -> void:
 	verifier(au_boss.bouton_debug.disabled, "au boss, le bouton de test est désactivé")
 	verifier(au_boss.texte_etage.text.contains("BOSS"), "l'en-tête annonce le boss : %s" % au_boss.texte_etage.text)
 
+	# Chaque ennemi, en grand derrière la machine : dans la fenêtre, sous son nom et sa jauge, et son bas caché par le meuble.
+	for chemin in DirAccess.get_files_at("res://data/enemies/"):
+		if chemin.get_extension() != "tres":
+			continue
+		GameState.nouvelle_partie()
+		GameState.partie.ennemi_courant = load("res://data/enemies/" + chemin) as EnemyData
+		GameState.partie.ecran = Partie.Ecran.COMBAT
+		GameState.aller_a(GameState.SCENE_COMBAT)
+		await _attendre()
+		var scene_combat: Control = current_scene
+		var sprite: Rect2 = scene_combat.image_ennemi.get_global_rect()
+		var plaque: Rect2 = scene_combat.texte_pv_ennemi.get_global_rect()
+		var meuble_haut: float = scene_combat.meuble.get_global_rect().position.y
+		verifier_dans_la_fenetre(scene_combat.image_ennemi, "%s : sprite" % chemin.get_basename())
+		verifier(sprite.position.y >= plaque.end.y - 4, "%s : le sprite est sous le nom et la jauge (haut %d, bas de la plaque %d)" % [chemin.get_basename(), sprite.position.y, plaque.end.y])
+		verifier(sprite.end.y > meuble_haut and sprite.end.y < meuble_haut + 80, "%s : ses pieds passent derrière le meuble (bas %d, haut du meuble %d)" % [chemin.get_basename(), sprite.end.y, meuble_haut])
+		verifier_dans_la_fenetre(scene_combat.bulle_intention, "%s : bulle d'intention" % chemin.get_basename())
+		verifier(scene_combat.bulle_intention.get_global_rect().position.y >= plaque.end.y - 4 or scene_combat.bulle_intention.get_global_rect().position.x > plaque.end.x, "%s : la bulle ne recouvre pas le nom" % chemin.get_basename())
+
 	# Mises et reliques sur l'écran de combat : sans relique d'abord.
 	GameState.nouvelle_partie()
 	GameState.partie.or_total = 50
@@ -248,6 +267,10 @@ func _initialize() -> void:
 	await _attendre()
 	var boutique_reliques: Control = current_scene
 	verifier(boutique_reliques.cartes_reliques.size() == 2, "2 reliques à vendre dans la boutique")
+	for carte in boutique_reliques.cartes_reliques + boutique_reliques.cartes_offres:
+		verifier(carte.get_minimum_size().y <= carte.size.y + 0.5, "carte de la boutique : son texte tient dans sa hauteur (texte %d, carte %d)" % [carte.get_minimum_size().y, carte.size.y])
+	var barre_du_sac: ScrollBar = boutique_reliques.zone_sac.get_v_scroll_bar()
+	verifier(barre_du_sac.max_value <= barre_du_sac.page + 1.0, "le sac de départ (5 lignes) tient dans la boutique sans que la dernière soit coupée (contenu %d, visible %d)" % [barre_du_sac.max_value, barre_du_sac.page])
 	for carte in boutique_reliques.cartes_reliques:
 		verifier_dans_la_fenetre(carte, "carte de relique à vendre")
 	verifier_dans_la_fenetre(boutique_reliques.zone_sac, "zone du sac (avec les reliques à vendre)")
@@ -269,15 +292,15 @@ func _initialize() -> void:
 	verifier(current_scene.cartes_reliques.is_empty(), "plus de relique à vendre quand on les a toutes")
 	verifier_dans_la_fenetre(current_scene.bouton_quitter, "bouton Quitter (toutes les reliques possédées)")
 
-	# La récompense mène aux portes du pas suivant.
+	# La récompense mène au combat du pas suivant (le combat est obligatoire : pas de porte après le pas 1).
 	GameState.nouvelle_partie()
 	aller_a_ecran(Partie.Ecran.RECOMPENSE)
 	await _attendre()
 	current_scene._choisir(null)
 	await _attendre()
-	verifier(current_scene.name == "Portes" and GameState.partie.pas == 2, "la récompense mène aux portes du pas 2 : %s" % current_scene.name)
+	verifier(current_scene.name == "Combat" and GameState.partie.pas == 2, "la récompense mène au combat du pas 2 : %s" % current_scene.name)
 
-	# Boss de l'étage 1 vaincu : l'écran des reliques (2 cartes), puis les portes de l'étage 2.
+	# Boss de l'étage 1 vaincu : l'écran des reliques (2 cartes), puis le premier combat de l'étage 2.
 	GameState.nouvelle_partie()
 	GameState.partie.aller_au_boss()
 	var combat_boss := GameState.partie.creer_combat()
@@ -295,15 +318,17 @@ func _initialize() -> void:
 	offerte.boutons[1].pressed.emit()
 	await _attendre()
 	verifier(GameState.partie.a_relique(choisie.id), "la relique choisie est possédée")
-	verifier(current_scene.name == "Portes" and GameState.partie.etage == 2 and GameState.partie.pas == 1,
-			"après la relique du boss : les portes de l'étage 2 : %s" % current_scene.name)
+	verifier(current_scene.name == "Combat" and GameState.partie.etage == 2 and GameState.partie.pas == 1,
+			"après la relique du boss : le premier combat de l'étage 2 : %s" % current_scene.name)
 
-	# Écran des portes : à chaque pas des 3 étages, les 2 portes et les textes tiennent dans la fenêtre.
+	# Écran des portes : après chaque pas qui propose des salles bonus, des 3 étages, les 2 portes et les textes
+	# tiennent dans la fenêtre.
 	for etage in range(1, 4):
-		for pas in range(1, 6):
+		for pas in Donjon.BONUS_APRES_PAS:
 			GameState.nouvelle_partie()
 			GameState.partie.etage = etage
 			GameState.partie.pas = pas
+			GameState.partie.ecran = Partie.Ecran.PORTES
 			GameState.aller_a_suivant()
 			await _attendre()
 			var portes_ecran: Control = current_scene
@@ -319,6 +344,7 @@ func _initialize() -> void:
 			GameState.lancer(Partie.creer(graine))
 			GameState.partie.etage = 3
 			GameState.partie.pas = 2
+			GameState.partie.ecran = Partie.Ecran.PORTES
 			GameState.aller_a_suivant()
 			await _attendre()
 			for texte in current_scene.textes_portes:
@@ -327,12 +353,13 @@ func _initialize() -> void:
 			break
 	verifier(avertit, "à l'étage 3, les portes de coffre préviennent des mimiques")
 
-	# Un clic sur une porte mène à l'écran de la salle (combat, boutique, coffre = relique, repos).
-	var attendus := {Salle.Type.COMBAT: "Combat", Salle.Type.BOUTIQUE: "Boutique", Salle.Type.COFFRE: "Relique", Salle.Type.REPOS: "Repos"}
+	# Un clic sur une porte bonus mène à l'écran de la salle (boutique, coffre = relique, repos).
+	var attendus := {Salle.Type.BOUTIQUE: "Boutique", Salle.Type.COFFRE: "Relique", Salle.Type.REPOS: "Repos"}
 	var types_testes := {}
 	for graine in 80:
 		GameState.lancer(Partie.creer(graine))
-		GameState.partie.pas = 2 + graine % 4
+		GameState.partie.pas = 2 if graine % 4 < 2 else 4
+		GameState.partie.ecran = Partie.Ecran.PORTES
 		var salle: Salle = GameState.partie.portes()[graine % 2]
 		if int(types_testes.get(salle.type, 0)) >= 2:
 			continue
@@ -342,7 +369,7 @@ func _initialize() -> void:
 		current_scene.boutons_portes[graine % 2].pressed.emit()
 		await _attendre()
 		verifier(current_scene.name == attendus[salle.type], "porte %s : l'écran « %s » s'ouvre" % [salle.nom_type(), current_scene.name])
-	verifier(types_testes.size() == 4, "les 4 types de salle ont été franchis par un clic")
+	verifier(types_testes.size() == 3, "les 3 types de salle bonus ont été franchis par un clic")
 
 	# Un coffre-mimique mène au combat de la Mimique, avec la surprise dans le journal.
 	var graine_mimique := -1
@@ -352,7 +379,7 @@ func _initialize() -> void:
 		if graine_mimique >= 0:
 			break
 		var donjon_test := Donjon.creer(graine)
-		for pas in range(1, 6):
+		for pas in Donjon.BONUS_APRES_PAS:
 			for i in 2:
 				if donjon_test.portes(3, pas)[i].mimique and graine_mimique < 0:
 					graine_mimique = graine
@@ -362,6 +389,7 @@ func _initialize() -> void:
 	GameState.lancer(Partie.creer(graine_mimique))
 	GameState.partie.etage = 3
 	GameState.partie.pas = pas_mimique
+	GameState.partie.ecran = Partie.Ecran.PORTES
 	GameState.aller_a_suivant()
 	await _attendre()
 	current_scene.boutons_portes[index_mimique].pressed.emit()
@@ -392,15 +420,15 @@ func _initialize() -> void:
 	await _attendre()
 	repos.bouton_soin.pressed.emit()
 	await _attendre()
-	verifier(GameState.partie.pv == 22 and current_scene.name == "Portes" and GameState.partie.pas == 2,
-			"se reposer rend 12 PV et mène aux portes du pas 2 : PV %d, %s" % [GameState.partie.pv, current_scene.name])
+	verifier(GameState.partie.pv == 22 and current_scene.name == "Combat" and GameState.partie.pas == 2,
+			"se reposer rend 12 PV et mène au combat du pas 2 : PV %d, %s" % [GameState.partie.pv, current_scene.name])
 	GameState.nouvelle_partie()
 	aller_a_ecran(Partie.Ecran.REPOS)
 	await _attendre()
 	current_scene._choisir_symbole()
 	current_scene._dorer(0)
 	await _attendre()
-	verifier(GameState.partie.sac.symboles[0].doree and current_scene.name == "Portes", "doré gratuitement, retour aux portes")
+	verifier(GameState.partie.sac.symboles[0].doree and current_scene.name == "Combat", "doré gratuitement, le combat suivant commence")
 	GameState.nouvelle_partie()
 	aller_a_ecran(Partie.Ecran.REPOS)
 	await _attendre()
@@ -445,16 +473,152 @@ func _initialize() -> void:
 	verifier(current_scene.texte_passif.visible and current_scene.texte_passif.text.contains("Règle du tour"),
 			"le Grand Croupier annonce la règle du tour : %s" % current_scene.texte_passif.text)
 
-	# Une partie qui n'attend pas un combat : l'écran de combat (écran principal) redirige vers les portes...
+	# Une partie qui n'attend pas un combat : l'écran de combat (écran principal) redirige vers l'écran attendu...
 	GameState.nouvelle_partie()
+	GameState.partie.ecran = Partie.Ecran.PORTES
 	GameState.aller_a(GameState.SCENE_COMBAT)
 	await _attendre()
-	verifier(current_scene.name == "Portes", "en partie, l'écran principal redirige vers les portes : %s" % current_scene.name)
-	# ... et au lancement du jeu (hors partie) vers le Comptoir.
+	verifier(current_scene.name == "Portes", "en partie, l'écran principal redirige vers l'écran attendu (les portes) : %s" % current_scene.name)
+	# ... et au lancement du jeu (hors partie, alors que la partie déjà créée commence sur un combat) vers le menu.
+	GameState.nouvelle_partie()
+	GameState.partie.ecran = Partie.Ecran.COMBAT
 	GameState.en_partie = false
 	GameState.aller_a(GameState.SCENE_COMBAT)
 	await _attendre()
-	verifier(current_scene.name == "Comptoir", "au lancement, l'écran principal mène au Comptoir : %s" % current_scene.name)
+	verifier(current_scene.name == "Menu", "au lancement, l'écran principal mène au menu principal : %s" % current_scene.name)
+
+	# --- Menu principal ---
+	GameState.options = Options.new()
+	var menu: Control = current_scene
+	for composant in [menu.bouton_jouer, menu.bouton_comptoir, menu.bouton_options, menu.bouton_quitter, menu.texte_titre, menu.texte_version]:
+		verifier_dans_la_fenetre(composant, "menu : %s" % composant.name)
+	verifier(menu.texte_version.text == Version.texte(), "le menu affiche la version : %s" % menu.texte_version.text)
+	menu.bouton_options.pressed.emit()
+	await _attendre()
+	verifier(current_scene.name == "Options", "« Options » ouvre les options : %s" % current_scene.name)
+
+	# --- Options ---
+	var reglages: Control = current_scene
+	for composant in [reglages.curseur_musique, reglages.curseur_effets, reglages.texte_musique, reglages.texte_effets,
+			reglages.case_plein_ecran, reglages.case_tremblements, reglages.case_flashs, reglages.bouton_credits,
+			reglages.bouton_retour, reglages.texte_message]:
+		verifier_dans_la_fenetre(composant, "options : %s" % composant.name)
+	verifier(reglages.curseur_musique.value == 60 and reglages.curseur_effets.value == 80, "les curseurs montrent 60 % et 80 %")
+	reglages.curseur_musique.value = 30
+	verifier(is_equal_approx(GameState.options.volume_musique, 0.3), "un curseur change l'option")
+	verifier(is_equal_approx(AudioServer.get_bus_volume_linear(AudioServer.get_bus_index(Son.BUS_MUSIQUE)), 0.09), "…et le gain du bus Musique (0,3 au carré = 0,09)")
+	verifier(reglages.texte_musique.text.contains("30"), "…et son texte : %s" % reglages.texte_musique.text)
+	reglages.curseur_effets.value = 0
+	verifier(AudioServer.is_bus_mute(AudioServer.get_bus_index(Son.BUS_EFFETS)), "effets à 0 : le bus Effets est coupé")
+	reglages.case_tremblements.button_pressed = true
+	reglages.case_flashs.button_pressed = true
+	verifier(GameState.options.reduire_tremblements and GameState.options.reduire_flashs, "les cases d'accessibilité changent les options")
+	var neon_titre := reglages.titre_options.material as ShaderMaterial
+	verifier(neon_titre != null and is_zero_approx(float(neon_titre.get_shader_parameter("amplitude"))), "« Réduire les flashs » coupe tout de suite le pulsement du titre néon")
+	reglages.bouton_credits.pressed.emit()
+	verifier(reglages.texte_credits.visible, "« Crédits » affiche les crédits")
+	verifier_dans_la_fenetre(reglages.texte_credits, "texte des crédits")
+	# --- Plein écran : bouton en haut à droite et Alt+Entrée, sur tous les écrans ---
+	var plein := PleinEcran.instance
+	verifier(is_instance_valid(plein) and plein.is_inside_tree() and plein.bouton != null, "le bouton plein écran est installé à la racine du jeu")
+	verifier_dans_la_fenetre(plein.bouton, "bouton plein écran")
+	verifier(plein.bouton.focus_mode == Control.FOCUS_NONE, "…sans focus (Espace et Entrée ne le déclenchent pas)")
+	var etat_avant := GameState.options.plein_ecran
+	plein.bouton.pressed.emit()
+	verifier(GameState.options.plein_ecran != etat_avant, "le bouton bascule l'option plein écran")
+	verifier(reglages.case_plein_ecran.button_pressed == GameState.options.plein_ecran, "…et la case des Options suit")
+	var entree_seule := InputEventKey.new()
+	entree_seule.keycode = KEY_ENTER
+	entree_seule.pressed = true
+	plein._input(entree_seule)
+	verifier(GameState.options.plein_ecran != etat_avant, "Entrée seule ne bascule pas le plein écran")
+	var alt_entree := InputEventKey.new()
+	alt_entree.keycode = KEY_ENTER
+	alt_entree.alt_pressed = true
+	alt_entree.pressed = true
+	plein._input(alt_entree)
+	verifier(GameState.options.plein_ecran == etat_avant, "Alt+Entrée bascule le plein écran")
+	verifier(not PleinEcran.est_integre(), "les tests ne tournent pas dans la fenêtre intégrée de l'éditeur")
+	plein.montrer_message("essai")
+	verifier(plein.message.visible and plein.message.text == "essai", "le message passager du plein écran s'affiche")
+	plein.message.hide()
+	GameState.options = Options.new()
+	GameState.appliquer_options()
+	var echap := InputEventKey.new()
+	echap.physical_keycode = KEY_ESCAPE
+	echap.pressed = true
+	reglages._unhandled_input(echap)
+	await _attendre()
+	verifier(current_scene.name == "Menu", "Échap revient au menu : %s" % current_scene.name)
+	current_scene.bouton_comptoir.pressed.emit()
+	await _attendre()
+	verifier(current_scene.name == "Comptoir", "« Comptoir du Croupier » ouvre le Comptoir : %s" % current_scene.name)
+	verifier_dans_la_fenetre(current_scene.bouton_menu, "bouton Menu du Comptoir")
+	current_scene._unhandled_input(echap)
+	await _attendre()
+	verifier(current_scene.name == "Menu", "Échap au Comptoir : retour au menu")
+	current_scene.bouton_jouer.pressed.emit()
+	await _attendre()
+	verifier(current_scene.name == "Combat" and GameState.en_partie, "« Jouer » lance une partie, directement sur le premier combat (obligatoire) : %s" % current_scene.name)
+	# Espace (action « levier ») tire le levier. Contre le rat : la porte tirée au hasard pourrait mener à un
+	# Pickpocket (qui s'enfuit au premier tour) ou à une salle sans combat, et le test ne serait pas stable.
+	GameState.partie.choisir_porte(0)
+	GameState.partie.ennemi_courant = load("res://data/enemies/rat_egout.tres") as EnemyData
+	GameState.partie.ecran = Partie.Ecran.COMBAT
+	GameState.aller_a_suivant()
+	await _attendre()
+	# Beaucoup de PV pour les deux camps dès le départ : un tirage chanceux ne doit pas finir le combat avant l'animation.
+	current_scene.combat.pv_ennemi = 500
+	current_scene.combat.pv_joueur = 500
+	var espace := InputEventKey.new()
+	espace.physical_keycode = KEY_SPACE
+	espace.pressed = true
+	var avant_tour: int = current_scene.combat.numero_tour
+	current_scene._unhandled_input(espace)
+	verifier(current_scene.combat.numero_tour == avant_tour + 1 or current_scene.combat.tirage_en_attente or current_scene.combat.est_fini(), "la barre d'espace tire le levier")
+	# --- Les rouleaux s'arrêtent un par un ---
+	var anime: Control = current_scene
+	anime.forcer_animation = true
+	# Un tirage chanceux pourrait tuer le rat : on lui donne beaucoup de PV (et au joueur) pour que ce test soit stable.
+	anime.combat.pv_ennemi = 500
+	anime.combat.pv_joueur = 500
+	var tour_avant_anim: int = anime.combat.numero_tour
+	anime._tirer()
+	verifier(anime.animation_en_cours and anime.combat.numero_tour == tour_avant_anim + 1, "le tour est calculé tout de suite, les rouleaux s'arrêtent ensuite")
+	verifier(anime._en_rotation[0] and anime._en_rotation[4] and anime._fenetres[0].visible and anime._fenetres[4].visible, "au début, tous les rouleaux tournent (les symboles défilent)")
+	await create_timer(0.7).timeout
+	verifier(not anime._en_rotation[0] and not anime._fenetres[0].visible and anime.etiquettes[0].text != "", "au bout d'un instant, le premier rouleau est arrêté et affiche son symbole")
+	verifier(anime._en_rotation[4] and anime._fenetres[4].visible, "…pendant que le dernier tourne encore")
+	await create_timer(1.5).timeout
+	verifier(anime._en_rotation[4], "le dernier rouleau se fait attendre (suspense) : il tourne encore après 2,2 s")
+	await create_timer(1.3).timeout
+	verifier(not anime.animation_en_cours and not anime._en_rotation[4] and anime.etiquettes[4].text != "", "au bout de ~3,5 s au plus, tous les rouleaux sont arrêtés")
+	verifier(anime.texte_journal.text.contains("Tour"), "…et le journal du tour est alors affiché : %s" % anime.texte_journal.text.left(30).replace("
+", " "))
+	var tour_apres: int = anime.combat.numero_tour
+	anime._tirer()
+	verifier(anime.animation_en_cours, "un nouveau tirage relance l'animation")
+	anime._tirer()
+	verifier(not anime.animation_en_cours and not anime._fenetres[4].visible and anime.etiquettes[4].text != "", "Espace pendant l'animation l'accélère : tous les rouleaux sont arrêtés d'un coup")
+	verifier(anime.combat.numero_tour == tour_apres + 1 or anime.combat.est_fini(), "…sans jouer un tour de plus (un seul tour par tirage)")
+	anime.forcer_animation = false
+
+	# Avec une relique de relance, le tirage n'est annoncé (journal, boutons) qu'une fois le dernier rouleau arrêté.
+	GameState.nouvelle_partie()
+	GameState.partie.ajouter_relique(Reliques.charger(&"de_pipe"))
+	aller_au_combat()
+	await _attendre()
+	var avec_relance: Control = current_scene
+	avec_relance.forcer_animation = true
+	avec_relance._tirer()
+	verifier(avec_relance.animation_en_cours and avec_relance.combat.tirage_en_attente, "avec le Dé pipé, le tirage attend sa validation pendant que les rouleaux tournent")
+	verifier(not avec_relance.ligne_relance.visible and not avec_relance.texte_journal.text.contains("Tirage affiché"), "…mais rien n'est annoncé tant qu'ils tournent (ni boutons, ni combo dans le journal)")
+	avec_relance._terminer_animation()
+	verifier(avec_relance.ligne_relance.visible and avec_relance.texte_journal.text.contains("Tirage affiché"), "…une fois les rouleaux arrêtés, le tirage et les boutons Valider / relance apparaissent")
+	avec_relance.forcer_animation = false
+
+	# Le menu et les options ne touchent pas à ce que le profil de test contient.
+	GameState.en_partie = false
 
 	# --- Comptoir du Croupier ---
 	var profil := Profil.nouveau()
@@ -497,7 +661,7 @@ func _initialize() -> void:
 	# « Jouer » : la partie démarre avec les avantages et les malédictions du profil.
 	comptoir_ecran.bouton_jouer.pressed.emit()
 	await _attendre()
-	verifier(current_scene.name == "Portes" and GameState.en_partie, "« Jouer » mène aux portes d'une nouvelle partie : %s" % current_scene.name)
+	verifier(current_scene.name == "Combat" and GameState.en_partie, "« Jouer » mène au premier combat d'une nouvelle partie : %s" % current_scene.name)
 	verifier(GameState.partie.profil == profil and GameState.partie.pv_max == 40 + 15 and GameState.partie.maledictions.size() == 3,
 			"la partie a les avantages (+15 PV) et les 3 malédictions du profil")
 	# Test du bouton de test et de la remise à zéro.
@@ -525,7 +689,7 @@ func _initialize() -> void:
 	verifier(fin_bilan.texte_jetons != null and profil_fin.jetons == 14, "défaite après 9 salles et 1 boss : 14 jetons enregistrés (%d)" % profil_fin.jetons)
 	verifier(fin_bilan.texte_malediction != null and fin_bilan.texte_malediction.text.contains("effacée"), "l'écran dit qu'une malédiction est effacée (le boss)")
 	verifier(fin_bilan.texte_malediction.text.contains("reçue"), "…et qu'une nouvelle est reçue")
-	for composant in [fin_bilan.texte_jetons, fin_bilan.texte_malediction, fin_bilan.bouton_rejouer, fin_bilan.bouton_comptoir]:
+	for composant in [fin_bilan.texte_jetons, fin_bilan.texte_malediction, fin_bilan.bouton_rejouer, fin_bilan.bouton_comptoir, fin_bilan.bouton_menu]:
 		verifier_dans_la_fenetre(composant, "fin de partie : %s" % composant.name)
 	var jetons_apres := profil_fin.jetons
 	GameState.aller_a_suivant()

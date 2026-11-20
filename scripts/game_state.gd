@@ -7,6 +7,8 @@ extends RefCounted
 ## que l'éditeur Godot ouvert peut réécrire sans la déclaration (le jeu plantait alors avec
 ## « Identifier not found: GameState »). Une classe à membres statiques se trouve partout.
 
+const SCENE_MENU := "res://scenes/menu.tscn"
+const SCENE_OPTIONS := "res://scenes/options.tscn"
 const SCENE_COMPTOIR := "res://scenes/comptoir.tscn"
 const SCENE_PORTES := "res://scenes/portes.tscn"
 const SCENE_COMBAT := "res://scenes/combat.tscn"
@@ -30,7 +32,60 @@ static var message_profil: String = ""
 ## une vraie lecture du fichier du joueur. Un test ou un outil qui prépare son propre profil ne passe jamais
 ## par cette lecture : il n'écrit donc jamais dans le vrai profil.
 static var _ecriture_permise: bool = false
+
+## Les réglages du joueur (volumes, plein écran, accessibilité). Chargés une seule fois, comme le profil.
+static var options: Options
+static var _ecriture_options_permise: bool = false
+static var _demarre: bool = false
 static var _hasard_du_profil: RandomNumberGenerator
+
+
+## Prépare ce que tout le jeu utilise : les actions d'entrée, les bus audio, les options du joueur.
+## Idempotent : chaque écran peut l'appeler dans son _ready(). C'est ce qui fait marcher le jeu quand on
+## lance directement l'écran principal du projet.
+static func demarrer() -> void:
+	if _demarre:
+		return
+	_demarre = true
+	(Engine.get_main_loop() as SceneTree).root.tree_exiting.connect(func() -> void:
+		Engine.time_scale = 1.0
+		Son.liberer()
+		Musique.liberer())
+	Entrees.enregistrer()
+	charger_options()
+	appliquer_options()
+	PleinEcran.installer()
+
+
+## Charge les options (une seule fois). Sans sauvegarde possible (mode sans fenêtre), les options par défaut.
+static func charger_options() -> void:
+	if options != null:
+		return
+	if _sauvegarde_active():
+		var chargement := OptionsFichier.charger(OptionsFichier.CHEMIN_DEFAUT)
+		options = chargement.options
+		_ecriture_options_permise = chargement.ecriture_permise
+	else:
+		options = Options.new()
+
+
+## Écrit les options sur le disque (si la sauvegarde est active et permise). Renvoie faux en cas d'échec.
+static func sauver_options() -> bool:
+	if options == null or not _sauvegarde_active() or not _ecriture_options_permise:
+		return true
+	return OptionsFichier.sauver(options, OptionsFichier.CHEMIN_DEFAUT) == OK
+
+
+## Applique les options : volumes des bus et plein écran (pas de changement de fenêtre en mode sans fenêtre).
+static func appliquer_options() -> void:
+	charger_options()
+	Son.appliquer_options(options)
+	if _sauvegarde_active() and not PleinEcran.est_integre():
+		# Le mode n'est touché que s'il doit changer : une fenêtre agrandie par le joueur le reste.
+		var en_plein_ecran := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
+		if options.plein_ecran != en_plein_ecran:
+			DisplayServer.window_set_mode(
+					DisplayServer.WINDOW_MODE_FULLSCREEN if options.plein_ecran else DisplayServer.WINDOW_MODE_WINDOWED)
 
 
 ## Commence une nouvelle partie avec le profil (s'il est chargé) : avantages et malédictions comprises.
@@ -49,6 +104,12 @@ static func lancer(une_partie: Partie) -> void:
 static func vers_le_comptoir() -> void:
 	en_partie = false
 	aller_a(SCENE_COMPTOIR)
+
+
+## Retourne au menu principal (hors partie).
+static func vers_le_menu() -> void:
+	en_partie = false
+	aller_a(SCENE_MENU)
 
 
 ## La sauvegarde du profil n'existe que dans le jeu lui-même : jamais en mode sans fenêtre (tests,
@@ -116,12 +177,12 @@ static func scene_de(ecran: Partie.Ecran) -> String:
 	return SCENE_PORTES
 
 
-## La scène à afficher maintenant : le Comptoir hors partie, sinon l'écran que la partie demande.
+## La scène à afficher maintenant : le menu principal hors partie, sinon l'écran que la partie demande.
 static func scene_attendue() -> String:
-	return scene_de(partie.ecran) if en_partie else SCENE_COMPTOIR
+	return scene_de(partie.ecran) if en_partie else SCENE_MENU
 
 
-## Va à l'écran attendu maintenant (Comptoir, portes, combat, boutique...).
+## Va à l'écran attendu maintenant (menu, portes, combat, boutique...).
 static func aller_a_suivant() -> void:
 	aller_a(scene_attendue())
 
@@ -129,6 +190,7 @@ static func aller_a_suivant() -> void:
 ## Comme aller_a_suivant, mais plus tard dans l'image : pour un écran qui s'aperçoit dans son
 ## _ready() que la partie attend un autre écran (changer de scène pendant _ready() est refusé).
 static func rediriger() -> void:
+	demarrer()
 	var arbre := Engine.get_main_loop() as SceneTree
 	arbre.call_deferred("change_scene_to_file", scene_attendue())
 

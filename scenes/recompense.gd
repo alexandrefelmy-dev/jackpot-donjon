@@ -15,6 +15,8 @@ func _ready() -> void:
 	if partie.ecran != Partie.Ecran.RECOMPENSE:
 		GameState.rediriger()
 		return
+	GameState.demarrer()
+	Musique.jouer_pour(partie)
 	propositions = partie.proposer_recompenses()
 	_construire_interface()
 
@@ -25,6 +27,7 @@ func _choisir(symbole: SymbolData) -> void:
 	for bouton in boutons:
 		bouton.disabled = true
 	bouton_passer.disabled = true
+	Son.jouer(&"achat" if symbole != null else &"clic")
 	if symbole != null:
 		partie.choisir_recompense(symbole)
 	partie.terminer_recompense()
@@ -40,10 +43,7 @@ func _compter_dans_le_sac(symbole: SymbolData) -> int:
 
 
 func _construire_interface() -> void:
-	var fond := ColorRect.new()
-	fond.color = COULEUR_FOND
-	fond.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(fond)
+	Cartes.ajouter_fond(self, COULEUR_FOND, true)
 
 	var centre := CenterContainer.new()
 	centre.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -57,6 +57,7 @@ func _construire_interface() -> void:
 	titre.text = tr("Victoire ! Choisis une récompense")
 	titre.add_theme_font_size_override("font_size", 32)
 	titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	Habillage.titre(titre)
 	colonne.add_child(titre)
 
 	var infos := Label.new()
@@ -104,5 +105,9 @@ func _creer_carte(symbole: SymbolData) -> Button:
 	carte.tooltip_text = tr("Ajouter %s à ton sac") % tr(symbole.nom)
 
 	Cartes.habiller_bouton(carte, symbole.couleur)
+	Cartes.ajouter_ornement(carte)
+	carte.icon = Images.icone(symbole.icone, 48)
+	carte.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	carte.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
 	carte.pressed.connect(_choisir.bind(symbole))
 	return carte

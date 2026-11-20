@@ -30,6 +30,8 @@ func _ready() -> void:
 	if partie.ecran != Partie.Ecran.REPOS:
 		GameState.rediriger()
 		return
+	GameState.demarrer()
+	Musique.jouer_pour(partie)
 	_construire_interface()
 	_rafraichir()
 
@@ -40,6 +42,7 @@ func _se_reposer() -> void:
 	if partie.soin_du_repos() <= 0:
 		return
 	partie.repos_soigner()
+	Son.jouer(&"soin")
 	GameState.aller_a_suivant()
 
 
@@ -61,6 +64,7 @@ func _annuler() -> void:
 
 func _dorer(index_sac: int) -> void:
 	if partie.repos_dorer(index_sac):
+		Son.jouer(&"achat")
 		GameState.aller_a_suivant()
 
 
@@ -114,10 +118,7 @@ func _rafraichir_sac() -> void:
 # --- Construction de l'interface (en code) -----------------------------------
 
 func _construire_interface() -> void:
-	var fond := ColorRect.new()
-	fond.color = COULEUR_FOND
-	fond.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(fond)
+	Cartes.ajouter_fond(self, COULEUR_FOND, true)
 
 	var marge := MarginContainer.new()
 	marge.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -133,6 +134,7 @@ func _construire_interface() -> void:
 	titre.text = tr("Un feu de camp : repos")
 	titre.add_theme_font_size_override("font_size", 34)
 	titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	Habillage.titre(titre)
 	page.add_child(titre)
 
 	texte_infos = Label.new()

@@ -12,11 +12,15 @@ var texte_jetons: Label
 var texte_malediction: Label
 var bouton_rejouer: Button
 var bouton_comptoir: Button
+var bouton_menu: Button
 
 
 func _ready() -> void:
 	partie = GameState.partie
 	# Les jetons et la malédiction sont inscrits au profil une seule fois, même si l'écran est rechargé.
+	GameState.demarrer()
+	Musique.jouer(&"")
+	# Pas de jingle ici : celui de la victoire ou de la défaite a déjà sonné à la fin du dernier combat.
 	GameState.enregistrer_bilan()
 	_construire_interface()
 
@@ -26,15 +30,16 @@ func _rejouer() -> void:
 	GameState.aller_a_suivant()
 
 
+func _aller_au_menu() -> void:
+	GameState.vers_le_menu()
+
+
 func _aller_au_comptoir() -> void:
 	GameState.vers_le_comptoir()
 
 
 func _construire_interface() -> void:
-	var fond := ColorRect.new()
-	fond.color = COULEUR_FOND
-	fond.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(fond)
+	Cartes.ajouter_fond(self, COULEUR_FOND, true)
 
 	var centre := CenterContainer.new()
 	centre.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -50,6 +55,7 @@ func _construire_interface() -> void:
 	titre.add_theme_font_size_override("font_size", 56)
 	titre.add_theme_color_override("font_color", COULEUR_VICTOIRE if victoire else COULEUR_DEFAITE)
 	titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	Cartes.neon(titre, COULEUR_VICTOIRE if victoire else COULEUR_DEFAITE)
 	colonne.add_child(titre)
 
 	var sous_titre := Label.new()
@@ -58,7 +64,7 @@ func _construire_interface() -> void:
 	elif partie.est_combat_de_boss():
 		sous_titre.text = tr("Tu es tombé face au boss de l'étage %d. Le donjon recommence à zéro.") % partie.etage
 	else:
-		sous_titre.text = tr("Tu es tombé à l'étage %d, salle %d. Le donjon recommence à zéro.") % [partie.etage, partie.pas]
+		sous_titre.text = tr("Tu es tombé à l'étage %d, combat %d. Le donjon recommence à zéro.") % [partie.etage, partie.pas]
 	sous_titre.add_theme_font_size_override("font_size", 22)
 	sous_titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	colonne.add_child(sous_titre)
@@ -108,12 +114,10 @@ func _construire_interface() -> void:
 	boutons.add_child(bouton_rejouer)
 	bouton_comptoir = _creer_bouton(tr("Comptoir du Croupier"), _aller_au_comptoir)
 	boutons.add_child(bouton_comptoir)
+	bouton_menu = _creer_bouton(tr("Menu"), _aller_au_menu)
+	bouton_menu.custom_minimum_size = Vector2(160, 56)
+	boutons.add_child(bouton_menu)
 
 
 func _creer_bouton(texte: String, action: Callable) -> Button:
-	var bouton := Button.new()
-	bouton.text = texte
-	bouton.custom_minimum_size = Vector2(240, 56)
-	bouton.focus_mode = Control.FOCUS_NONE
-	bouton.pressed.connect(action)
-	return bouton
+	return Cartes.creer_bouton(texte, Vector2(240, 56), action)

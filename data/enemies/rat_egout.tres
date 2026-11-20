@@ -6,10 +6,11 @@
 script = ExtResource("1_enemy")
 id = &"rat_egout"
 nom = "Rat d'égout"
+images = "tiny_slug_anim"
 couleur = Color(0.55, 0.45, 0.38, 1)
-pv_max = 12
+pv_max = 11
 or_victoire = 8
 intentions = Array[Dictionary]([{
 "type": "attaque",
-"valeur": 8
+"valeur": 7
 }])

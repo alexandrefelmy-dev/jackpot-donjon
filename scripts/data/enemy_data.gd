@@ -10,6 +10,8 @@ extends Resource
 @export var nom: String = ""
 ## Couleur de l'ennemi, en attendant les vrais graphismes.
 @export var couleur: Color = Color.GRAY
+## Nom des images de l'ennemi dans assets/images/ (sans « _f0.png ») : ses images d'attente sont `images_f0`, `images_f1`...
+@export var images: String = ""
 ## Étage où l'ennemi apparaît (1 = Les Cryptes).
 @export var etage: int = 1
 ## Vrai pour le boss qui garde la fin de l'étage.

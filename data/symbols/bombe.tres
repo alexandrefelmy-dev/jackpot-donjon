@@ -6,6 +6,7 @@
 script = ExtResource("1_symbol")
 id = &"bombe"
 nom = "Bombe"
+icone = "bomb_f0"
 couleur = Color(0.35, 0.35, 0.4, 1)
 prix = 14
 effet_base = {

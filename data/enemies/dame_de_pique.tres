@@ -6,6 +6,7 @@
 script = ExtResource("1_enemy")
 id = &"dame_de_pique"
 nom = "La Dame de Pique"
+images = "necromancer_anim"
 couleur = Color(0.3, 0.25, 0.4, 1)
 etage = 2
 est_boss = true

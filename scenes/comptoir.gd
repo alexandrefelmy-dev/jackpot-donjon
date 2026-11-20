@@ -3,7 +3,7 @@ extends Control
 ## on y dépense ses jetons d'âme en avantages permanents, on voit ses malédictions, puis on joue.
 
 const COULEUR_FOND := Color("1b1a24")
-const TAILLE_CARTE := Vector2(330, 112)
+const TAILLE_CARTE := Vector2(330, 126)
 ## Couleur de chaque achat (en attendant les vrais graphismes).
 const COULEURS: Dictionary = {
 	Comptoir.Achat.SYMBOLE: Color("4f7f6a"),
@@ -20,12 +20,15 @@ var texte_jetons: Label
 var texte_message: Label
 var texte_maledictions: Label
 var texte_debloques: Label
+var bouton_menu: Button
 var bouton_jouer: Button
 var bouton_debug_jetons: Button
 var bouton_debug_reset: Button
 
 
 func _ready() -> void:
+	GameState.demarrer()
+	Musique.jouer_menu()
 	GameState.charger_profil()
 	GameState.en_partie = false
 	comptoir = Comptoir.creer(GameState.profil)
@@ -37,9 +40,20 @@ func _ready() -> void:
 
 # --- Actions -----------------------------------------------------------------
 
+func _unhandled_input(evenement: InputEvent) -> void:
+	if evenement.is_action_pressed(Entrees.RETOUR):
+		_menu()
+
+
+func _menu() -> void:
+	Son.jouer(&"clic")
+	GameState.vers_le_menu()
+
+
 func _acheter(achat: Comptoir.Achat) -> void:
 	var titre := comptoir.titre(achat)
 	if comptoir.acheter(achat):
+		Son.jouer(&"achat")
 		if not GameState.sauver_profil():
 			texte_message.text = GameState.message_profil
 			_rafraichir()
@@ -55,6 +69,7 @@ func _acheter(achat: Comptoir.Achat) -> void:
 
 func _jouer() -> void:
 	bouton_jouer.disabled = true
+	Son.jouer(&"clic")
 	GameState.nouvelle_partie()
 	GameState.aller_a_suivant()
 
@@ -116,10 +131,7 @@ func _rafraichir() -> void:
 # --- Construction de l'interface (en code) -----------------------------------
 
 func _construire_interface() -> void:
-	var fond := ColorRect.new()
-	fond.color = COULEUR_FOND
-	fond.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(fond)
+	Cartes.ajouter_fond(self, COULEUR_FOND)
 
 	var marge := MarginContainer.new()
 	marge.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -134,6 +146,7 @@ func _construire_interface() -> void:
 	var titre := Label.new()
 	titre.text = tr("Comptoir du Croupier")
 	titre.add_theme_font_size_override("font_size", 32)
+	Habillage.titre(titre, Cartes.COULEUR_JETONS)
 	page.add_child(titre)
 
 	texte_jetons = Label.new()
@@ -194,6 +207,12 @@ func _construire_interface() -> void:
 	bouton_jouer.focus_mode = Control.FOCUS_NONE
 	bouton_jouer.pressed.connect(_jouer)
 	bas.add_child(bouton_jouer)
+	bouton_menu = Button.new()
+	bouton_menu.text = tr("Menu")
+	bouton_menu.custom_minimum_size = Vector2(140, 52)
+	bouton_menu.focus_mode = Control.FOCUS_NONE
+	bouton_menu.pressed.connect(_menu)
+	bas.add_child(bouton_menu)
 	if OS.is_debug_build():
 		bouton_debug_jetons = Button.new()
 		bouton_debug_jetons.text = tr("[test] +50 jetons")

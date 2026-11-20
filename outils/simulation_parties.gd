@@ -1,6 +1,6 @@
 extends SceneTree
 ## OUTIL : joue des parties ENTIÈRES à travers les vraies scènes (Comptoir, portes, combat, récompense,
-## relique, boutique, repos, fin), en cliquant comme un joueur : portes au hasard, mises, relances,
+## relique, boutique, repos, fin), en cliquant comme un joueur : portes bonus au hasard, mises, relances,
 ## achats, soins, dorures. Vérifie qu'aucun écran ne bloque ni ne plante.
 ## Trois passes : sans relique, avec les 9 reliques, puis « increvable » (beaucoup de PV, pour
 ## aller jusqu'aux étages 2 et 3 : Dame de Pique, mimiques, Grand Croupier, victoire).
@@ -16,7 +16,7 @@ const PARTIES_PAR_PASSE := 20
 var etats := {"victoire": 0, "defaite": 0}
 var erreurs := 0
 var vu := {
-	"porte_combat": 0, "porte_boutique": 0, "porte_coffre": 0, "porte_repos": 0,
+	"combat": 0, "porte_boutique": 0, "porte_coffre": 0, "porte_repos": 0,
 	"mimique": 0, "fuite": 0, "boss": 0, "relique_offerte": 0, "relique_achetee": 0,
 	"repos_soin": 0, "repos_dore": 0, "mise": 0, "relance_pipe": 0, "relance_as": 0,
 	"attente": 0, "etage_2": 0, "etage_3": 0,
@@ -48,7 +48,7 @@ func _initialize() -> void:
 		await _jouer(PARTIES_PAR_PASSE)
 		print("passe 3 (increvable) : ", etats, " erreurs ", erreurs)
 		# Les parties increvables doivent tout avoir vu : sinon une salle ou un ennemi n'est jamais joué.
-		for obligatoire in ["porte_combat", "porte_boutique", "porte_coffre", "porte_repos", "mimique", "fuite",
+		for obligatoire in ["combat", "porte_boutique", "porte_coffre", "porte_repos", "mimique", "fuite",
 				"boss", "relique_offerte", "repos_soin", "repos_dore", "etage_2", "etage_3"]:
 			if int(vu[obligatoire]) == 0:
 				print("ERREUR : « %s » n'a jamais été joué pendant la simulation" % obligatoire)
@@ -99,6 +99,13 @@ func _jouer(nb_parties: int) -> void:
 	while parties < nb_parties and etapes < 40000:
 		etapes += 1
 		match _nom_scene():
+			"Menu":
+				# Tantôt « Jouer » directement, tantôt par le Comptoir.
+				if hasard.randi_range(0, 1) == 0:
+					current_scene.bouton_jouer.pressed.emit()
+				else:
+					current_scene.bouton_comptoir.pressed.emit()
+				await _attendre()
 			"Comptoir":
 				_jouer_comptoir()
 				await _attendre()
@@ -107,6 +114,7 @@ func _jouer(nb_parties: int) -> void:
 				_jouer_portes()
 				await _attendre()
 			"Combat":
+				_regler_la_partie()  # la partie s'ouvre sur un combat : les réglages de la passe valent dès le début
 				_jouer_combat()
 				current_scene._continuer()
 				await _attendre()
@@ -158,14 +166,14 @@ func _jouer_comptoir() -> void:
 	ecran.bouton_jouer.pressed.emit()
 
 
-## Les portes : une au hasard, en comptant ce qu'on franchit.
+## Les portes bonus (après les pas 2 et 4) : une au hasard, en comptant ce qu'on franchit.
+## Un combat n'est jamais proposé en porte : il est obligatoire.
 func _jouer_portes() -> void:
 	var ecran: Control = current_scene
 	var partie: Partie = ecran.partie
-	if partie.etage == 2:
-		vu["etage_2"] += 1
-	elif partie.etage == 3:
-		vu["etage_3"] += 1
+	if not partie.pas in Donjon.BONUS_APRES_PAS:
+		print("ERREUR : des portes au pas %d, alors que seuls les pas %s en ont" % [partie.pas, str(Donjon.BONUS_APRES_PAS)])
+		erreurs += 1
 	if ecran.boutons_portes.size() != 2:
 		print("ERREUR : %d portes au lieu de 2" % ecran.boutons_portes.size())
 		erreurs += 1
@@ -173,7 +181,8 @@ func _jouer_portes() -> void:
 	var salle: Salle = ecran.portes[index]
 	match salle.type:
 		Salle.Type.COMBAT:
-			vu["porte_combat"] += 1
+			print("ERREUR : un combat est proposé en porte (il doit être obligatoire)")
+			erreurs += 1
 		Salle.Type.BOUTIQUE:
 			vu["porte_boutique"] += 1
 		Salle.Type.COFFRE:
@@ -188,8 +197,14 @@ func _jouer_portes() -> void:
 ## Un combat entier : mise au hasard, levier, relances au hasard, validation.
 func _jouer_combat() -> void:
 	var ecran: Control = current_scene
+	if ecran.partie.etage == 2:
+		vu["etage_2"] += 1
+	elif ecran.partie.etage == 3:
+		vu["etage_3"] += 1
 	if ecran.combat.ennemi.est_boss:
 		vu["boss"] += 1
+	else:
+		vu["combat"] += 1
 	var tours := 0
 	while not ecran.combat.est_fini() and tours < 400:
 		var possibles: Array[int] = []
@@ -201,6 +216,7 @@ func _jouer_combat() -> void:
 		if choix > 0:
 			vu["mise"] += 1
 		ecran._tirer()
+		ecran._terminer_animation()  # fenêtre réelle : les rouleaux s'arrêtent un par un, on n'attend pas
 		if ecran.combat.tirage_en_attente:
 			vu["attente"] += 1
 			if hasard.randi_range(0, 1) == 0 and ecran.bouton_de_pipe.visible and not ecran.bouton_de_pipe.disabled:
@@ -222,6 +238,7 @@ func _jouer_combat() -> void:
 						print("ERREUR : le choix du rouleau reste ouvert après avoir gardé un rouleau")
 						erreurs += 1
 			ecran.bouton_valider.pressed.emit()
+			ecran._terminer_animation()
 			if ecran.combat.tirage_en_attente:
 				print("ERREUR : le tirage attend encore après « Valider »")
 				erreurs += 1

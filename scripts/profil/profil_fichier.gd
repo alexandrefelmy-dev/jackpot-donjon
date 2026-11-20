@@ -35,7 +35,7 @@ static func charger(chemin: String, migrations: Dictionary = MIGRATIONS) -> Char
 		if not FileAccess.file_exists(candidat):
 			continue
 		un_fichier_existe = true
-		var donnees := _lire_json(candidat)
+		var donnees := FichierSur.lire_json(candidat)
 		if donnees.is_empty() or _entier_ou(donnees.get("version"), -1) < 0:
 			continue
 		var version := _entier_ou(donnees.get("version"), -1)
@@ -71,36 +71,9 @@ static func migrer(donnees: Dictionary, migrations: Dictionary = MIGRATIONS) -> 
 	return courant
 
 
-## Écrit le profil à `chemin`, de façon sûre. Renvoie OK ou le code d'erreur (à montrer au joueur).
+## Écrit le profil à `chemin`, de façon sûre (voir FichierSur). Renvoie OK ou le code d'erreur.
 static func sauver(profil: Profil, chemin: String) -> Error:
-	var absolu := ProjectSettings.globalize_path(chemin)
-	var temporaire := absolu + ".tmp"
-	var fichier := FileAccess.open(temporaire, FileAccess.WRITE)
-	if fichier == null:
-		return FileAccess.get_open_error()
-	var ecrit := fichier.store_string(JSON.stringify(profil.en_dictionnaire(), "\t"))
-	fichier.close()
-	if not ecrit:
-		return ERR_FILE_CANT_WRITE
-	if FileAccess.file_exists(chemin):
-		if _lire_json(chemin).is_empty():
-			# Le fichier actuel est abîmé : il ne doit pas écraser un bon « .bak ».
-			DirAccess.remove_absolute(absolu)
-		else:
-			if FileAccess.file_exists(chemin + ".bak"):
-				DirAccess.remove_absolute(absolu + ".bak")
-			var erreur := DirAccess.rename_absolute(absolu, absolu + ".bak")
-			if erreur != OK:
-				return erreur
-	return DirAccess.rename_absolute(temporaire, absolu)
-
-
-## Le contenu d'un fichier JSON sous forme de dictionnaire ({} si absent, abîmé ou pas un dictionnaire).
-static func _lire_json(chemin: String) -> Dictionary:
-	var json := JSON.new()
-	if json.parse(FileAccess.get_file_as_string(chemin)) != OK:
-		return {}
-	return json.data if json.data is Dictionary else {}
+	return FichierSur.ecrire(profil.en_dictionnaire(), chemin)
 
 
 static func _entier_ou(valeur: Variant, par_defaut: int) -> int:

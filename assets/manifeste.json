@@ -1,0 +1,724 @@
+[
+ {
+  "fichier": "assets/sons/chip-lay-1.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/chip-lay-2.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/chip-lay-3.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/chips-collide-1.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/chips-collide-2.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/chips-collide-3.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/chips-collide-4.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/chips-stack-1.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/chips-stack-2.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/chips-stack-3.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/card-place-1.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/card-place-2.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/card-place-3.ogg",
+  "auteur": "Kenney",
+  "source": "https://kenney.nl/assets/casino-audio (copie : https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/sons/rouleaux.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/ding.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/jackpot.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/coup_donne_1.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/coup_donne_2.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/coup_donne_3.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/coup_recu_1.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/coup_recu_2.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/bouclier.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/soin.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/bombe.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/relique.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/victoire.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/sons/defaite.wav",
+  "auteur": "Jackpot Donjon",
+  "source": "généré par outils/generer_sons.py",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "généré par script"
+ },
+ {
+  "fichier": "assets/musiques/etage_1.ogg",
+  "titre": "Dungeon Ambience",
+  "auteur": "yd",
+  "source": "https://opengameart.org/content/dungeon-ambience",
+  "fichier_original": "dungeon002.ogg",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/musiques/etage_2.ogg",
+  "titre": "Insistent: background loop",
+  "auteur": "yd",
+  "source": "https://opengameart.org/content/insistent-background-loop",
+  "fichier_original": "Insistent.ogg",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/musiques/etage_3.ogg",
+  "titre": "Creepy",
+  "auteur": "TokyoGeisha",
+  "source": "https://opengameart.org/content/creepy",
+  "fichier_original": "CrEEP.ogg",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/musiques/boss.ogg",
+  "titre": "Fast fight / battle music (looped)",
+  "auteur": "XCVG",
+  "source": "https://opengameart.org/content/fast-fight-battle-music-looped",
+  "fichier_original": "fight_looped.ogg",
+  "licence": "CC0 1.0",
+  "origine": "pack externe"
+ },
+ {
+  "fichier": "assets/images/big_demon_idle_anim_f0.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/big_demon_idle_anim_f1.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/big_demon_idle_anim_f2.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/big_demon_idle_anim_f3.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/big_zombie_idle_anim_f0.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/big_zombie_idle_anim_f1.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/big_zombie_idle_anim_f2.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/big_zombie_idle_anim_f3.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/bomb_f0.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/chest_full_open_anim_f0.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/chest_mimic_open_anim_f0.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/chest_mimic_open_anim_f1.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/chest_mimic_open_anim_f2.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/coin_anim_f0.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/coin_anim_f1.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/coin_anim_f2.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/coin_anim_f3.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/flask_big_green.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/flask_big_red.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/floor_1.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/floor_2.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/floor_3.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/floor_4.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/goblin_idle_anim_f0.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/goblin_idle_anim_f1.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/goblin_idle_anim_f2.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/goblin_idle_anim_f3.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/ice_zombie_anim_f0.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/ice_zombie_anim_f1.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/ice_zombie_anim_f2.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/ice_zombie_anim_f3.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/imp_idle_anim_f0.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/imp_idle_anim_f1.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/imp_idle_anim_f2.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/imp_idle_anim_f3.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/knight_m_idle_anim_f0.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/knight_m_idle_anim_f1.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/knight_m_idle_anim_f2.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/knight_m_idle_anim_f3.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/necromancer_anim_f0.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/necromancer_anim_f1.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/necromancer_anim_f2.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/necromancer_anim_f3.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/ogre_idle_anim_f0.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/ogre_idle_anim_f1.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/ogre_idle_anim_f2.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/ogre_idle_anim_f3.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/orc_shaman_idle_anim_f0.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/orc_shaman_idle_anim_f1.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/orc_shaman_idle_anim_f2.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/orc_shaman_idle_anim_f3.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/orc_warrior_idle_anim_f0.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/orc_warrior_idle_anim_f1.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/orc_warrior_idle_anim_f2.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/orc_warrior_idle_anim_f3.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/skelet_idle_anim_f0.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/skelet_idle_anim_f1.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/skelet_idle_anim_f2.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/skelet_idle_anim_f3.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/skull.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/tiny_slug_anim_f0.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/tiny_slug_anim_f1.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/tiny_slug_anim_f2.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/tiny_slug_anim_f3.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/ui_heart_full.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/weapon_arrow.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/weapon_knight_sword.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/weapon_regular_sword.png",
+  "auteur": "0x72",
+  "source": "https://0x72.itch.io/dungeontileset-ii",
+  "licence": "CC0 1.0",
+  "origine": "pack externe (DungeonTileset II v1.7)"
+ },
+ {
+  "fichier": "assets/images/bouclier.png",
+  "auteur": "Jackpot Donjon",
+  "source": "dessiné par outils/importer_assets.py (16x16, palette réduite)",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "dessiné par script"
+ },
+ {
+  "fichier": "assets/images/aimant.png",
+  "auteur": "Jackpot Donjon",
+  "source": "dessiné par outils/importer_assets.py (16x16, palette réduite)",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "dessiné par script"
+ },
+ {
+  "fichier": "assets/images/trefle.png",
+  "auteur": "Jackpot Donjon",
+  "source": "dessiné par outils/importer_assets.py (16x16, palette réduite)",
+  "licence": "créé pour le jeu (aucune licence externe)",
+  "origine": "dessiné par script"
+ }
+]

@@ -15,6 +15,8 @@ func _ready() -> void:
 	if partie.ecran != Partie.Ecran.RELIQUE:
 		GameState.rediriger()
 		return
+	GameState.demarrer()
+	Musique.jouer_pour(partie)
 	propositions = partie.proposer_reliques(Partie.NB_RELIQUES_OFFERTES)
 	_construire_interface()
 
@@ -24,14 +26,12 @@ func _choisir(relique: RelicData) -> void:
 	for bouton in boutons:
 		bouton.disabled = true
 	partie.choisir_relique(relique)
+	Son.jouer(&"relique")
 	GameState.aller_a_suivant()
 
 
 func _construire_interface() -> void:
-	var fond := ColorRect.new()
-	fond.color = COULEUR_FOND
-	fond.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(fond)
+	Cartes.ajouter_fond(self, COULEUR_FOND, true)
 
 	var centre := CenterContainer.new()
 	centre.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -45,6 +45,7 @@ func _construire_interface() -> void:
 	titre.text = tr("Une relique t'est offerte !")
 	titre.add_theme_font_size_override("font_size", 32)
 	titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	Habillage.titre(titre)
 	colonne.add_child(titre)
 
 	var consigne := Label.new()
@@ -73,5 +74,6 @@ func _creer_carte(relique: RelicData) -> Button:
 	carte.add_theme_font_size_override("font_size", 20)
 	carte.tooltip_text = tr("Prendre : %s") % tr(relique.nom)
 	Cartes.habiller_bouton(carte, relique.couleur)
+	Cartes.ajouter_ornement(carte)
 	carte.pressed.connect(_choisir.bind(relique))
 	return carte

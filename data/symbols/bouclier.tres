@@ -6,6 +6,7 @@
 script = ExtResource("1_symbol")
 id = &"bouclier"
 nom = "Bouclier"
+icone = "bouclier"
 couleur = Color(0.36, 0.56, 0.9, 1)
 prix = 8
 effet_base = {

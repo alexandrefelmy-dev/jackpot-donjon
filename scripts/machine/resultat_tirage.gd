@@ -22,6 +22,14 @@ class Combo:
 		return longueur >= 5
 
 
+## Y a-t-il un jackpot (combo de 5) dans ce tirage ?
+func a_un_jackpot() -> bool:
+	for combo in combos:
+		if combo.est_jackpot():
+			return true
+	return false
+
+
 ## Les symboles tirés, lus ligne par ligne (null = rouleau vide).
 var grille: Array[SymbolData] = []
 ## Les combos trouvés, de gauche à droite.

@@ -6,13 +6,13 @@ Une ligne de 5 rouleaux, tirés au hasard dans le « sac » de symboles du joueu
 
 Inspirations : Luck be a Landlord, Slay the Spire, Balatro.
 
-**Statut : en développement, version 0.7 terminée** (profil enregistré, Comptoir du Croupier, jetons d'âme, malédictions, 4 nouveaux symboles) ; prochaine étape : v0.8, l'habillage (graphismes, sons, menu). Projet personnel, développé avec l'aide de l'IA.
+**Statut : en développement, version 0.8 terminée** (habillage : menu, options, sons et musiques, images, plein écran, vraie machine à sous, ambiance casino ; combats obligatoires) ; prochaine étape : v1.0, la sortie (équilibrage, statistiques de fin de partie, export .exe). Projet personnel, développé avec l'aide de l'IA.
 
 ## Lancer le jeu
 
 1. Installer [Godot 4.7](https://godotengine.org/download) (version standard, GDScript).
 2. Ouvrir le dossier du projet dans Godot (`project.godot`).
-3. Appuyer sur F5 : la partie commence sur l'écran de combat (boutons « [test] » visibles seulement quand on lance depuis l'éditeur : aller directement au boss et recevoir une relique en combat, +30 or en boutique). L'écran de test de la machine est `scenes/machine_test.tscn`.
+3. Appuyer sur F5 : le jeu s'ouvre sur le menu principal (Jouer lance une partie ; avec le son !). Le bouton ⛶ en haut à droite ou Alt+Entrée passe en plein écran. En combat, Espace (ou un clic sur le levier) tire le levier (boutons « [test] » visibles seulement quand on lance depuis l'éditeur : aller directement au boss et recevoir une relique en combat, +30 or en boutique). L'écran de test de la machine est `scenes/machine_test.tscn`.
 
 ## Lancer les tests
 
@@ -24,6 +24,15 @@ godot --headless --path . -s res://tests/test_partie.gd
 godot --headless --path . -s res://tests/test_boutique.gd
 godot --headless --path . -s res://tests/test_reliques.gd
 godot --headless --path . -s res://tests/test_mises.gd
+godot --headless --path . -s res://tests/test_donjon.gd
+godot --headless --path . -s res://tests/test_ennemis.gd
+godot --headless --path . -s res://tests/test_profil.gd
+godot --headless --path . -s res://tests/test_comptoir.gd
+godot --headless --path . -s res://tests/test_symboles.gd
+godot --headless --path . -s res://tests/test_options.gd
+godot --headless --path . -s res://tests/test_audio.gd
+godot --headless --path . -s res://tests/test_impacts.gd
+godot --headless --path . -s res://tests/test_images.gd
 godot --headless --path . -s res://tests/test_interface.gd
 ```
 
@@ -37,9 +46,10 @@ Les règles, les valeurs et les jalons (v0.1 à v1.1) sont dans [`docs/cahier-de
 
 | Dossier | Contenu |
 | --- | --- |
-| `scenes/` | scènes et leur script (combat, récompense, relique, boutique, fin de partie, test de la machine) |
+| `scenes/` | scènes et leur script (menu, options, Comptoir, portes, combat, récompense, relique, boutique, repos, fin de partie, test de la machine) |
 | `scripts/` | logique : sac, tirage, combos, effets, combat, mises, partie, boutique, reliques |
-| `data/` | symboles, ennemis et reliques, un fichier `.tres` chacun |
+| `data/` | symboles, ennemis et reliques, un fichier `.tres` chacun ; tables des sons et des musiques |
+| `assets/` | images (pack 0x72), sons, musiques, shaders, manifeste des licences |
 | `tests/` | tests en ligne de commande |
 | `outils/` | outils de vérification : équilibrage, parties simulées, captures d'écran, vrais clics |
-| `docs/` | cahier des charges |
+| `docs/` | cahier des charges, crédits et licences (`CREDITS.md`) |

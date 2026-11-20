@@ -6,16 +6,17 @@
 script = ExtResource("1_enemy")
 id = &"pickpocket"
 nom = "Pickpocket"
+images = "imp_idle_anim"
 couleur = Color(0.45, 0.35, 0.55, 1)
 etage = 2
-pv_max = 24
+pv_max = 22
 or_victoire = 16
 intentions = Array[Dictionary]([{
 "type": "vol",
 "valeur": 4
 }, {
 "type": "attaque",
-"valeur": 9
+"valeur": 8
 }, {
 "type": "vol",
 "valeur": 4

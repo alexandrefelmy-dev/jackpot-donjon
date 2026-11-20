@@ -1,27 +1,29 @@
 class_name Donjon
 extends RefCounted
-## La disposition du donjon : 3 étages, chacun 5 pas avec 2 portes au choix, puis un boss.
+## La disposition du donjon : 3 étages, chacun 5 combats obligatoires (les « pas ») puis un boss. Après certains
+## pas (BONUS_APRES_PAS), le joueur choisit entre 2 salles bonus (coffre, boutique ou repos).
 ## Pas d'interface ici. Tout le donjon ne dépend QUE de la graine de la partie : il est généré
 ## d'un coup au début, avec un générateur par étage, séparé de celui du jeu (tirages, récompenses).
 ## Même graine = même donjon, quoi que le joueur ait fait avant (voir tests/test_donjon.gd).
 
 const NB_ETAGES := 3
 const NB_PAS := 5
-## Un étage dont les portes cassent une contrainte est rejeté et retiré (graine dérivée).
+## Après la victoire du combat de ces pas, on choisit entre 2 salles bonus (le combat de chaque pas, lui, est obligatoire).
+const BONUS_APRES_PAS: Array[int] = [2, 4]
+## Un étage dont les salles cassent une contrainte est rejeté et retiré (graine dérivée).
 const MAX_TENTATIVES := 60
 ## Un coffre sur 3 est une Mimique, à l'étage 3 seulement.
 const MIMIQUE_UN_SUR := 3
 const ETAGE_DES_MIMIQUES := 3
 
-## Poids du tirage du type de chaque porte (le combat est le plus fréquent).
+## Poids du tirage du type de chaque salle bonus.
 const POIDS: Dictionary = {
-	Salle.Type.COMBAT: 50.0,
 	Salle.Type.COFFRE: 20.0,
 	Salle.Type.BOUTIQUE: 15.0,
 	Salle.Type.REPOS: 15.0,
 }
 
-## Les étages : nom, ennemis des salles de combat, boss. La Mimique n'est pas dans les ennemis :
+## Les étages : nom, ennemis des combats, boss. La Mimique n'est pas dans les ennemis :
 ## elle n'apparaît que dans les coffres de l'étage 3.
 const ETAGES: Array[Dictionary] = [
 	{
@@ -54,7 +56,8 @@ const ETAGES: Array[Dictionary] = [
 const MIMIQUE := "res://data/enemies/mimique.tres"
 
 var graine: int
-## Les étages (0 = étage 1) : chaque étage est une liste de 5 pas, chaque pas une liste de 2 salles.
+## Les étages (0 = étage 1) : chaque étage est une liste de 5 pas, chaque pas un dictionnaire
+## { "combat": Salle (le combat obligatoire), "bonus": Array[Salle] (2 salles bonus, ou vide) }.
 var etages: Array[Array] = []
 ## Le boss de chaque étage.
 var boss: Array[EnemyData] = []
@@ -74,10 +77,15 @@ static func creer(graine_voulue: int) -> Donjon:
 	return donjon
 
 
-## Les 2 portes du pas `pas` (1 à 5) de l'étage `etage` (1 à 3).
+## Le combat obligatoire du pas `pas` (1 à 5) de l'étage `etage` (1 à 3).
+func combat(etage: int, pas: int) -> Salle:
+	return etages[etage - 1][pas - 1]["combat"]
+
+
+## Les 2 salles bonus à choisir après le combat du pas `pas` (vide si ce pas n'en propose pas).
 func portes(etage: int, pas: int) -> Array[Salle]:
 	var liste: Array[Salle] = []
-	liste.assign(etages[etage - 1][pas - 1])
+	liste.assign(etages[etage - 1][pas - 1]["bonus"])
 	return liste
 
 
@@ -112,36 +120,44 @@ func _generer_etage(etage: int) -> Array:
 
 func _tirer_etage(etage: int, rng: RandomNumberGenerator) -> Array:
 	var pas_liste: Array = []
+	var precedent: EnemyData = null
 	for pas in range(1, NB_PAS + 1):
-		var premiere := _tirer_salle(etage, rng, pas == 1)
-		var seconde := _tirer_salle(etage, rng, pas == 1)
-		# Les 2 portes d'un pas ne se ressemblent jamais : on retire la seconde si besoin.
-		var essais := 0
-		while seconde.ressemble_a(premiere) and essais < 30:
-			seconde = _tirer_salle(etage, rng, pas == 1)
-			essais += 1
-		pas_liste.append([premiere, seconde])
+		var ennemi := _tirer_ennemi(etage, rng, precedent)
+		precedent = ennemi
+		var bonus: Array = []
+		if pas in BONUS_APRES_PAS:
+			var premiere := _tirer_salle_bonus(etage, rng)
+			var seconde := _tirer_salle_bonus(etage, rng)
+			# Les 2 portes d'un pas ne se ressemblent jamais : on retire la seconde si besoin.
+			var essais := 0
+			while seconde.ressemble_a(premiere) and essais < 30:
+				seconde = _tirer_salle_bonus(etage, rng)
+				essais += 1
+			bonus = [premiere, seconde]
+		pas_liste.append({"combat": Salle.creer(Salle.Type.COMBAT, ennemi), "bonus": bonus})
 	return pas_liste
 
 
-## Une salle au hasard. `combat_force` : la porte est un combat (1re salle de l'étage).
-func _tirer_salle(etage: int, rng: RandomNumberGenerator, combat_force: bool) -> Salle:
-	var type_choisi := Salle.Type.COMBAT
-	if not combat_force:
-		var types := POIDS.keys()
-		var poids := PackedFloat32Array()
-		for type_possible: Salle.Type in types:
-			poids.append(POIDS[type_possible])
-		type_choisi = types[rng.rand_weighted(poids)]
+## Un ennemi de l'étage, jamais le même que celui du combat d'avant (s'il y a le choix).
+func _tirer_ennemi(etage: int, rng: RandomNumberGenerator, precedent: EnemyData) -> EnemyData:
+	var chemins: Array = ETAGES[etage - 1]["ennemis"]
+	var ennemi := load(chemins[rng.randi_range(0, chemins.size() - 1)]) as EnemyData
+	var essais := 0
+	while chemins.size() > 1 and precedent != null and ennemi.id == precedent.id and essais < 30:
+		ennemi = load(chemins[rng.randi_range(0, chemins.size() - 1)]) as EnemyData
+		essais += 1
+	return ennemi
 
-	match type_choisi:
-		Salle.Type.COMBAT:
-			var ennemis: Array = ETAGES[etage - 1]["ennemis"]
-			var chemin: String = ennemis[rng.randi_range(0, ennemis.size() - 1)]
-			return Salle.creer(type_choisi, load(chemin) as EnemyData)
-		Salle.Type.COFFRE:
-			if etage == ETAGE_DES_MIMIQUES and rng.randi_range(1, MIMIQUE_UN_SUR) == 1:
-				return Salle.creer(type_choisi, load(MIMIQUE) as EnemyData, true)
+
+## Une salle bonus au hasard (coffre, boutique ou repos).
+func _tirer_salle_bonus(etage: int, rng: RandomNumberGenerator) -> Salle:
+	var types := POIDS.keys()
+	var poids := PackedFloat32Array()
+	for type_possible: Salle.Type in types:
+		poids.append(POIDS[type_possible])
+	var type_choisi: Salle.Type = types[rng.rand_weighted(poids)]
+	if type_choisi == Salle.Type.COFFRE and etage == ETAGE_DES_MIMIQUES and rng.randi_range(1, MIMIQUE_UN_SUR) == 1:
+		return Salle.creer(type_choisi, load(MIMIQUE) as EnemyData, true)
 	return Salle.creer(type_choisi)
 
 
@@ -150,18 +166,29 @@ static func erreur_etage(pas_liste: Array) -> String:
 	if pas_liste.size() != NB_PAS:
 		return "il n'y a pas %d pas" % NB_PAS
 	var types_vus := {}
+	var precedent: EnemyData = null
 	for k in pas_liste.size():
-		var portes_du_pas: Array = pas_liste[k]
-		if portes_du_pas.size() != 2:
-			return "le pas %d n'a pas 2 portes" % (k + 1)
-		var a: Salle = portes_du_pas[0]
-		var b: Salle = portes_du_pas[1]
-		if a.ressemble_a(b):
-			return "le pas %d a deux portes identiques" % (k + 1)
-		if k == 0 and (a.type != Salle.Type.COMBAT or b.type != Salle.Type.COMBAT):
-			return "le pas 1 doit proposer 2 combats"
-		types_vus[a.type] = true
-		types_vus[b.type] = true
+		var le_pas: Dictionary = pas_liste[k]
+		var combat_du_pas: Salle = le_pas["combat"]
+		if combat_du_pas.type != Salle.Type.COMBAT or combat_du_pas.ennemi == null:
+			return "le pas %d n'a pas de combat" % (k + 1)
+		if precedent != null and combat_du_pas.ennemi.id == precedent.id:
+			return "le pas %d a le même ennemi que le pas d'avant" % (k + 1)
+		precedent = combat_du_pas.ennemi
+		var bonus: Array = le_pas["bonus"]
+		if (k + 1) in BONUS_APRES_PAS:
+			if bonus.size() != 2:
+				return "le pas %d n'a pas 2 salles bonus" % (k + 1)
+			var a: Salle = bonus[0]
+			var b: Salle = bonus[1]
+			if a.type == Salle.Type.COMBAT or b.type == Salle.Type.COMBAT:
+				return "le pas %d a un combat parmi ses salles bonus" % (k + 1)
+			if a.ressemble_a(b):
+				return "le pas %d a deux salles bonus identiques" % (k + 1)
+			types_vus[a.type] = true
+			types_vus[b.type] = true
+		elif not bonus.is_empty():
+			return "le pas %d ne devrait pas avoir de salles bonus" % (k + 1)
 	for obligatoire in [Salle.Type.COFFRE, Salle.Type.BOUTIQUE, Salle.Type.REPOS]:
 		if not types_vus.has(obligatoire):
 			return "il manque un type de salle : %s" % Salle.Type.keys()[obligatoire]
@@ -172,8 +199,10 @@ static func erreur_etage(pas_liste: Array) -> String:
 func empreinte() -> String:
 	var morceaux: Array[String] = []
 	for etage in etages.size():
-		for portes_du_pas: Array in etages[etage]:
-			for salle: Salle in portes_du_pas:
+		for le_pas: Dictionary in etages[etage]:
+			var salle_combat: Salle = le_pas["combat"]
+			morceaux.append(salle_combat.empreinte())
+			for salle: Salle in le_pas["bonus"]:
 				morceaux.append(salle.empreinte() + ("!" if salle.mimique else ""))
 		morceaux.append("|" + String(boss[etage].id))
 	return ",".join(morceaux)
