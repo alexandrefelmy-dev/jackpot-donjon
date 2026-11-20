@@ -14,6 +14,9 @@ const TAILLE_BOUTON := 44
 const MARGE := 8
 
 var bouton: Button
+## Un message passager (plein écran impossible dans la fenêtre intégrée de l'éditeur).
+var message: Label
+var _tween_message: Tween
 
 
 ## Ajoute le bouton et le raccourci à la racine, une seule fois (plus tard dans l'image : la racine est occupée
@@ -25,8 +28,25 @@ static func installer() -> void:
 	(Engine.get_main_loop() as SceneTree).root.add_child.call_deferred(instance)
 
 
+## Le jeu est-il lancé dans la fenêtre intégrée de l'éditeur Godot ? Elle n'accepte que le mode « fenêtré » : le
+## moteur affiche « Embedded window only supports Windowed mode » si on lui demande le plein écran.
+static func est_integre() -> bool:
+	return Engine.is_embedded_in_editor()
+
+
+## Explique, par un message passager, pourquoi le plein écran n'est pas possible ici.
+static func avertir() -> void:
+	if is_instance_valid(instance):
+		instance.montrer_message(TranslationServer.translate(
+				"Plein écran impossible dans la fenêtre intégrée de l'éditeur. Dans l'onglet « Jeu » de Godot, désactive « Embed Game on Next Play », puis relance."))
+
+
 ## Bascule le plein écran : l'option est changée, appliquée à la fenêtre et enregistrée.
+## Dans la fenêtre intégrée de l'éditeur, rien ne change et un message l'explique.
 static func basculer() -> void:
+	if est_integre():
+		avertir()
+		return
 	GameState.charger_options()
 	GameState.options.plein_ecran = not GameState.options.plein_ecran
 	GameState.appliquer_options()
@@ -51,6 +71,39 @@ func _ready() -> void:
 	bouton.offset_bottom = MARGE + TAILLE_BOUTON
 	bouton.pressed.connect(basculer)
 	add_child(bouton)
+
+	message = Label.new()
+	message.visible = false
+	message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	message.custom_minimum_size = Vector2(560, 0)
+	message.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	message.add_theme_font_size_override("font_size", 18)
+	var fond := StyleBoxFlat.new()
+	fond.bg_color = Color(0.06, 0.04, 0.08, 0.95)
+	fond.border_color = Color("ffd34d")
+	fond.set_border_width_all(2)
+	fond.set_corner_radius_all(10)
+	fond.set_content_margin_all(12)
+	message.add_theme_stylebox_override("normal", fond)
+	message.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	message.offset_left = -280
+	message.offset_right = 280
+	message.offset_top = 56
+	add_child(message)
+
+
+## Affiche un message quelques secondes, puis le fait disparaître.
+func montrer_message(texte: String) -> void:
+	message.text = texte
+	message.modulate = Color.WHITE
+	message.visible = true
+	if _tween_message != null:
+		_tween_message.kill()
+	_tween_message = create_tween()
+	_tween_message.tween_interval(6.0)
+	_tween_message.tween_property(message, "modulate:a", 0.0, 0.6)
+	_tween_message.tween_callback(message.hide)
 
 
 func _input(evenement: InputEvent) -> void:

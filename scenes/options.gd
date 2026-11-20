@@ -58,6 +58,10 @@ func _retour() -> void:
 func _changer() -> void:
 	options.volume_musique = curseur_musique.value / 100.0
 	options.volume_effets = curseur_effets.value / 100.0
+	if PleinEcran.est_integre() and case_plein_ecran.button_pressed != options.plein_ecran:
+		# Fenêtre intégrée de l'éditeur : le plein écran est refusé, la case revient à l'état réel.
+		case_plein_ecran.set_pressed_no_signal(options.plein_ecran)
+		PleinEcran.avertir()
 	options.plein_ecran = case_plein_ecran.button_pressed
 	options.reduire_tremblements = case_tremblements.button_pressed
 	options.reduire_flashs = case_flashs.button_pressed

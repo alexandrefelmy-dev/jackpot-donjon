@@ -526,6 +526,10 @@ func _initialize() -> void:
 	alt_entree.pressed = true
 	plein._input(alt_entree)
 	verifier(GameState.options.plein_ecran == etat_avant, "Alt+Entrée bascule le plein écran")
+	verifier(not PleinEcran.est_integre(), "les tests ne tournent pas dans la fenêtre intégrée de l'éditeur")
+	plein.montrer_message("essai")
+	verifier(plein.message.visible and plein.message.text == "essai", "le message passager du plein écran s'affiche")
+	plein.message.hide()
 	GameState.options = Options.new()
 	GameState.appliquer_options()
 	var echap := InputEventKey.new()

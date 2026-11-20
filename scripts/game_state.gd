@@ -80,7 +80,7 @@ static func sauver_options() -> bool:
 static func appliquer_options() -> void:
 	charger_options()
 	Son.appliquer_options(options)
-	if _sauvegarde_active():
+	if _sauvegarde_active() and not PleinEcran.est_integre():
 		# Le mode n'est touché que s'il doit changer : une fenêtre agrandie par le joueur le reste.
 		var en_plein_ecran := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
 		if options.plein_ecran != en_plein_ecran:
