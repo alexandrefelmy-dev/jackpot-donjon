@@ -128,25 +128,9 @@ const SHADER_NEON := "res://assets/shaders/neon.gdshader"
 static var _shader_neon: Shader
 
 
-## Le fond d'un écran : l'aplat sombre habituel, avec par-dessus le sol du pack (une dalle, répétée, très
-## estompée) pour donner l'ambiance du donjon sans gêner la lecture.
+## Le fond d'un écran : l'aplat sombre, le sol du donjon et les bords sombres (voir Decor).
 static func ajouter_fond(parent: Control, couleur: Color) -> void:
-	var fond := ColorRect.new()
-	fond.color = couleur
-	fond.set_anchors_preset(Control.PRESET_FULL_RECT)
-	fond.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	parent.add_child(fond)
-	var dalle := Images.icone("floor_1", 64)
-	if dalle != null:
-		var sol := TextureRect.new()
-		sol.texture = dalle
-		sol.stretch_mode = TextureRect.STRETCH_TILE
-		sol.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
-		sol.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		sol.modulate = Color(1, 1, 1, 0.07)
-		sol.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		sol.set_anchors_preset(Control.PRESET_FULL_RECT)
-		parent.add_child(sol)
+	Decor.ajouter(parent, couleur)
 
 
 ## Un bouton d'écran : texte, taille minimale, pas de focus (Espace tire le levier, jamais un bouton), action.
