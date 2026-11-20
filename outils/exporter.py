@@ -7,8 +7,9 @@ Prérequis : les modèles d'export de Godot (même version que l'éditeur) insta
 CLAUDE.md. Le préréglage « Windows Desktop » vient de export_presets.cfg.
 Résultat dans build/ (ignoré par git) : windows/jackpot-donjon.exe et jackpot-donjon-<version>-windows.zip
 (l'exe, docs/LISEZMOI.txt et les crédits). Affiche aussi l'empreinte SHA-256 du .zip.
-Les champs « application/... » (icône, version, description) de export_presets.cfg ne servent à rien tant que
-`application/modify_resources` est à false (il faut l'outil rcedit pour les écrire dans le .exe).
+Les champs « application/... » (icône, version, description) de export_presets.cfg sont écrits dans le .exe par
+l'outil rcedit : il doit être indiqué dans les paramètres de l'éditeur Godot (export/windows/rcedit), et
+`application/modify_resources` doit être à true.
 Pas de dépendance : la bibliothèque standard de Python suffit.
 """
 import hashlib
