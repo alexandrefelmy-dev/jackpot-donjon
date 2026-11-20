@@ -14,7 +14,9 @@ Inspirations : Luck be a Landlord, Slay the Spire, Balatro.
 
 ### Avec le .exe (Windows 10 ou 11, 64 bits)
 
-Le jeu s'exporte en **un seul fichier**, `jackpot-donjon.exe`, qui n'a besoin ni de Godot ni d'installation : un double-clic suffit. Ce fichier n'est pas stocké dans le dépôt Git (il est trop gros) : on le fabrique avec la commande ci-dessous. Il sort dans le dossier `build/` :
+**Télécharger le jeu : [Releases, version 1.0](https://github.com/alexandrefelmy-dev/jackpot-donjon/releases/tag/v1.0)** (fichier `jackpot-donjon-1.0-windows.zip`, 46 Mo). Le décompresser et double-cliquer sur `jackpot-donjon.exe`.
+
+Le jeu s'exporte en **un seul fichier**, `jackpot-donjon.exe`, qui n'a besoin ni de Godot ni d'installation : un double-clic suffit. Ce fichier n'est pas stocké dans le dépôt Git (il est trop gros) mais publié dans les Releases ; pour le fabriquer soi-même, utiliser la commande ci-dessous. Il sort dans le dossier `build/` :
 
 - `build/windows/jackpot-donjon.exe` : le jeu ;
 - `build/jackpot-donjon-1.0-windows.zip` : le jeu, un `LISEZMOI.txt` et les crédits, prêts à envoyer à quelqu'un.
