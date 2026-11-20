@@ -34,8 +34,9 @@ usage libre, crédit non obligatoire, donné ici par courtoisie).
   `bouclier.png`, `aimant.png`, `trefle.png` — le pack n'a pas ces images ; aucune licence externe.
 - **Dessinés par le code du jeu** (aucun fichier, aucune licence externe) : le meuble de la machine à sous, les
   ampoules, le levier, les flèches de la ligne de gain, l'icône du bouton plein écran, le halo derrière l'ennemi,
-  les bords sombres et le thème des boutons (`scripts/ui/meuble_machine.gd`, `ampoules.gd`, `levier_machine.gd`,
-  `plein_ecran.gd`, `decor.gd`, `habillage.gd`).
+  les bords sombres, la moquette et les rideaux (shaders `moquette` et `rideau`), le cadre d'ampoules des portes et
+  l'ornement des cartes, le thème des boutons (`scripts/ui/meuble_machine.gd`, `ampoules.gd`, `levier_machine.gd`,
+  `plein_ecran.gd`, `decor.gd`, `habillage.gd`, `cadre_ampoules.gd`, `ornement_carte.gd`).
 - Correspondance ennemi → image : dans le champ `images` de chaque `data/enemies/*.tres` (choix de ressemblance :
   le pack n'a pas de rat, de pickpocket ni de croupier exacts).
 
