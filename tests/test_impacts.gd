@@ -219,9 +219,33 @@ func test_habillage() -> void:
 	verifier(etiquette.material is ShaderMaterial, "un titre reçoit le néon")
 	ecran.queue_free()
 
+	# Les ampoules d'une porte cintrée : régulièrement espacées, toutes dans le cadre, des deux côtés de l'arche.
+	var taille := Vector2(330, 340)
+	var ampoules := CadreAmpoules.positions_des_ampoules(taille, Cartes.RAYON_PORTE, 16.0, CadreAmpoules.MARGE, CadreAmpoules.ECART)
+	verifier(ampoules.size() >= 40, "une porte a de nombreuses ampoules : %d" % ampoules.size())
+	var toutes_dedans := true
+	var a_gauche := 0
+	var a_droite := 0
+	for p in ampoules:
+		toutes_dedans = toutes_dedans and Rect2(Vector2.ZERO, taille).has_point(p)
+		if p.x < taille.x / 2.0:
+			a_gauche += 1
+		else:
+			a_droite += 1
+	verifier(toutes_dedans, "toutes les ampoules sont dans le cadre de la porte")
+	verifier(absi(a_gauche - a_droite) <= 3, "autant d'ampoules à gauche (%d) qu'à droite (%d)" % [a_gauche, a_droite])
+	var ecart_max := 0.0
+	for i in range(1, ampoules.size()):
+		ecart_max = maxf(ecart_max, ampoules[i].distance_to(ampoules[i - 1]))
+	verifier(ecart_max <= CadreAmpoules.ECART + 1.0, "deux ampoules voisines ne sont jamais à plus de %d px (écart max %.1f)" % [int(CadreAmpoules.ECART), ecart_max])
+	verifier(CadreAmpoules.positions_des_ampoules(Vector2(10, 10), 160.0, 16.0, 9.0, 22.0).is_empty(), "un cadre trop petit n'a pas d'ampoule (et ne plante pas)")
+
 
 func test_shader() -> void:
-	print("Shader néon")
+	print("Shaders (néon, moquette, rideau)")
+	for chemin in [Cartes.SHADER_NEON, Decor.SHADER_MOQUETTE, Decor.SHADER_RIDEAU]:
+		var shader_decor := load(chemin) as Shader
+		verifier(shader_decor != null and not shader_decor.get_shader_uniform_list().is_empty(), "%s se charge et se compile" % chemin.get_file())
 	var shader := load(Cartes.SHADER_NEON) as Shader
 	verifier(shader != null, "le shader se charge")
 	var noms: Array[String] = []

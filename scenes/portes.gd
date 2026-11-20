@@ -4,7 +4,7 @@ extends Control
 ## Ensuite la partie dit quel écran afficher (combat, boutique, relique, repos).
 
 const COULEUR_FOND := Color("1b1a24")
-const TAILLE_PORTE := Vector2(330, 290)
+const TAILLE_PORTE := Vector2(330, 340)
 const COULEUR_BOSS := Color("ff9a5c")
 
 ## Couleur de chaque type de salle (en attendant les vrais graphismes).
@@ -61,7 +61,7 @@ func _description(salle: Salle) -> String:
 
 
 func _construire_interface() -> void:
-	Cartes.ajouter_fond(self, COULEUR_FOND)
+	Cartes.ajouter_fond(self, COULEUR_FOND, true)
 
 	var centre := CenterContainer.new()
 	centre.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -109,15 +109,22 @@ func _creer_progression() -> Control:
 	rangee.add_theme_constant_override("separation", 10)
 	rangee.alignment = BoxContainer.ALIGNMENT_CENTER
 	for numero in range(1, Donjon.NB_PAS + 1):
-		var case_pas := ColorRect.new()
-		case_pas.custom_minimum_size = Vector2(34, 14)
+		# Un jeton rond par salle : vert pour les salles faites, doré pour celle à choisir, sombre pour les suivantes.
+		var case_pas := Panel.new()
+		case_pas.custom_minimum_size = Vector2(26, 26)
 		case_pas.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var jeton := StyleBoxFlat.new()
+		jeton.set_corner_radius_all(13)
+		jeton.set_border_width_all(3)
+		jeton.border_color = Habillage.COULEUR_OR_SOMBRE
 		if numero < partie.pas:
-			case_pas.color = Color("7ddc7d")
+			jeton.bg_color = Color("3fae5c")
 		elif numero == partie.pas:
-			case_pas.color = Cartes.COULEUR_SURVOL
+			jeton.bg_color = Cartes.COULEUR_SURVOL
+			jeton.border_color = Color.WHITE
 		else:
-			case_pas.color = Color("3a3846")
+			jeton.bg_color = Color("2a1f3a")
+		case_pas.add_theme_stylebox_override("panel", jeton)
 		rangee.add_child(case_pas)
 	var boss := Label.new()
 	boss.text = tr("BOSS")
@@ -140,7 +147,7 @@ const ICONES: Dictionary = {
 func _creer_porte(salle: Salle, index: int) -> Button:
 	var description := _description(salle)
 	var porte := Cartes.creer_carte(COULEURS[salle.type], salle.nom_type().to_upper(), description, TAILLE_PORTE,
-			40, 19, Images.icone(ICONES[salle.type], 64))
+			40, 19, Images.icone(ICONES[salle.type], 64), true)
 	textes_portes.append(Cartes.texte_carte(porte))
 	Cartes.neon(porte.get_meta("titre") as Label, Color("ffd34d"))
 	porte.tooltip_text = tr("Franchir cette porte : %s") % salle.nom_type()

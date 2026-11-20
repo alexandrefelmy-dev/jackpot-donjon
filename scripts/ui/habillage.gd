@@ -18,11 +18,14 @@ static func theme() -> Theme:
 		return _theme
 	var t := Theme.new()
 
-	t.set_stylebox("normal", "Button", _boite(COULEUR_VIN, COULEUR_OR_SOMBRE, 2))
-	t.set_stylebox("hover", "Button", _boite(Color("4a1c30"), COULEUR_OR, 2))
-	t.set_stylebox("pressed", "Button", _boite(Color("1c0a14"), COULEUR_OR, 3))
-	t.set_stylebox("hover_pressed", "Button", _boite(Color("1c0a14"), COULEUR_OR, 3))
-	t.set_stylebox("disabled", "Button", _boite(Color("1d1520"), Color(COULEUR_OR_SOMBRE, 0.3), 2))
+	var survol := _boite(Color("5a1c36"), COULEUR_OR, 3)
+	survol.shadow_color = Color(COULEUR_OR, 0.45)  # un halo doré sous la souris
+	survol.shadow_size = 9
+	t.set_stylebox("normal", "Button", _boite(COULEUR_VIN, COULEUR_OR_SOMBRE, 3))
+	t.set_stylebox("hover", "Button", survol)
+	t.set_stylebox("pressed", "Button", _boite(Color("1c0a14"), COULEUR_OR, 4))
+	t.set_stylebox("hover_pressed", "Button", _boite(Color("1c0a14"), COULEUR_OR, 4))
+	t.set_stylebox("disabled", "Button", _boite(Color("1d1520"), Color(COULEUR_OR_SOMBRE, 0.3), 3))
 	t.set_stylebox("focus", "Button", StyleBoxEmpty.new())
 	t.set_color("font_color", "Button", COULEUR_TEXTE)
 	t.set_color("font_hover_color", "Button", Color.WHITE)
@@ -59,9 +62,9 @@ static func _boite(fond: Color, bordure: Color, epaisseur: int) -> StyleBoxFlat:
 	style.bg_color = fond
 	style.border_color = bordure
 	style.set_border_width_all(epaisseur)
-	style.set_corner_radius_all(10)
-	style.content_margin_left = 14
-	style.content_margin_right = 14
+	style.set_corner_radius_all(22)  # des pastilles, pas des rectangles
+	style.content_margin_left = 22
+	style.content_margin_right = 22
 	style.content_margin_top = 6
 	style.content_margin_bottom = 6
 	return style

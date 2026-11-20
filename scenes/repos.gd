@@ -118,7 +118,7 @@ func _rafraichir_sac() -> void:
 # --- Construction de l'interface (en code) -----------------------------------
 
 func _construire_interface() -> void:
-	Cartes.ajouter_fond(self, COULEUR_FOND)
+	Cartes.ajouter_fond(self, COULEUR_FOND, true)
 
 	var marge := MarginContainer.new()
 	marge.set_anchors_preset(Control.PRESET_FULL_RECT)

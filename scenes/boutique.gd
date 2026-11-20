@@ -288,6 +288,7 @@ func _construire_colonne_achats(parent: Control) -> void:
 		carte.focus_mode = Control.FOCUS_NONE
 		carte.add_theme_font_size_override("font_size", 16)
 		Cartes.habiller_bouton(carte, boutique.offres[i].couleur)
+		Cartes.ajouter_ornement(carte)
 		carte.pressed.connect(_acheter.bind(i))
 		ligne_offres.add_child(carte)
 		cartes_offres.append(carte)
@@ -335,6 +336,7 @@ func _construire_colonne_sac(parent: Control) -> void:
 		carte.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		carte.add_theme_font_size_override("font_size", 15)
 		Cartes.habiller_bouton(carte, boutique.offres_reliques[i].couleur)
+		Cartes.ajouter_ornement(carte)
 		carte.tooltip_text = "%s\n%s" % [tr(boutique.offres_reliques[i].nom), tr(boutique.offres_reliques[i].description)]
 		carte.pressed.connect(_acheter_relique.bind(i))
 		ligne_reliques.add_child(carte)

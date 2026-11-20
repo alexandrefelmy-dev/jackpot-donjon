@@ -44,7 +44,7 @@ func _quitter() -> void:
 
 
 func _construire_interface() -> void:
-	Cartes.ajouter_fond(self, COULEUR_FOND)
+	Cartes.ajouter_fond(self, COULEUR_FOND, true)
 
 	var centre := CenterContainer.new()
 	centre.set_anchors_preset(Control.PRESET_FULL_RECT)

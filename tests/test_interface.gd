@@ -548,8 +548,11 @@ func _initialize() -> void:
 	current_scene.bouton_jouer.pressed.emit()
 	await _attendre()
 	verifier(current_scene.name == "Portes" and GameState.en_partie, "« Jouer » lance une partie : %s" % current_scene.name)
-	# Espace (action « levier ») tire le levier.
+	# Espace (action « levier ») tire le levier. Contre le rat : la porte tirée au hasard pourrait mener à un
+	# Pickpocket (qui s'enfuit au premier tour) ou à une salle sans combat, et le test ne serait pas stable.
 	GameState.partie.choisir_porte(0)
+	GameState.partie.ennemi_courant = load("res://data/enemies/rat_egout.tres") as EnemyData
+	GameState.partie.ecran = Partie.Ecran.COMBAT
 	GameState.aller_a_suivant()
 	await _attendre()
 	var espace := InputEventKey.new()

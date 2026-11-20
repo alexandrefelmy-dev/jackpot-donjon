@@ -3,7 +3,7 @@ extends Control
 ## on y dépense ses jetons d'âme en avantages permanents, on voit ses malédictions, puis on joue.
 
 const COULEUR_FOND := Color("1b1a24")
-const TAILLE_CARTE := Vector2(330, 112)
+const TAILLE_CARTE := Vector2(330, 126)
 ## Couleur de chaque achat (en attendant les vrais graphismes).
 const COULEURS: Dictionary = {
 	Comptoir.Achat.SYMBOLE: Color("4f7f6a"),
