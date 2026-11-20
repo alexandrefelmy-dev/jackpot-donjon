@@ -519,19 +519,21 @@ func _initialize() -> void:
 	var tour_avant_anim: int = anime.combat.numero_tour
 	anime._tirer()
 	verifier(anime.animation_en_cours and anime.combat.numero_tour == tour_avant_anim + 1, "le tour est calculé tout de suite, les rouleaux s'arrêtent ensuite")
-	verifier(anime.etiquettes[0].text == "···" and anime.etiquettes[4].text == "···", "au début, tous les rouleaux « tournent » (···)")
-	await create_timer(0.4).timeout
-	verifier(anime.etiquettes[0].text != "···", "au bout d'un instant, le premier rouleau est arrêté")
-	verifier(anime.etiquettes[4].text == "···" or not anime.animation_en_cours, "…pendant que le dernier tourne encore (ou que tout est fini)")
-	await create_timer(0.9).timeout
-	verifier(not anime.animation_en_cours and anime.etiquettes[4].text != "···", "au bout de ~0,8 s, tous les rouleaux sont arrêtés")
+	verifier(anime._en_rotation[0] and anime._en_rotation[4] and anime._fenetres[0].visible and anime._fenetres[4].visible, "au début, tous les rouleaux tournent (les symboles défilent)")
+	await create_timer(0.7).timeout
+	verifier(not anime._en_rotation[0] and not anime._fenetres[0].visible and anime.etiquettes[0].text != "", "au bout d'un instant, le premier rouleau est arrêté et affiche son symbole")
+	verifier(anime._en_rotation[4] and anime._fenetres[4].visible, "…pendant que le dernier tourne encore")
+	await create_timer(1.5).timeout
+	verifier(anime._en_rotation[4], "le dernier rouleau se fait attendre (suspense) : il tourne encore après 2,2 s")
+	await create_timer(1.3).timeout
+	verifier(not anime.animation_en_cours and not anime._en_rotation[4] and anime.etiquettes[4].text != "", "au bout de ~3,5 s au plus, tous les rouleaux sont arrêtés")
 	verifier(anime.texte_journal.text.contains("Tour"), "…et le journal du tour est alors affiché : %s" % anime.texte_journal.text.left(30).replace("
 ", " "))
 	var tour_apres: int = anime.combat.numero_tour
 	anime._tirer()
 	verifier(anime.animation_en_cours, "un nouveau tirage relance l'animation")
 	anime._tirer()
-	verifier(not anime.animation_en_cours and anime.etiquettes[4].text != "···", "Espace pendant l'animation l'accélère : tous les rouleaux sont arrêtés d'un coup")
+	verifier(not anime.animation_en_cours and not anime._fenetres[4].visible and anime.etiquettes[4].text != "", "Espace pendant l'animation l'accélère : tous les rouleaux sont arrêtés d'un coup")
 	verifier(anime.combat.numero_tour == tour_apres + 1 or anime.combat.est_fini(), "…sans jouer un tour de plus (un seul tour par tirage)")
 	anime.forcer_animation = false
 

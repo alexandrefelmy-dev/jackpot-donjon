@@ -16,11 +16,15 @@ const IMAGES_D_ATTENTE := 6
 const NOMS := ["portes_etage1", "portes_etage3", "combat_depart", "combat_attente", "combat_choix_rouleau",
 		"combat_apres_tour", "combat_grand_croupier", "combat_grand_croupier_tour2", "combat_dame_de_pique",
 		"combat_dame_de_pique_tour3", "combat_mimique", "combat_usurier", "combat_pickpocket", "combat_pickpocket_fuite",
-		"recompense", "relique", "boutique", "repos", "repos_sac", "fin_victoire", "fin_defaite", "comptoir", "comptoir_epuise", "fin_bilan", "menu", "options", "options_credits"]
+		"recompense", "relique", "boutique", "repos", "repos_sac", "fin_victoire", "fin_defaite", "comptoir", "comptoir_epuise", "fin_bilan", "menu", "options", "options_credits",
+		"combat_avant_tirage", "combat_rouleaux_tournent", "combat_dernier_rouleau"]
+## Captures prises plus tard qu'après 6 images : durée à attendre (ms) depuis la préparation de l'écran.
+const ATTENTE_MS := {"combat_dernier_rouleau": 2000}
 
 var _etape := 0
 var _attente := 0
 var _erreurs := 0
+var _debut_etape_ms := 0
 
 
 func _initialize() -> void:
@@ -36,6 +40,8 @@ func _process(_delta: float) -> bool:
 	_attente += 1
 	if _attente < IMAGES_D_ATTENTE:
 		return false
+	if Time.get_ticks_msec() - _debut_etape_ms < int(ATTENTE_MS.get(NOMS[_etape], 0)):
+		return false
 	_attente = 0
 	_photographier(_etape)
 	_etape += 1
@@ -48,6 +54,7 @@ func _process(_delta: float) -> bool:
 
 ## Met le jeu dans l'état de l'écran n°etape.
 func _preparer(etape: int) -> void:
+	_debut_etape_ms = Time.get_ticks_msec()
 	match etape:
 		0:  # choix des portes, étage 1
 			GameState.nouvelle_partie()
@@ -178,6 +185,17 @@ func _preparer(etape: int) -> void:
 			GameState.aller_a(GameState.SCENE_OPTIONS)
 		26:  # …avec les crédits
 			current_scene.bouton_credits.pressed.emit()
+		27:  # combat avant le levier
+			GameState.nouvelle_partie()
+			GameState.partie.choisir_porte(0)
+			GameState.aller_a_suivant()
+		28:  # …levier tiré : les 5 rouleaux tournent
+			var combat: Control = current_scene
+			combat._tirer()
+			_controler(combat.animation_en_cours, "les rouleaux devraient tourner")
+		29:  # …2 s plus tard : les quatre premiers sont arrêtés, le dernier tourne encore (suspense)
+			var combat: Control = current_scene
+			_controler(combat.animation_en_cours and combat._en_rotation[4], "le dernier rouleau devrait encore tourner")
 
 
 ## Un combat contre l'ennemi `id`, à l'étage `etage`, avec l'ouverture jouée si l'ennemi en a une.

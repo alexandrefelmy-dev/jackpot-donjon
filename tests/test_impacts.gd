@@ -21,6 +21,7 @@ func _lancer() -> void:
 	await test_flash()
 	await test_reductions()
 	test_valeurs_du_tour()
+	test_chronologie_rouleaux()
 	test_shader()
 	GameState.options = null
 	print("TERMINÉ : %d échec(s)" % echecs)
@@ -169,6 +170,34 @@ func test_valeurs_du_tour() -> void:
 	verifier(Impacts.force_de_secousse(machine.resoudre(mixte), 40, 40) == 0.0, "un petit tour : pas de secousse")
 	verifier(Impacts.force_de_secousse(machine.resoudre(mixte), 40, 28) == 0.5, "un coup reçu de 12 PV : secousse 0,5")
 	verifier(Impacts.force_de_secousse(machine.resoudre(mixte), 40, 35) == 0.25, "un coup reçu de 5 PV : petite secousse 0,25")
+
+
+func test_chronologie_rouleaux() -> void:
+	print("Minutage des rouleaux (suspense sur le dernier)")
+	var epee := load("res://data/symbols/epee.tres") as SymbolData
+	var piece := load("res://data/symbols/piece.tres") as SymbolData
+	var bouclier := load("res://data/symbols/bouclier.tres") as SymbolData
+	var potion := load("res://data/symbols/potion.tres") as SymbolData
+	var banal: Array[SymbolData] = [epee, piece, bouclier, potion, epee]
+	var t := ChronologieRouleaux.instants_d_arret(banal)
+	verifier(t.size() == 5, "un instant d'arrêt par rouleau")
+	var croissant := true
+	for i in range(1, t.size()):
+		croissant = croissant and t[i] > t[i - 1]
+	verifier(croissant, "les rouleaux s'arrêtent de gauche à droite : %s" % str(t))
+	verifier(is_equal_approx(t[1] - t[0], ChronologieRouleaux.ECART), "les quatre premiers sont espacés régulièrement")
+	verifier(t[4] - t[3] >= ChronologieRouleaux.ECART + ChronologieRouleaux.ATTENTE_DERNIER - 0.001, "le dernier se fait attendre ~0,9 s de plus : %.2f s après l'avant-dernier" % (t[4] - t[3]))
+	var trois: Array[SymbolData] = [epee, piece, piece, piece, potion]
+	var quatre: Array[SymbolData] = [epee, epee, epee, epee, potion]
+	verifier(ChronologieRouleaux.suite_avant_le_dernier(banal) == 1, "pas de suite avant le dernier : 1")
+	verifier(ChronologieRouleaux.suite_avant_le_dernier(trois) == 3 and ChronologieRouleaux.suite_avant_le_dernier(quatre) == 4, "suites de 3 et de 4 repérées")
+	var t3 := ChronologieRouleaux.instants_d_arret(trois)
+	var t4 := ChronologieRouleaux.instants_d_arret(quatre)
+	verifier(t3[4] > t[4] and t4[4] > t3[4], "trois puis quatre symboles identiques : l'attente du dernier rouleau grandit")
+	var vide: Array[SymbolData] = [null, null, null, null, null]
+	verifier(ChronologieRouleaux.suite_avant_le_dernier(vide) == 0, "des cases vides ne comptent pas comme une suite")
+	verifier(ChronologieRouleaux.duree_ralenti(4, 5) > ChronologieRouleaux.duree_ralenti(0, 5), "le dernier rouleau ralentit plus longtemps")
+	verifier(ChronologieRouleaux.instants_d_arret([] as Array[SymbolData]).is_empty(), "grille vide : rien")
 
 
 func test_shader() -> void:

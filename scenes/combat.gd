@@ -76,10 +76,23 @@ var bouton_debug_etage: Button
 
 ## Les rouleaux s'arrêtent un par un (affichage seulement : la logique du tour est déjà calculée).
 var animation_en_cours: bool = false
-var _tween_rouleaux: Tween
+## Rouleaux qui défilent : par case, une fenêtre qui masque ce qui dépasse et une bande d'icônes qui glisse vers le bas.
+var _fenetres: Array[Control] = []
+var _bandes: Array[Array] = []
+var _decalages: Array[float] = []
+var _en_rotation: Array[bool] = []
+## Instant d'arrêt de chaque rouleau (secondes après le levier, voir ChronologieRouleaux).
+var _arrets: Array[float] = []
+var _temps_animation: float = 0.0
+var _textures_defilement: Array[Texture2D] = []
 ## Ce qui s'affiche une fois les rouleaux arrêtés : journal, chiffres, sons, secousse (voir _presenter_tour).
 var _presentation: Callable
-const DELAI_ENTRE_ROULEAUX := 0.12
+## Vitesse de défilement (pixels par seconde), espace entre deux icônes de la bande, et leur nombre.
+const VITESSE_DEFILEMENT := 1100.0
+const PAS_BANDE := 60.0
+const NB_ICONES_BANDE := 4
+## Vitesse minimale (part de la vitesse normale) juste avant l'arrêt d'un rouleau.
+const VITESSE_FIN_RALENTI := 0.12
 ## Vrai pour tester l'animation même en mode sans fenêtre (par défaut elle y est sautée).
 var forcer_animation: bool = false
 
@@ -213,20 +226,85 @@ func _lancer_les_effets(resultat: ResultatTirage, pv_avant: int) -> void:
 		Impacts.pluie_de_pieces(self)
 
 
-## Les rouleaux, un par un : d'abord tous « en train de tourner », puis chacun s'arrête à son tour de gauche à
-## droite avec un petit rebond et un clic un peu plus aigu. Pas d'animation en mode sans fenêtre (tests).
+## Les rouleaux tournent tous (les symboles défilent), puis s'arrêtent de gauche à droite, chacun avec un
+## ralentissement, un petit rebond et un clic un peu plus aigu. Le dernier se fait attendre (suspense, voir
+## ChronologieRouleaux). Les rouleaux bloqués ne tournent pas. Pas d'animation en mode sans fenêtre (tests).
 func _animer_rouleaux() -> void:
 	if DisplayServer.get_name() == "headless" and not forcer_animation:
 		return
 	animation_en_cours = true
+	_temps_animation = 0.0
+	_arrets = ChronologieRouleaux.instants_d_arret(combat.grille_courante)
+	_textures_defilement = _icones_pour_defiler()
 	for i in cases.size():
-		_dessiner_case(i, null, false)
-		etiquettes[i].text = "···"
-	_tween_rouleaux = create_tween()
+		var bloque := i in combat.bloques_du_tirage
+		_dessiner_case(i, null, false, bloque)
+		_en_rotation[i] = not bloque and i < _arrets.size()
+		_fenetres[i].visible = _en_rotation[i]
+		if _en_rotation[i]:
+			etiquettes[i].text = ""
+			_decalages[i] = randf() * PAS_BANDE
+			for icone_bande: TextureRect in _bandes[i]:
+				icone_bande.texture = _icone_au_hasard()
+			_placer_bande(i)
+
+
+## Les symboles qui défilent : ceux du sac du joueur (sinon ceux du tirage).
+func _icones_pour_defiler() -> Array[Texture2D]:
+	var symboles: Array[SymbolData] = []
+	for groupe in partie.sac.groupes():
+		symboles.append(groupe["symbole"])
+	if symboles.is_empty():
+		symboles.assign(combat.grille_courante.filter(func(s: SymbolData) -> bool: return s != null))
+	var textures: Array[Texture2D] = []
+	for symbole in symboles:
+		var texture := Images.icone(symbole.icone, ICONE_ROULEAU)
+		if texture != null:
+			textures.append(texture)
+	return textures
+
+
+func _icone_au_hasard() -> Texture2D:
+	if _textures_defilement.is_empty():
+		return null
+	return _textures_defilement[randi() % _textures_defilement.size()]
+
+
+## Fait avancer les rouleaux qui tournent et arrête ceux dont l'heure est venue.
+func _process(delta: float) -> void:
+	if not animation_en_cours:
+		return
+	_temps_animation += delta
+	var encore := false
 	for i in cases.size():
-		_tween_rouleaux.tween_interval(DELAI_ENTRE_ROULEAUX + (0.06 if i == 0 else 0.0))
-		_tween_rouleaux.tween_callback(_reveler_rouleau.bind(i))
-	_tween_rouleaux.tween_callback(_terminer_animation)
+		if not _en_rotation[i]:
+			continue
+		var reste := _arrets[i] - _temps_animation
+		if reste <= 0.0:
+			_en_rotation[i] = false
+			_fenetres[i].visible = false
+			_reveler_rouleau(i)
+			continue
+		encore = true
+		var ralenti := ChronologieRouleaux.duree_ralenti(i, cases.size())
+		var facteur := 1.0 if reste >= ralenti else lerpf(VITESSE_FIN_RALENTI, 1.0, reste / ralenti)
+		_decalages[i] += VITESSE_DEFILEMENT * facteur * delta
+		_placer_bande(i)
+	if not encore:
+		_terminer_animation()
+
+
+## Place les icônes de la bande du rouleau `index` ; une icône qui ressort en haut change de symbole.
+func _placer_bande(index: int) -> void:
+	var bande := _bandes[index]
+	var longueur := PAS_BANDE * bande.size()
+	for j in bande.size():
+		var icone_bande: TextureRect = bande[j]
+		var y := fposmod(_decalages[index] + PAS_BANDE * j, longueur) - PAS_BANDE
+		if y < icone_bande.offset_top:
+			icone_bande.texture = _icone_au_hasard()
+		icone_bande.offset_top = y
+		icone_bande.offset_bottom = y + PAS_BANDE
 
 
 func _reveler_rouleau(index: int) -> void:
@@ -247,10 +325,10 @@ func _terminer_animation() -> void:
 	if not animation_en_cours:
 		return
 	animation_en_cours = false
-	if _tween_rouleaux != null:
-		_tween_rouleaux.kill()
-	for case_grille in cases:
-		case_grille.offset_transform_position = Vector2.ZERO
+	for i in cases.size():
+		_en_rotation[i] = false
+		_fenetres[i].visible = false
+		cases[i].offset_transform_position = Vector2.ZERO
 	_dessiner_grille()
 	if _presentation.is_valid():
 		var presentation := _presentation
@@ -622,6 +700,27 @@ func _construire_colonne_combat(parent: Control) -> void:
 		etiquette.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		contenu.add_child(etiquette)
 		case_grille.add_child(contenu)
+		# Le rouleau qui tourne : une fenêtre qui masque ce qui dépasse, et des icônes qui glissent dedans.
+		var fenetre := Control.new()
+		fenetre.clip_contents = true
+		fenetre.visible = false
+		fenetre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var bande: Array = []
+		for j in NB_ICONES_BANDE:
+			var icone_bande := TextureRect.new()
+			icone_bande.set_anchors_preset(Control.PRESET_TOP_WIDE)
+			icone_bande.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+			icone_bande.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			icone_bande.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			icone_bande.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			icone_bande.modulate = Color(1, 1, 1, 0.8)
+			fenetre.add_child(icone_bande)
+			bande.append(icone_bande)
+		case_grille.add_child(fenetre)
+		_fenetres.append(fenetre)
+		_bandes.append(bande)
+		_decalages.append(0.0)
+		_en_rotation.append(false)
 		grille.add_child(case_grille)
 		cases.append(case_grille)
 		etiquettes.append(etiquette)
