@@ -128,8 +128,10 @@ const SHADER_NEON := "res://assets/shaders/neon.gdshader"
 static var _shader_neon: Shader
 
 
-## Le fond d'un écran : l'aplat sombre, le sol du donjon et les bords sombres (voir Decor).
+## Le fond d'un écran : l'aplat sombre, le sol du donjon et les bords sombres (voir Decor), et le style commun des
+## boutons et des jauges (voir Habillage) posé sur la racine de l'écran.
 static func ajouter_fond(parent: Control, couleur: Color) -> void:
+	parent.theme = Habillage.theme()
 	Decor.ajouter(parent, couleur)
 
 

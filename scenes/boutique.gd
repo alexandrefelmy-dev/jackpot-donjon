@@ -230,10 +230,14 @@ func _construire_interface() -> void:
 	titre.text = tr("Boutique")
 	titre.add_theme_font_size_override("font_size", 28)
 	titre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	Habillage.titre(titre)
 	entete.add_child(titre)
 	texte_infos = Label.new()
 	texte_infos.add_theme_font_size_override("font_size", 20)
 	entete.add_child(texte_infos)
+	var place_plein_ecran := Control.new()  # le bouton plein écran est en haut à droite
+	place_plein_ecran.custom_minimum_size = Vector2(PleinEcran.TAILLE_BOUTON, 0)
+	entete.add_child(place_plein_ecran)
 
 	# Corps : à gauche les offres et les services, à droite le sac.
 	var corps := HBoxContainer.new()

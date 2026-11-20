@@ -75,6 +75,7 @@ func _construire_interface() -> void:
 	titre.text = tr("Étage %d — %s") % [partie.etage, partie.nom_etage()]
 	titre.add_theme_font_size_override("font_size", 34)
 	titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	Habillage.titre(titre)
 	colonne.add_child(titre)
 
 	var avancee := Label.new()

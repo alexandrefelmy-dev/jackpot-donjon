@@ -308,11 +308,14 @@ La version 1.0 compte 3 étages, 9 ennemis normaux et 3 boss, dans un univers de
 - Néons : un shader à halo pulsant (période de 2 s) sur les titres du menu, des portes, du Comptoir et de l'écran de fin, et sur la bannière de jackpot.
 - Graphismes : le pack DungeonTileset II de 0x72 (CC0), agrandi d'un facteur entier sans lissage. Chaque ennemi a dans son `.tres` le nom de ses images (`images`), chaque symbole le nom de son icône (`icone`) ; le chevalier est le joueur. Le bouclier, l'aimant et le trèfle, absents du pack, sont dessinés par un script du projet (16×16). Le pack n'a pas d'images d'attaque ni de mort : les coups passent par les effets. Plusieurs ennemis n'ont pas d'image exacte (le Rat d'égout est une limace, le Rat-Croupier un ogre, le Pickpocket un diablotin…) : correspondance réglable dans les `.tres`.
 - Crédits : `docs/CREDITS.md` liste chaque ressource externe (auteur, source, licence), et `assets/manifeste.json` le fait fichier par fichier ; un test vérifie que chaque image est déclarée.
+- Écran de combat : une vraie machine à sous au centre en bas (meuble rouge à cadre doré, enseigne « JACKPOT DONJON » en néon entourée d'ampoules, une fenêtre par rouleau ombrée comme un cylindre, flèches rouges de la ligne de gain, mises sous la vitre). Les ampoules clignotent au repos, courent pendant que les rouleaux tournent et s'allument ensemble sur un jackpot. Le levier est à droite du meuble (un clic ou Espace ; il s'abaisse à chaque tirage). « Valider », les relances et « Continuer » prennent la place sous les mises. L'ennemi est en grand en arrière-plan, posé derrière le meuble (sprite recadré, hauteur voulue 190 px) : son nom, une fine jauge de vie et ses PV flottent au-dessus de lui, son intention (et son passif) est dans une bulle à côté, il n'y a plus de panneau. À gauche : le joueur (vie, armure, or, sac), ses reliques et le journal du dernier tour.
+- Plein écran : le bouton ⛶ (en haut à droite de tous les écrans) et Alt+Entrée le basculent ; le choix est enregistré avec les options et la case des Options suit. Le jeu reste en 1152 × 648 de base, mis à l'échelle sans flou.
+- Décor et style : tous les écrans ont le sol du donjon (dalles 0x72) assombri par des bords sombres, des boutons « casino » (vin sombre, cadre doré) et des titres en néon doré. Le meuble, les ampoules, le levier et le décor sont dessinés par le code (aucun fichier image, aucune licence externe).
 - Équilibrage : aucune valeur de jeu n'a changé.
 
 ## Interface et contrôles
 
-Le jeu se joue entièrement à la souris, avec la barre Espace comme raccourci pour tirer le levier. Résolution de base 1280 × 720, mise à l'échelle automatique en plein écran.
+Le jeu se joue entièrement à la souris, avec la barre Espace comme raccourci pour tirer le levier. Résolution de base 1152 × 648 (16:9), mise à l'échelle automatique ; plein écran avec le bouton ⛶ ou Alt+Entrée.
 
 | Écran | Contenu |
 | --- | --- |
@@ -320,7 +323,7 @@ Le jeu se joue entièrement à la souris, avec la barre Espace comme raccourci p
 | Options | Volume Musique et Effets, plein écran, réduire les tremblements et les flashs, crédits |
 | Comptoir du Croupier | Entre deux parties : jetons d'âme, avantages à débloquer, malédictions actives |
 | Choix de salle | 2 portes avec l'icône du type de salle, étage et salle en cours |
-| Combat | Ennemi et son intention, machine à sous, levier, mises, PV, armure, or, reliques |
+| Combat | Ennemi en grand en arrière-plan (nom, jauge de vie, bulle d'intention), machine à sous (meuble, rouleaux, levier, mises), PV, armure, or, reliques, journal |
 | Récompense | 3 symboles au choix + bouton Passer, or gagné |
 | Boutique | Symboles, reliques, retrait, amélioration, soin, or restant |
 | Sac | Liste de tous les symboles possédés, consultable à tout moment |
@@ -399,7 +402,7 @@ Le jeu se construit par versions jouables : la version 0.3 est le MVP, une parti
    - Réalisé : profil enregistré (écriture sûre, sauvegarde `.bak`, versions) ; Comptoir du Croupier au lancement et après chaque partie ; 6 achats (déblocage au hasard d'un symbole ou d'une relique, PV max, or de départ, relance gratuite, Trèfle) ; 5 malédictions ; bilan de fin de partie ; 4 nouveaux symboles (Bombe, Flèche, Aimant, Trèfle).
 8. **v0.8 – Habillage** : graphismes, sons, musique, animations, menu principal.
    - Fini quand : le jeu a ses images, ses sons et sa musique, un menu principal et des options, et chaque tirage s'anime.
-   - Réalisé : menu principal et options (volumes, plein écran, réduire les tremblements et les flashs, crédits, enregistrées) ; sons et musiques CC0 (Kenney, OpenGameArt) complétés par des sons générés ; bus Musique et Effets ; rouleaux qui défilent puis s'arrêtent un par un (le dernier se fait attendre), chiffres qui s'envolent, tremblement, arrêt sur image, pluie de pièces, flash, néons ; images du pack 0x72 pour les ennemis, le chevalier, les symboles et les portes, avec trois icônes dessinées ; Espace, Entrée et manette pour le levier, Échap pour revenir. Écarts : les néons ne sont pas sur les boutons de mise ; pas d'animations d'attaque ni de mort (le pack n'en a pas) ; sons manquants générés par script.
+   - Réalisé : menu principal et options (volumes, plein écran, réduire les tremblements et les flashs, crédits, enregistrées) ; sons et musiques CC0 (Kenney, OpenGameArt) complétés par des sons générés ; bus Musique et Effets ; machine à sous dessinée (meuble, enseigne néon, ampoules, levier), ennemi en grand en arrière-plan, plein écran (⛶, Alt+Entrée), décor et boutons « casino » sur tous les écrans, rouleaux qui défilent puis s'arrêtent un par un (le dernier se fait attendre), chiffres qui s'envolent, tremblement, arrêt sur image, pluie de pièces, flash, néons ; images du pack 0x72 pour les ennemis, le chevalier, les symboles et les portes, avec trois icônes dessinées ; Espace, Entrée et manette pour le levier, Échap pour revenir. Écarts : les néons ne sont pas sur les boutons de mise ; pas d'animations d'attaque ni de mort (le pack n'en a pas) ; sons manquants générés par script.
 9. **v1.0 – Sortie** : équilibrage, statistiques de fin de partie, export en .exe Windows.
 10. **v1.1 – Version anglaise** : traduction de tous les textes, choix de la langue dans les options.
 

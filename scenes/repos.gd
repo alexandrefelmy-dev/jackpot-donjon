@@ -134,6 +134,7 @@ func _construire_interface() -> void:
 	titre.text = tr("Un feu de camp : repos")
 	titre.add_theme_font_size_override("font_size", 34)
 	titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	Habillage.titre(titre)
 	page.add_child(titre)
 
 	texte_infos = Label.new()

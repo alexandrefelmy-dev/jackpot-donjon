@@ -45,6 +45,7 @@ func _construire_interface() -> void:
 	titre.text = tr("Une relique t'est offerte !")
 	titre.add_theme_font_size_override("font_size", 32)
 	titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	Habillage.titre(titre)
 	colonne.add_child(titre)
 
 	var consigne := Label.new()

@@ -22,6 +22,7 @@ func _lancer() -> void:
 	await test_reductions()
 	test_valeurs_du_tour()
 	test_chronologie_rouleaux()
+	test_habillage()
 	test_shader()
 	GameState.options = null
 	print("TERMINÉ : %d échec(s)" % echecs)
@@ -198,6 +199,25 @@ func test_chronologie_rouleaux() -> void:
 	verifier(ChronologieRouleaux.suite_avant_le_dernier(vide) == 0, "des cases vides ne comptent pas comme une suite")
 	verifier(ChronologieRouleaux.duree_ralenti(4, 5) > ChronologieRouleaux.duree_ralenti(0, 5), "le dernier rouleau ralentit plus longtemps")
 	verifier(ChronologieRouleaux.instants_d_arret([] as Array[SymbolData]).is_empty(), "grille vide : rien")
+
+
+func test_habillage() -> void:
+	print("Thème commun et décor")
+	var theme := Habillage.theme()
+	verifier(theme == Habillage.theme(), "le thème est construit une seule fois")
+	verifier(theme.has_stylebox("normal", "Button") and theme.has_stylebox("disabled", "Button"), "les boutons ont leurs styles")
+	verifier(theme.has_stylebox("fill", "ProgressBar") and theme.has_stylebox("panel", "TooltipPanel"), "jauges et bulles d'aide aussi")
+	var ecran := nouvel_ecran()
+	Cartes.ajouter_fond(ecran, Color.BLACK)
+	verifier(ecran.theme == theme, "ajouter_fond pose le thème sur l'écran")
+	verifier(ecran.get_node_or_null("Fond") != null and ecran.get_node_or_null("Sol") != null and ecran.get_node_or_null("Vignette") != null, "le décor a son fond, son sol et sa vignette")
+	for nom in ["Fond", "Sol", "Vignette"]:
+		var calque := ecran.get_node(nom) as Control
+		verifier(calque.mouse_filter == Control.MOUSE_FILTER_IGNORE, "le calque %s laisse passer les clics" % nom)
+	var etiquette := Label.new()
+	Habillage.titre(etiquette)
+	verifier(etiquette.material is ShaderMaterial, "un titre reçoit le néon")
+	ecran.queue_free()
 
 
 func test_shader() -> void:

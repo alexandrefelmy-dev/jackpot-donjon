@@ -105,6 +105,7 @@ func _construire_interface() -> void:
 	var titre := Label.new()
 	titre.text = tr("Options")
 	titre.add_theme_font_size_override("font_size", 40)
+	Habillage.titre(titre)
 	page.add_child(titre)
 
 	texte_musique = Label.new()
