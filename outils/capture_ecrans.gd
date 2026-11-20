@@ -17,7 +17,7 @@ const NOMS := ["portes_etage1", "portes_etage3", "combat_depart", "combat_attent
 		"combat_apres_tour", "combat_grand_croupier", "combat_grand_croupier_tour2", "combat_dame_de_pique",
 		"combat_dame_de_pique_tour3", "combat_mimique", "combat_usurier", "combat_pickpocket", "combat_pickpocket_fuite",
 		"recompense", "relique", "boutique", "repos", "repos_sac", "fin_victoire", "fin_defaite", "comptoir", "comptoir_epuise", "fin_bilan", "menu", "options", "options_credits",
-		"combat_avant_tirage", "combat_rouleaux_tournent", "combat_dernier_rouleau"]
+		"combat_avant_tirage", "combat_rouleaux_tournent", "combat_dernier_rouleau", "combat_squelette", "combat_victoire"]
 ## Captures prises plus tard qu'après 6 images : durée à attendre (ms) depuis la préparation de l'écran.
 const ATTENTE_MS := {"combat_dernier_rouleau": 2000}
 
@@ -196,6 +196,14 @@ func _preparer(etape: int) -> void:
 		29:  # …2 s plus tard : les quatre premiers sont arrêtés, le dernier tourne encore (suspense)
 			var combat: Control = current_scene
 			_controler(combat.animation_en_cours and combat._en_rotation[4], "le dernier rouleau devrait encore tourner")
+		30:  # un autre ennemi (le squelette), en grand derrière la machine
+			_combat_contre("squelette", 1)
+		31:  # …vaincu : le texte de victoire et « Continuer »
+			var combat: Control = current_scene
+			combat.combat.pv_ennemi = 0
+			combat.combat.etat = Combat.Etat.VICTOIRE
+			combat._rafraichir()
+			_controler(combat.bouton_continuer.visible, "« Continuer » devrait s'afficher")
 
 
 ## Un combat contre l'ennemi `id`, à l'étage `etage`, avec l'ouverture jouée si l'ennemi en a une.

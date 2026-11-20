@@ -71,6 +71,25 @@ func _initialize() -> void:
 	verifier(au_boss.bouton_debug.disabled, "au boss, le bouton de test est désactivé")
 	verifier(au_boss.texte_etage.text.contains("BOSS"), "l'en-tête annonce le boss : %s" % au_boss.texte_etage.text)
 
+	# Chaque ennemi, en grand derrière la machine : dans la fenêtre, sous son nom et sa jauge, et son bas caché par le meuble.
+	for chemin in DirAccess.get_files_at("res://data/enemies/"):
+		if chemin.get_extension() != "tres":
+			continue
+		GameState.nouvelle_partie()
+		GameState.partie.ennemi_courant = load("res://data/enemies/" + chemin) as EnemyData
+		GameState.partie.ecran = Partie.Ecran.COMBAT
+		GameState.aller_a(GameState.SCENE_COMBAT)
+		await _attendre()
+		var scene_combat: Control = current_scene
+		var sprite: Rect2 = scene_combat.image_ennemi.get_global_rect()
+		var plaque: Rect2 = scene_combat.texte_pv_ennemi.get_global_rect()
+		var meuble_haut: float = scene_combat.meuble.get_global_rect().position.y
+		verifier_dans_la_fenetre(scene_combat.image_ennemi, "%s : sprite" % chemin.get_basename())
+		verifier(sprite.position.y >= plaque.end.y - 4, "%s : le sprite est sous le nom et la jauge (haut %d, bas de la plaque %d)" % [chemin.get_basename(), sprite.position.y, plaque.end.y])
+		verifier(sprite.end.y > meuble_haut and sprite.end.y < meuble_haut + 80, "%s : ses pieds passent derrière le meuble (bas %d, haut du meuble %d)" % [chemin.get_basename(), sprite.end.y, meuble_haut])
+		verifier_dans_la_fenetre(scene_combat.bulle_intention, "%s : bulle d'intention" % chemin.get_basename())
+		verifier(scene_combat.bulle_intention.get_global_rect().position.y >= plaque.end.y - 4 or scene_combat.bulle_intention.get_global_rect().position.x > plaque.end.x, "%s : la bulle ne recouvre pas le nom" % chemin.get_basename())
+
 	# Mises et reliques sur l'écran de combat : sans relique d'abord.
 	GameState.nouvelle_partie()
 	GameState.partie.or_total = 50
@@ -536,6 +555,9 @@ func _initialize() -> void:
 	# --- Les rouleaux s'arrêtent un par un ---
 	var anime: Control = current_scene
 	anime.forcer_animation = true
+	# Un tirage chanceux pourrait tuer le rat : on lui donne beaucoup de PV (et au joueur) pour que ce test soit stable.
+	anime.combat.pv_ennemi = 500
+	anime.combat.pv_joueur = 500
 	var tour_avant_anim: int = anime.combat.numero_tour
 	anime._tirer()
 	verifier(anime.animation_en_cours and anime.combat.numero_tour == tour_avant_anim + 1, "le tour est calculé tout de suite, les rouleaux s'arrêtent ensuite")

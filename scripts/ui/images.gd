@@ -50,6 +50,31 @@ static func nb_cadres(prefixe: String) -> int:
 	return nombre
 
 
+## Comme cadres(), mais d'abord recadrées sur ce que l'animation dessine vraiment (sans la marge transparente du
+## pack) : le sprite visible a alors la hauteur voulue, et son bas touche le bas de l'image. Le facteur d'agrandissement
+## (entier) est entre 2 et `facteur_max` : un petit ennemi (un rat) ne devient pas géant.
+static func cadres_rognes(prefixe: String, hauteur_voulue: int, facteur_max: int = 12) -> Array[Texture2D]:
+	var cle := "%s@rogne%d" % [prefixe, hauteur_voulue]
+	if _cache.has(cle):
+		return _cache[cle]
+	var liste: Array[Texture2D] = []
+	var images: Array[Image] = []
+	var zone := Rect2i()
+	for i in nb_cadres(prefixe):
+		var image := texture("%s_f%d" % [prefixe, i]).get_image()
+		images.append(image)
+		var utilisee := image.get_used_rect()
+		zone = utilisee if i == 0 else zone.merge(utilisee)
+	if zone.size.y > 0:
+		var facteur := clampi(int(float(hauteur_voulue) / zone.size.y), 2, facteur_max)
+		for image in images:
+			var rogne := image.get_region(zone)
+			rogne.resize(rogne.get_width() * facteur, rogne.get_height() * facteur, Image.INTERPOLATE_NEAREST)
+			liste.append(ImageTexture.create_from_image(rogne))
+	_cache[cle] = liste
+	return liste
+
+
 ## Les images d'une animation, agrandies d'un facteur entier pour approcher `hauteur_voulue` pixels de haut
 ## (facteur arrondi au plus proche, au moins 2). Liste vide si l'animation n'existe pas.
 static func cadres(prefixe: String, hauteur_voulue: int) -> Array[Texture2D]:

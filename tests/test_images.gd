@@ -42,6 +42,20 @@ func test_ennemis() -> void:
 		var ennemi := load(chemin) as EnemyData
 		verifier(ennemi != null and Images.nb_cadres(ennemi.images) >= 2, "%s : %d images d'animation (%s)" % [chemin.get_file(), Images.nb_cadres(ennemi.images) if ennemi != null else 0, ennemi.images if ennemi != null else "?"])
 	verifier(Images.nb_cadres("knight_m_idle_anim") >= 2, "le joueur (chevalier) a son animation")
+	# Les sprites recadrés (ennemis en grand derrière la machine) : de la bonne taille, sans marge transparente.
+	for chemin in _fichiers("res://data/enemies/"):
+		var ennemi := load(chemin) as EnemyData
+		var cadres := Images.cadres_rognes(ennemi.images, 190)
+		verifier(cadres.size() == Images.nb_cadres(ennemi.images), "%s : toutes les images sont recadrées" % chemin.get_file())
+		var hauteur := cadres[0].get_height() if not cadres.is_empty() else 0
+		verifier(hauteur >= 60 and hauteur <= 240, "%s : sprite de %d px de haut (60 à 240)" % [chemin.get_file(), hauteur])
+		var meme_taille := true
+		for cadre in cadres:
+			meme_taille = meme_taille and cadre.get_size() == cadres[0].get_size()
+		verifier(meme_taille, "%s : toutes les images ont la même taille (l'ennemi ne saute pas)" % chemin.get_file())
+		if not cadres.is_empty():
+			var utilisee := cadres[0].get_image().get_used_rect()
+			verifier(utilisee.position.y == 0 or cadres.size() > 1, "%s : le haut du sprite touche le haut de l'image" % chemin.get_file())
 
 
 func test_symboles() -> void:
