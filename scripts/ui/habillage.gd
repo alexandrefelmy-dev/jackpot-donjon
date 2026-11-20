@@ -7,6 +7,8 @@ extends RefCounted
 
 const COULEUR_OR := Color("ffd34d")
 const COULEUR_OR_SOMBRE := Color("a8801f")
+## Un or pâle pour les textes discrets (les records).
+const COULEUR_DISCRETE := Color("c2a662")
 const COULEUR_VIN := Color("2a1220")
 const COULEUR_TEXTE := Color("f3ead8")
 
@@ -47,6 +49,18 @@ static func theme() -> Theme:
 
 	_theme = t
 	return t
+
+
+## Un panneau sombre translucide à cadre doré (joueur et journal du combat, statistiques de fin) : lisible
+## par-dessus le décor.
+static func panneau() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.04, 0.08, 0.82)
+	style.border_color = COULEUR_OR_SOMBRE
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(12)
+	style.set_content_margin_all(10)
+	return style
 
 
 ## Donne à un titre l'allure d'une enseigne : or, contour sombre et lumière de néon pulsante.

@@ -1,0 +1,32 @@
+{
+	"version": 2,
+	"jetons": 37,
+	"symboles_debloques": [
+		"epee",
+		"bouclier",
+		"potion",
+		"piece",
+		"bombe"
+	],
+	"reliques_debloquees": [
+		"coeur_de_pierre",
+		"tirelire",
+		"lame_aimantee",
+		"de_pipe",
+		"jackpot_maudit"
+	],
+	"niveau_pv": 2,
+	"niveau_or": 1,
+	"relance_de_partie": true,
+	"trefle_au_depart": false,
+	"maledictions": [
+		"fatigue",
+		"mauvais_oeil"
+	],
+	"parties_jouees": 9,
+	"victoires": 1,
+	"record_salles": 14,
+	"record_degats": 230,
+	"record_combo": 4,
+	"record_jackpots": 2
+}

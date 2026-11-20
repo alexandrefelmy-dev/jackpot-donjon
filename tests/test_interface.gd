@@ -638,6 +638,8 @@ func _initialize() -> void:
 	verifier(comptoir_ecran.texte_maledictions.text.contains("Sac lesté") and comptoir_ecran.texte_maledictions.text.contains("Mauvais œil"),
 			"les 3 malédictions sont affichées : %s" % comptoir_ecran.texte_maledictions.text.replace("\n", " | "))
 	verifier(comptoir_ecran.texte_jetons.text.contains("100"), "les jetons s'affichent : %s" % comptoir_ecran.texte_jetons.text)
+	verifier_dans_la_fenetre(comptoir_ecran.texte_records, "records du Comptoir")
+	verifier(comptoir_ecran.texte_records.text.contains("Records"), "le Comptoir montre les records : %s" % comptoir_ecran.texte_records.text)
 	# Un clic sur « Débloquer un symbole » : 10 jetons dépensés, un symbole débloqué.
 	comptoir_ecran.boutons_achats[0].pressed.emit()
 	verifier(profil.jetons == 90 and profil.symboles_debloques.size() == 5, "clic sur « Débloquer un symbole » : 90 jetons, un symbole de plus")
@@ -676,10 +678,20 @@ func _initialize() -> void:
 	# --- Écran de fin avec le bilan du profil ---
 	var profil_fin := Profil.nouveau()
 	profil_fin.maledictions.assign([&"fatigue"] as Array[StringName])
+	profil_fin.parties_jouees = 1  # une partie déjà jouée : les records battus sont annoncés
+	profil_fin.record_degats = 50
+	profil_fin.record_salles = 20
+	profil_fin.record_combo = 5
 	GameState.profil = profil_fin
 	var perdue := Partie.creer(1, profil_fin)
 	perdue.salles_franchies = 9
 	perdue.boss_vaincus = 1
+	perdue.stats.degats_infliges = 123
+	perdue.stats.plus_long_combo = 4
+	perdue.stats.jackpots = 0
+	perdue.stats.mises_jouees = 3
+	perdue.stats.mises_gagnees = 2
+	perdue.stats.or_depense = 17
 	perdue.etat = Partie.Etat.DEFAITE
 	perdue.ecran = Partie.Ecran.FIN
 	GameState.lancer(perdue)
@@ -689,12 +701,25 @@ func _initialize() -> void:
 	verifier(fin_bilan.texte_jetons != null and profil_fin.jetons == 14, "défaite après 9 salles et 1 boss : 14 jetons enregistrés (%d)" % profil_fin.jetons)
 	verifier(fin_bilan.texte_malediction != null and fin_bilan.texte_malediction.text.contains("effacée"), "l'écran dit qu'une malédiction est effacée (le boss)")
 	verifier(fin_bilan.texte_malediction.text.contains("reçue"), "…et qu'une nouvelle est reçue")
-	for composant in [fin_bilan.texte_jetons, fin_bilan.texte_malediction, fin_bilan.bouton_rejouer, fin_bilan.bouton_comptoir, fin_bilan.bouton_menu]:
+	for composant in [fin_bilan.panneau_stats, fin_bilan.texte_records, fin_bilan.texte_jetons, fin_bilan.texte_malediction,
+			fin_bilan.bouton_rejouer, fin_bilan.bouton_comptoir, fin_bilan.bouton_menu]:
 		verifier_dans_la_fenetre(composant, "fin de partie : %s" % composant.name)
+	var tout_le_texte := "
+".join(fin_bilan.cases_stats.map(func(c: Label) -> String: return c.text))
+	verifier(fin_bilan.cases_stats.size() == 10, "10 statistiques affichées")
+	verifier(tout_le_texte.contains("123") and tout_le_texte.contains("2 / 3") and tout_le_texte.contains("dépensé : 17") and tout_le_texte.contains("combo : 4"),
+			"les statistiques de la partie s'affichent : dégâts 123, mises 2 / 3, or dépensé 17, plus long combo 4")
+	var cases_en_or: Array[String] = []
+	for etiquette: Label in fin_bilan.cases_stats:
+		if etiquette.text.contains("record !"):
+			cases_en_or.append(etiquette.text)
+	verifier(cases_en_or.size() == 1 and cases_en_or[0].contains("123"), "seul le record de dégâts est battu (123 > 50) : %s" % str(cases_en_or))
+	verifier(fin_bilan.texte_records.text.contains("123") and fin_bilan.texte_records.text.contains("combo de 5"),
+			"la ligne des records du profil est à jour : %s" % fin_bilan.texte_records.text)
 	var jetons_apres := profil_fin.jetons
 	GameState.aller_a_suivant()
 	await _attendre()
-	verifier(profil_fin.jetons == jetons_apres and profil_fin.parties_jouees == 1, "recharger l'écran de fin ne crédite pas une 2e fois")
+	verifier(profil_fin.jetons == jetons_apres and profil_fin.parties_jouees == 2, "recharger l'écran de fin ne crédite pas une 2e fois")
 	current_scene.bouton_comptoir.pressed.emit()
 	await _attendre()
 	verifier(current_scene.name == "Comptoir" and not GameState.en_partie, "« Comptoir du Croupier » mène au Comptoir")

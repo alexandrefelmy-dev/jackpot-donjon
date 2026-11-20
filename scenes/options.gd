@@ -158,7 +158,7 @@ func _construire_interface() -> void:
 	page.add_child(texte_message)
 
 	texte_credits = Label.new()
-	texte_credits.text = tr("Sons : Kenney (casino-audio, CC0) et sons générés pour le jeu.\nMusiques (CC0, OpenGameArt) : yd, TokyoGeisha, XCVG.\nTous les détails et les licences : docs/CREDITS.md")
+	texte_credits.text = tr("Images : DungeonTileset II par 0x72 (CC0).\nSons : Kenney (casino-audio, CC0) et sons générés pour le jeu.\nMusiques (CC0, OpenGameArt) : yd, TokyoGeisha, XCVG.\nTous les détails et les licences : CREDITS.txt, dans le dossier du jeu.")
 	texte_credits.add_theme_font_size_override("font_size", 16)
 	texte_credits.add_theme_color_override("font_color", Color(1, 1, 1, 0.75))
 	texte_credits.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

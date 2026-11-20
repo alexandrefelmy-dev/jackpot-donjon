@@ -314,6 +314,14 @@ La version 1.0 compte 3 étages, 9 ennemis normaux et 3 boss, dans un univers de
 - Combats obligatoires (demandé par Alex) : voir « Précisions de règles (v0.6) » pour la nouvelle structure d'un étage (5 combats, 2 salles bonus après les combats 2 et 4). Un combat qui s'enfuit (Pickpocket) compte comme un combat fait ; la Mimique d'un coffre bonus est un combat en plus.
 - Équilibrage : il y a beaucoup plus de combats (5 par étage au lieu de 2 à 3 environ), donc les ennemis normaux ont été allégés : PV et attaque × 0,9 (arrondi), les boss et l'attaque surprise de la Mimique sont inchangés. Mesuré avec 400 parties par robot : « prudent » 48 % de victoires (42 % avant), « hasard » 14 % (16 %), « tout » 18 % (22 %), « prudent » avec un profil neuf 19 % (19 %), avec 3 malédictions 10 % (11 %), avec tous les avantages 31 % (42 %). Valeurs à régler dans les `.tres` après les essais d'Alex.
 
+**Précisions de règles (v1.0)**
+
+- Statistiques de partie (écran de fin) : étage atteint, salles franchies (et boss vaincus), combats gagnés, tours joués, dégâts infligés (ceux du journal « Tu infliges N dégâts », avant l'armure de l'ennemi), plus long combo (3, 4 ou 5 symboles, 6 avec le Sixième rouleau), jackpots (combos de 5), mises gagnées sur mises jouées (or ou quitte ou double ; une mise impossible n'est pas comptée), or en poche et or dépensé en boutique, symboles dans le sac. Un combat perdu compte aussi. Les statistiques vivent dans `StatsPartie` : `Combat` compte les siennes, `Partie` les additionne à la fin de chaque combat.
+- Records (enregistrés dans le profil, version 2) : le plus de salles franchies, de dégâts, le plus long combo et le plus de jackpots dans une même partie. Une statistique qui bat un record déjà existant est affichée en or avec « record ! » à l'écran de fin ; à la toute première partie, les records sont posés sans rien annoncer (tout serait un record). Le Comptoir affiche les records. Le profil passe à la version 2 : un profil de la version 1 est migré sans rien perdre (records à 0), un profil plus récent que le jeu reste refusé et jamais écrasé.
+- Performance : mesurée avec `outils/mesure_images.gd` en vraie fenêtre sans synchronisation verticale (menu, combat au repos, combat pendant les rouleaux, en 1152 × 648 et 1920 × 1080). Sur la machine de test (AMD Radeon RX 9070 XT), la moyenne reste sous 0,5 ms par image et le pire cas à 8 ms (la toute première animation), pour un budget de 16,6 ms (60 images par seconde).
+- Sécurité : le jeu n'a aucun réseau et ne lance aucune commande ; les seuls fichiers lus sont le profil et les options, en JSON, validés strictement (types, bornes, identifiants connus) : aucun objet n'est jamais chargé depuis un fichier. Revue de sécurité de la branche : aucun problème trouvé.
+- Équilibrage : aucune valeur de jeu n'a changé depuis la v0.8.
+
 ## Interface et contrôles
 
 Le jeu se joue entièrement à la souris, avec la barre Espace comme raccourci pour tirer le levier. Résolution de base 1152 × 648 (16:9), mise à l'échelle automatique ; plein écran avec le bouton ⛶ ou Alt+Entrée.
@@ -328,7 +336,7 @@ Le jeu se joue entièrement à la souris, avec la barre Espace comme raccourci p
 | Récompense | 3 symboles au choix + bouton Passer, or gagné |
 | Boutique | Symboles, reliques, retrait, amélioration, soin, or restant |
 | Sac | Liste de tous les symboles possédés, consultable à tout moment |
-| Fin de partie | Victoire ou game over, statistiques (étage atteint, dégâts, plus gros jackpot), jetons gagnés, malédiction reçue, Rejouer |
+| Fin de partie | Victoire ou game over, 10 statistiques (records battus en or), records du profil, jetons gagnés, malédiction reçue, Rejouer |
 
 En combat, survoler un symbole ou une relique affiche une bulle d'aide avec son effet exact.
 
@@ -405,6 +413,8 @@ Le jeu se construit par versions jouables : la version 0.3 est le MVP, une parti
    - Fini quand : le jeu a ses images, ses sons et sa musique, un menu principal et des options, et chaque tirage s'anime.
    - Réalisé : menu principal et options (volumes, plein écran, réduire les tremblements et les flashs, crédits, enregistrées) ; sons et musiques CC0 (Kenney, OpenGameArt) complétés par des sons générés ; bus Musique et Effets ; machine à sous dessinée (meuble, enseigne néon, ampoules, levier), ennemi en grand en arrière-plan, plein écran (⛶, Alt+Entrée), décor et boutons « casino » sur tous les écrans, rouleaux qui défilent puis s'arrêtent un par un (le dernier se fait attendre), chiffres qui s'envolent, tremblement, arrêt sur image, pluie de pièces, flash, néons ; images du pack 0x72 pour les ennemis, le chevalier, les symboles et les portes, avec trois icônes dessinées ; Espace, Entrée et manette pour le levier, Échap pour revenir. Écarts : les néons ne sont pas sur les boutons de mise ; pas d'animations d'attaque ni de mort (le pack n'en a pas) ; sons manquants générés par script.
 9. **v1.0 – Sortie** : équilibrage, statistiques de fin de partie, export en .exe Windows.
+   - Fini quand : le jeu se joue de bout en bout depuis un seul .exe, sans éditeur, avec ses statistiques de fin de partie.
+   - Réalisé : statistiques de partie (10 chiffres) et records dans le profil (version 2, migration depuis la version 1) ; écran de fin et Comptoir mis à jour ; équilibrage revérifié avec les robots (valeurs inchangées depuis la v0.8, voir « Précisions de règles (v0.8) ») ; performances mesurées (menu, combat, rouleaux : bien sous 16,6 ms) ; revue de sécurité sans problème ; icône du jeu dessinée par code ; export Windows en un seul .exe (118 Mo, données intégrées) et un .zip de 46 Mo avec `LISEZMOI.txt` et les crédits (`python outils/exporter.py`). L'icône, le nom et la version sont inscrits dans le .exe avec l'outil `rcedit`. Écart : l'exe n'est pas signé (Windows peut afficher un avertissement au premier lancement).
 10. **v1.1 – Version anglaise** : traduction de tous les textes, choix de la langue dans les options.
 
 ## Hors périmètre et décisions

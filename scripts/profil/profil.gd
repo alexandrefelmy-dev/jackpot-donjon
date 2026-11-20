@@ -4,9 +4,13 @@ extends RefCounted
 ## permanents, malédictions). Que des données simples : il s'écrit tel quel dans un fichier JSON
 ## (voir ProfilFichier). Les règles d'achat sont dans Comptoir, le bilan d'une partie dans Bilan.
 
-## Le numéro de version du fichier : à augmenter à chaque changement de forme, avec une migration.
-const VERSION := 1
+## Le numéro de version du fichier : à augmenter à chaque changement de forme, avec une migration
+## (voir ProfilFichier.migrations_reelles). Version 2 : les records.
+const VERSION := 2
 
+## Borne de bon sens du record de plus long combo (la machine a 5 ou 6 rouleaux aujourd'hui) : large, pour qu'une
+## machine plus grande plus tard ne fasse jamais passer un profil pour abîmé.
+const RECORD_COMBO_MAX := 20
 const NIVEAU_MAX := 3
 const PV_PAR_NIVEAU := 5
 const OR_PAR_NIVEAU := 10
@@ -33,6 +37,14 @@ var trefle_au_depart: bool = false
 var maledictions: Array[StringName] = []
 var parties_jouees: int = 0
 var victoires: int = 0
+## Les records d'une partie (0 = aucun) : salles franchies, dégâts infligés, plus long combo, jackpots.
+var record_salles: int = 0
+var record_degats: int = 0
+var record_combo: int = 0
+var record_jackpots: int = 0
+## Les noms des records : la clé du fichier est « record_ » + le nom, le champ porte le même nom. Une seule liste
+## pour le fichier, la validation, les statistiques de fin (Bilan) et les écrans.
+const CLES_RECORDS: Array[StringName] = [&"salles", &"degats", &"combo", &"jackpots"]
 
 
 ## Un profil neuf : rien d'acheté, les éléments de départ débloqués.
@@ -41,6 +53,21 @@ static func nouveau() -> Profil:
 	profil.symboles_debloques.assign(SYMBOLES_DE_DEPART)
 	profil.reliques_debloquees.assign(RELIQUES_DE_DEPART)
 	return profil
+
+
+## La valeur d'un record (voir CLES_RECORDS), et sa mise à jour.
+func record(cle: StringName) -> int:
+	return int(get("record_" + String(cle)))
+
+
+func poser_record(cle: StringName, valeur: int) -> void:
+	set("record_" + String(cle), valeur)
+
+
+## La ligne des records, pour l'écran de fin et le Comptoir.
+func texte_records() -> String:
+	return String(TranslationServer.translate("Records : %d salles · %d dégâts · combo de %d · %d jackpots")) % [
+		record_salles, record_degats, record_combo, record_jackpots]
 
 
 func a_debloque_symbole(id: StringName) -> bool:
@@ -79,7 +106,7 @@ func or_bonus() -> int:
 # --- Conversion en données simples ------------------------------------------------
 
 func en_dictionnaire() -> Dictionary:
-	return {
+	var donnees := {
 		"version": VERSION,
 		"jetons": jetons,
 		"symboles_debloques": _en_textes(symboles_debloques),
@@ -92,6 +119,9 @@ func en_dictionnaire() -> Dictionary:
 		"parties_jouees": parties_jouees,
 		"victoires": victoires,
 	}
+	for cle in CLES_RECORDS:
+		donnees["record_" + String(cle)] = record(cle)
+	return donnees
 
 
 ## Relit un profil depuis des données (déjà à la version actuelle). Renvoie null si quelque chose
@@ -105,6 +135,9 @@ static func depuis_dictionnaire(donnees: Dictionary) -> Profil:
 	var niveau_or_lu: Variant = entier_ou_null(donnees.get("niveau_or"))
 	var parties_lues: Variant = entier_ou_null(donnees.get("parties_jouees"))
 	var victoires_lues: Variant = entier_ou_null(donnees.get("victoires"))
+	var records_lus := {}
+	for cle in CLES_RECORDS:
+		records_lus[cle] = entier_ou_null(donnees.get("record_" + String(cle)))
 	if jetons_lus == null or jetons_lus < 0 or niveau_pv_lu == null or niveau_pv_lu < 0 or niveau_pv_lu > NIVEAU_MAX \
 			or niveau_or_lu == null or niveau_or_lu < 0 or niveau_or_lu > NIVEAU_MAX \
 			or parties_lues == null or parties_lues < 0 or victoires_lues == null or victoires_lues < 0 \
@@ -112,6 +145,11 @@ static func depuis_dictionnaire(donnees: Dictionary) -> Profil:
 		return null
 	if not (donnees.get("relance_de_partie") is bool) or not (donnees.get("trefle_au_depart") is bool):
 		return null
+	# Les records : des entiers positifs ou nuls (le plus long combo reste sous une borne de bon sens).
+	for cle in CLES_RECORDS:
+		var lu: Variant = records_lus[cle]
+		if lu == null or lu < 0 or (cle == &"combo" and lu > RECORD_COMBO_MAX):
+			return null
 	var symboles: Variant = _ids(donnees.get("symboles_debloques"), SYMBOLES_DE_DEPART + SYMBOLES_A_DEBLOQUER)
 	var reliques: Variant = _ids(donnees.get("reliques_debloquees"), RELIQUES_DE_DEPART + RELIQUES_A_DEBLOQUER)
 	var maledictions: Variant = _ids(donnees.get("maledictions"), Maledictions.TOUTES)
@@ -124,6 +162,8 @@ static func depuis_dictionnaire(donnees: Dictionary) -> Profil:
 	profil.trefle_au_depart = donnees["trefle_au_depart"]
 	profil.parties_jouees = parties_lues
 	profil.victoires = victoires_lues
+	for cle in CLES_RECORDS:
+		profil.poser_record(cle, records_lus[cle])
 	# Les éléments de départ restent toujours débloqués, même si le fichier ne les cite pas.
 	for id: StringName in symboles:
 		if not (id in profil.symboles_debloques):

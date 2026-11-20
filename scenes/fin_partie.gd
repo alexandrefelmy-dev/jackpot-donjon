@@ -8,6 +8,10 @@ const COULEUR_DEFAITE := Color("ff6b6b")
 
 
 var partie: Partie
+## Le panneau des statistiques, une case par statistique (texte et record battu), et la ligne des records.
+var panneau_stats: PanelContainer
+var cases_stats: Array[Label] = []
+var texte_records: Label
 var texte_jetons: Label
 var texte_malediction: Label
 var bouton_rejouer: Button
@@ -46,7 +50,7 @@ func _construire_interface() -> void:
 	add_child(centre)
 
 	var colonne := VBoxContainer.new()
-	colonne.add_theme_constant_override("separation", 16)
+	colonne.add_theme_constant_override("separation", 10)
 	centre.add_child(colonne)
 
 	var victoire := partie.etat == Partie.Etat.VICTOIRE
@@ -69,16 +73,7 @@ func _construire_interface() -> void:
 	sous_titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	colonne.add_child(sous_titre)
 
-	var stats := Label.new()
-	stats.text = "\n".join([
-		tr("Salles franchies : %d   Boss vaincus : %d / %d") % [partie.salles_franchies, partie.boss_vaincus, Donjon.NB_ETAGES],
-		tr("Or gagné : %d") % partie.or_total,
-		tr("Symboles dans le sac : %d") % partie.sac.taille(),
-		tr("Graine : %d") % partie.graine + "     " + Version.texte(),
-	])
-	stats.add_theme_font_size_override("font_size", 20)
-	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	colonne.add_child(stats)
+	_construire_statistiques(colonne)
 
 	# Ce que la partie rapporte au profil (rien sans profil : tests et outils).
 	if not partie.bilan.is_empty():
@@ -117,6 +112,64 @@ func _construire_interface() -> void:
 	bouton_menu = _creer_bouton(tr("Menu"), _aller_au_menu)
 	bouton_menu.custom_minimum_size = Vector2(160, 56)
 	boutons.add_child(bouton_menu)
+
+
+## Les statistiques de la partie, en deux colonnes dans un panneau ; une statistique qui bat un record du profil
+## est en or, avec « record ! ». Dessous : les records du profil, et la graine.
+func _construire_statistiques(colonne: VBoxContainer) -> void:
+	var records_battus: Array = partie.bilan.get("records_battus", [])
+	panneau_stats = PanelContainer.new()
+	panneau_stats.add_theme_stylebox_override("panel", Habillage.panneau())
+	colonne.add_child(panneau_stats)
+	var grille := GridContainer.new()
+	grille.columns = 2
+	grille.add_theme_constant_override("h_separation", 48)
+	grille.add_theme_constant_override("v_separation", 4)
+	panneau_stats.add_child(grille)
+	for ligne in _lignes_de_stats():
+		var etiquette := Label.new()
+		etiquette.text = ligne["texte"]
+		etiquette.add_theme_font_size_override("font_size", 18)
+		if ligne["record"] in records_battus:
+			etiquette.text = tr("%s  — record !") % etiquette.text
+			etiquette.add_theme_color_override("font_color", Habillage.COULEUR_OR)
+		grille.add_child(etiquette)
+		cases_stats.append(etiquette)
+
+	if GameState.profil != null:
+		var profil := GameState.profil
+		texte_records = Label.new()
+		texte_records.text = profil.texte_records()
+		texte_records.add_theme_font_size_override("font_size", 16)
+		texte_records.add_theme_color_override("font_color", Habillage.COULEUR_DISCRETE)
+		texte_records.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		colonne.add_child(texte_records)
+
+	var graine := Label.new()
+	graine.text = tr("Graine : %d") % partie.graine + "     " + Version.texte()
+	graine.add_theme_font_size_override("font_size", 14)
+	graine.add_theme_color_override("font_color", Color(1, 1, 1, 0.45))
+	graine.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	colonne.add_child(graine)
+
+
+## Les statistiques à montrer : { "texte", "record" } (le nom du record du profil que cette statistique peut battre, ou &"").
+func _lignes_de_stats() -> Array[Dictionary]:
+	var stats := partie.stats
+	var combo := tr("Plus long combo : %d symboles") % stats.plus_long_combo if stats.plus_long_combo > 0 \
+			else tr("Plus long combo : aucun")
+	return [
+		{"texte": tr("Étage atteint : %d") % partie.etage, "record": &""},
+		{"texte": tr("Salles franchies : %d (boss : %d / %d)") % [partie.salles_franchies, partie.boss_vaincus, Donjon.NB_ETAGES], "record": &"salles"},
+		{"texte": tr("Combats gagnés : %d") % partie.combats_gagnes, "record": &""},
+		{"texte": tr("Tours joués : %d") % stats.tours_joues, "record": &""},
+		{"texte": tr("Dégâts infligés : %d") % stats.degats_infliges, "record": &"degats"},
+		{"texte": combo, "record": &"combo"},
+		{"texte": tr("Jackpots : %d") % stats.jackpots, "record": &"jackpots"},
+		{"texte": tr("Mises gagnées : %d / %d") % [stats.mises_gagnees, stats.mises_jouees], "record": &""},
+		{"texte": tr("Or : %d (dépensé : %d)") % [partie.or_total, stats.or_depense], "record": &""},
+		{"texte": tr("Symboles dans le sac : %d") % partie.sac.taille(), "record": &""},
+	]
 
 
 func _creer_bouton(texte: String, action: Callable) -> Button:

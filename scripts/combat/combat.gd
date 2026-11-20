@@ -38,6 +38,8 @@ var or_gagne: int = 0
 ## Rouleaux (index de cases) bloqués pour le prochain tirage du joueur.
 ## La scène les lit avant de tirer ; jouer_tour() les vide ensuite.
 var rouleaux_bloques: Array[int] = []
+## Les statistiques de ce combat (Partie les additionne à celles de la partie).
+var stats := StatsPartie.new()
 ## Or volé au joueur pendant ce combat (par le Gobelin tricheur, par exemple).
 var or_vole: int = 0
 ## Combien de mises d'or perdues seront encore remboursées dans ce combat
@@ -287,6 +289,8 @@ func jouer_tour(resultat: ResultatTirage, mise: Mise = null) -> Array[String]:
 	if est_fini():
 		return journal
 
+	stats.tours_joues += 1
+
 	# Les rouleaux bloqués ont servi pour ce tirage : ils sont libres à nouveau.
 	rouleaux_bloques = []
 
@@ -308,7 +312,9 @@ func jouer_tour(resultat: ResultatTirage, mise: Mise = null) -> Array[String]:
 		pv_ennemi += soin_ennemi
 		journal.append(tr("%s se soigne de %d PV") % [tr(ennemi.nom), soin_ennemi])
 
+	stats.compter_combos(resultat)
 	var degats := resultat.total("degats")
+	stats.degats_infliges += degats
 	if degats > 0:
 		var absorbes := mini(armure_ennemi, degats)
 		armure_ennemi -= absorbes
@@ -374,7 +380,9 @@ func jouer_tour(resultat: ResultatTirage, mise: Mise = null) -> Array[String]:
 func _regler_mise(mise: Mise, resultat: ResultatTirage, journal: Array[String]) -> void:
 	match mise.type:
 		Mise.Type.OR:
-			if resultat.a_combo_hors_cranes():
+			var gagnee := resultat.a_combo_hors_cranes()
+			stats.compter_mise(gagnee)
+			if gagnee:
 				var gain := mise.montant * (gain_mise_or - 1)
 				or_gagne += gain
 				journal.append(tr("Mise de %d or gagnée : tu reçois %d or (+%d)") % [
@@ -387,7 +395,9 @@ func _regler_mise(mise: Mise, resultat: ResultatTirage, journal: Array[String]) 
 					or_gagne += mise.montant
 					journal.append(tr("Jeton porte-bonheur : ta mise est remboursée"))
 		Mise.Type.QUITTE_OU_DOUBLE:
-			if resultat.nb_cranes() == 0:
+			var sans_crane := resultat.nb_cranes() == 0
+			stats.compter_mise(sans_crane)
+			if sans_crane:
 				resultat.doubler_effets_positifs()
 				journal.append(tr("Quitte ou double gagné : effets positifs doublés !"))
 			else:

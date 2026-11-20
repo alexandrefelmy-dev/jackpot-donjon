@@ -37,6 +37,8 @@ usage libre, crédit non obligatoire, donné ici par courtoisie).
   les bords sombres, la moquette et les rideaux (shaders `moquette` et `rideau`), le cadre d'ampoules des portes et
   l'ornement des cartes, le thème des boutons (`scripts/ui/meuble_machine.gd`, `ampoules.gd`, `levier_machine.gd`,
   `plein_ecran.gd`, `decor.gd`, `habillage.gd`, `cadre_ampoules.gd`, `ornement_carte.gd`).
+- **L'icône du jeu** (`assets/icone/icone.png` et `icone.ico`) : dessinée par `outils/dessiner_icone.gd` (carré
+  arrondi, ampoules, rouleaux) avec trois sprites du pack 0x72 ci-dessus (épée, pièce, crâne) ; rien d'autre.
 - Correspondance ennemi → image : dans le champ `images` de chaque `data/enemies/*.tres` (choix de ressemblance :
   le pack n'a pas de rat, de pickpocket ni de croupier exacts).
 

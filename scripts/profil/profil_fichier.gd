@@ -13,8 +13,19 @@ extends RefCounted
 const CHEMIN_DEFAUT := "user://profil.save"
 
 ## Les migrations : version de départ -> fonction qui transforme ses données vers la version suivante.
-## Vide tant que le fichier n'a qu'une version. Ajouter ici (et dans tests/fixtures) à chaque changement.
-const MIGRATIONS: Dictionary = {}
+## Gardées pour toujours : une ancienne version sans sa migration serait perdue. Ajouter ici (et dans
+## tests/fixtures un fichier de cette version) à chaque changement de Profil.VERSION.
+static func migrations_reelles() -> Dictionary:
+	return {1: Callable(ProfilFichier, "_migrer_1_vers_2")}
+
+
+## Version 1 -> 2 : les records n'existaient pas, ils partent de 0. (La liste des clés est écrite ici en toutes
+## lettres, pas lue dans Profil.CLES_RECORDS : une migration ne doit jamais changer quand Profil évolue.)
+static func _migrer_1_vers_2(donnees: Dictionary) -> Dictionary:
+	var suite := donnees.duplicate()
+	for cle in ["record_salles", "record_degats", "record_combo", "record_jackpots"]:
+		suite[cle] = 0
+	return suite
 
 
 ## Ce que renvoie charger().
@@ -27,7 +38,7 @@ class Chargement:
 
 
 ## Lit le profil à `chemin` (le « .bak » en secours). Ne plante jamais : au pire, profil neuf.
-static func charger(chemin: String, migrations: Dictionary = MIGRATIONS) -> Chargement:
+static func charger(chemin: String, migrations: Dictionary = migrations_reelles()) -> Chargement:
 	var resultat := Chargement.new()
 	resultat.profil = Profil.nouveau()
 	var un_fichier_existe := false
@@ -57,9 +68,10 @@ static func charger(chemin: String, migrations: Dictionary = MIGRATIONS) -> Char
 	return resultat
 
 
-## Amène des données lues à la version actuelle, une version à la fois.
+## Amène des données lues à la version actuelle, une version à la fois. `migrations` : la chaîne à utiliser
+## (par défaut les vraies, voir migrations_reelles ; les tests en passent une à eux, `{}` = aucune).
 ## Renvoie un dictionnaire vide si une migration manque (données inutilisables).
-static func migrer(donnees: Dictionary, migrations: Dictionary = MIGRATIONS) -> Dictionary:
+static func migrer(donnees: Dictionary, migrations: Dictionary = migrations_reelles()) -> Dictionary:
 	var courant := donnees.duplicate(true)
 	var version := _entier_ou(courant.get("version"), -1)
 	while version < Profil.VERSION:

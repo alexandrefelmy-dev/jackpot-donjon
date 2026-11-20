@@ -17,6 +17,8 @@ const COULEURS: Dictionary = {
 var comptoir: Comptoir
 var boutons_achats: Array[Button] = []
 var texte_jetons: Label
+## Les records du joueur (voir Profil), sous les jetons.
+var texte_records: Label
 var texte_message: Label
 var texte_maledictions: Label
 var texte_debloques: Label
@@ -102,6 +104,7 @@ func _rafraichir() -> void:
 	var profil := GameState.profil
 	texte_jetons.text = tr("Jetons d'âme : %d     Parties : %d     Victoires : %d") % [
 		profil.jetons, profil.parties_jouees, profil.victoires]
+	texte_records.text = profil.texte_records()
 	for i in boutons_achats.size():
 		var achat: Comptoir.Achat = Comptoir.ORDRE[i]
 		var epuise := comptoir.est_epuise(achat)
@@ -153,6 +156,10 @@ func _construire_interface() -> void:
 	texte_jetons.add_theme_font_size_override("font_size", 20)
 	texte_jetons.add_theme_color_override("font_color", Cartes.COULEUR_JETONS)
 	page.add_child(texte_jetons)
+	texte_records = Label.new()
+	texte_records.add_theme_font_size_override("font_size", 16)
+	texte_records.add_theme_color_override("font_color", Habillage.COULEUR_DISCRETE)
+	page.add_child(texte_records)
 
 	var corps := HBoxContainer.new()
 	corps.add_theme_constant_override("separation", 24)
