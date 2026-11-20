@@ -31,11 +31,11 @@ static func style(couleur: Color, en_valeur: bool, porte: bool = false) -> Style
 	boite.shadow_color = Color(0, 0, 0, 0.5)
 	boite.shadow_size = 8
 	boite.shadow_offset = Vector2(0, 4)
-	# Le texte ne touche jamais le cadre doré.
+	# Le texte ne touche jamais le cadre doré (peu de marge en hauteur : les lignes du sac doivent tenir dans la fenêtre).
 	boite.content_margin_left = 16
 	boite.content_margin_right = 16
-	boite.content_margin_top = 8
-	boite.content_margin_bottom = 8
+	boite.content_margin_top = 2
+	boite.content_margin_bottom = 2
 	return boite
 
 

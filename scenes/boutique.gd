@@ -315,7 +315,7 @@ func _creer_bouton_service(parent: Control, action: Callable) -> Button:
 
 func _construire_colonne_sac(parent: Control) -> void:
 	var colonne := VBoxContainer.new()
-	colonne.add_theme_constant_override("separation", 10)
+	colonne.add_theme_constant_override("separation", 7)
 	colonne.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(colonne)
 
@@ -330,11 +330,11 @@ func _construire_colonne_sac(parent: Control) -> void:
 	colonne.add_child(ligne_reliques)
 	for i in boutique.offres_reliques.size():
 		var carte := Button.new()
-		carte.custom_minimum_size = Vector2(0, 112)
+		carte.custom_minimum_size = Vector2(0, 126)  # 4 ou 5 lignes de texte : plus bas, le titre ou le prix serait coupé
 		carte.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		carte.focus_mode = Control.FOCUS_NONE
 		carte.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		carte.add_theme_font_size_override("font_size", 15)
+		carte.add_theme_font_size_override("font_size", 14)
 		Cartes.habiller_bouton(carte, boutique.offres_reliques[i].couleur)
 		Cartes.ajouter_ornement(carte)
 		carte.tooltip_text = "%s\n%s" % [tr(boutique.offres_reliques[i].nom), tr(boutique.offres_reliques[i].description)]
@@ -353,6 +353,6 @@ func _construire_colonne_sac(parent: Control) -> void:
 	colonne.add_child(zone_sac)
 
 	liste_sac = VBoxContainer.new()
-	liste_sac.add_theme_constant_override("separation", 6)
+	liste_sac.add_theme_constant_override("separation", 3)
 	liste_sac.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	zone_sac.add_child(liste_sac)

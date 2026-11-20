@@ -267,6 +267,10 @@ func _initialize() -> void:
 	await _attendre()
 	var boutique_reliques: Control = current_scene
 	verifier(boutique_reliques.cartes_reliques.size() == 2, "2 reliques à vendre dans la boutique")
+	for carte in boutique_reliques.cartes_reliques + boutique_reliques.cartes_offres:
+		verifier(carte.get_minimum_size().y <= carte.size.y + 0.5, "carte de la boutique : son texte tient dans sa hauteur (texte %d, carte %d)" % [carte.get_minimum_size().y, carte.size.y])
+	var barre_du_sac: ScrollBar = boutique_reliques.zone_sac.get_v_scroll_bar()
+	verifier(barre_du_sac.max_value <= barre_du_sac.page + 1.0, "le sac de départ (5 lignes) tient dans la boutique sans que la dernière soit coupée (contenu %d, visible %d)" % [barre_du_sac.max_value, barre_du_sac.page])
 	for carte in boutique_reliques.cartes_reliques:
 		verifier_dans_la_fenetre(carte, "carte de relique à vendre")
 	verifier_dans_la_fenetre(boutique_reliques.zone_sac, "zone du sac (avec les reliques à vendre)")
@@ -555,6 +559,9 @@ func _initialize() -> void:
 	GameState.partie.ecran = Partie.Ecran.COMBAT
 	GameState.aller_a_suivant()
 	await _attendre()
+	# Beaucoup de PV pour les deux camps dès le départ : un tirage chanceux ne doit pas finir le combat avant l'animation.
+	current_scene.combat.pv_ennemi = 500
+	current_scene.combat.pv_joueur = 500
 	var espace := InputEventKey.new()
 	espace.physical_keycode = KEY_SPACE
 	espace.pressed = true
