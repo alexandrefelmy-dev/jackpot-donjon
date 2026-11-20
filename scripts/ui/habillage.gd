@@ -49,6 +49,18 @@ static func theme() -> Theme:
 	return t
 
 
+## Un panneau sombre translucide à cadre doré (joueur et journal du combat, statistiques de fin) : lisible
+## par-dessus le décor.
+static func panneau() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.04, 0.08, 0.82)
+	style.border_color = COULEUR_OR_SOMBRE
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(12)
+	style.set_content_margin_all(10)
+	return style
+
+
 ## Donne à un titre l'allure d'une enseigne : or, contour sombre et lumière de néon pulsante.
 static func titre(etiquette: Label, couleur: Color = COULEUR_OR) -> void:
 	etiquette.add_theme_color_override("font_color", couleur)

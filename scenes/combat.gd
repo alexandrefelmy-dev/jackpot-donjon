@@ -783,7 +783,7 @@ func _construire_colonne_gauche(parent: Control) -> void:
 	parent.add_child(colonne)
 
 	var panneau_joueur := PanelContainer.new()
-	panneau_joueur.add_theme_stylebox_override("panel", _style_panneau())
+	panneau_joueur.add_theme_stylebox_override("panel", Habillage.panneau())
 	colonne.add_child(panneau_joueur)
 	var ligne_joueur := HBoxContainer.new()
 	ligne_joueur.add_theme_constant_override("separation", 10)
@@ -810,7 +810,7 @@ func _construire_colonne_gauche(parent: Control) -> void:
 
 	var panneau_journal := PanelContainer.new()
 	panneau_journal.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	panneau_journal.add_theme_stylebox_override("panel", _style_panneau())
+	panneau_journal.add_theme_stylebox_override("panel", Habillage.panneau())
 	colonne.add_child(panneau_journal)
 	var boite_journal := VBoxContainer.new()
 	boite_journal.add_theme_constant_override("separation", 4)
@@ -1058,19 +1058,8 @@ func _etiquette_ennemi(parent: Control, taille: int, centree: bool = true) -> La
 	return etiquette
 
 
-## Un panneau sombre translucide (le joueur, le journal) : lisible par-dessus le décor.
-func _style_panneau() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.05, 0.04, 0.08, 0.82)
-	style.border_color = Habillage.COULEUR_OR_SOMBRE
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(12)
-	style.set_content_margin_all(10)
-	return style
-
-
 func _style_bulle() -> StyleBoxFlat:
-	var style := _style_panneau()
+	var style := Habillage.panneau()
 	style.bg_color = Color(0.08, 0.05, 0.08, 0.88)
 	style.border_color = Habillage.COULEUR_OR
 	style.set_border_width_all(3)
