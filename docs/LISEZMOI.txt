@@ -1,0 +1,26 @@
+JACKPOT DONJON - version 1.0
+================================
+
+Un roguelike 2D : chaque combat se joue sur une machine a sous.
+Descends 3 etages (5 combats obligatoires chacun, puis un boss), choisis ta
+salle bonus apres les combats 2 et 4, et fais evoluer ta machine.
+
+LANCER LE JEU
+  Double-clic sur jackpot-donjon.exe. Aucune installation.
+  Windows 10 ou 11 (64 bits). Un petit avertissement de Windows peut apparaitre
+  au premier lancement (le jeu n'est pas signe) : "Informations complementaires",
+  puis "Executer quand meme".
+
+COMMANDES
+  Souris : tout se joue a la souris.
+  Espace (ou Entree) : tirer le levier, valider un tirage, passer l'animation.
+  Echap : retour dans les menus.
+  Alt + Entree, ou le bouton en haut a droite : plein ecran.
+
+TES DONNEES
+  Ton profil (jetons d'ame, deblocages, records) et tes options sont enregistres
+  dans : %APPDATA%\Godot\app_userdata\jackpot donjon\
+  Supprime ce dossier pour repartir de zero.
+
+CREDITS
+  Voir CREDITS.txt (images, sons et musiques sous licence CC0).
