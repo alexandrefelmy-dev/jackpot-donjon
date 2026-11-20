@@ -380,8 +380,9 @@ func jouer_tour(resultat: ResultatTirage, mise: Mise = null) -> Array[String]:
 func _regler_mise(mise: Mise, resultat: ResultatTirage, journal: Array[String]) -> void:
 	match mise.type:
 		Mise.Type.OR:
-			stats.compter_mise(resultat.a_combo_hors_cranes())
-			if resultat.a_combo_hors_cranes():
+			var gagnee := resultat.a_combo_hors_cranes()
+			stats.compter_mise(gagnee)
+			if gagnee:
 				var gain := mise.montant * (gain_mise_or - 1)
 				or_gagne += gain
 				journal.append(tr("Mise de %d or gagnée : tu reçois %d or (+%d)") % [
@@ -394,8 +395,9 @@ func _regler_mise(mise: Mise, resultat: ResultatTirage, journal: Array[String]) 
 					or_gagne += mise.montant
 					journal.append(tr("Jeton porte-bonheur : ta mise est remboursée"))
 		Mise.Type.QUITTE_OU_DOUBLE:
-			stats.compter_mise(resultat.nb_cranes() == 0)
-			if resultat.nb_cranes() == 0:
+			var sans_crane := resultat.nb_cranes() == 0
+			stats.compter_mise(sans_crane)
+			if sans_crane:
 				resultat.doubler_effets_positifs()
 				journal.append(tr("Quitte ou double gagné : effets positifs doublés !"))
 			else:

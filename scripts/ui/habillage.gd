@@ -7,6 +7,8 @@ extends RefCounted
 
 const COULEUR_OR := Color("ffd34d")
 const COULEUR_OR_SOMBRE := Color("a8801f")
+## Un or pâle pour les textes discrets (les records).
+const COULEUR_DISCRETE := Color("c2a662")
 const COULEUR_VIN := Color("2a1220")
 const COULEUR_TEXTE := Color("f3ead8")
 

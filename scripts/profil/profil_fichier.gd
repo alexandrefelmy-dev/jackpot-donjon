@@ -19,7 +19,8 @@ static func migrations_reelles() -> Dictionary:
 	return {1: Callable(ProfilFichier, "_migrer_1_vers_2")}
 
 
-## Version 1 -> 2 : les records n'existaient pas, ils partent de 0.
+## Version 1 -> 2 : les records n'existaient pas, ils partent de 0. (La liste des clés est écrite ici en toutes
+## lettres, pas lue dans Profil.CLES_RECORDS : une migration ne doit jamais changer quand Profil évolue.)
 static func _migrer_1_vers_2(donnees: Dictionary) -> Dictionary:
 	var suite := donnees.duplicate()
 	for cle in ["record_salles", "record_degats", "record_combo", "record_jackpots"]:

@@ -1,16 +1,20 @@
-"""OUTIL : exporte le jeu pour Windows (un seul .exe, données intégrées) et fabrique le .zip à envoyer.
+r"""OUTIL : exporte le jeu pour Windows (un seul .exe, données intégrées) et fabrique le .zip à envoyer.
 
 Lancer :  python outils/exporter.py [chemin/vers/Godot_..._console.exe]
-Sans argument, utilise C:\Tools\Godot\Godot_v4.7.2-stable_win64_console.exe (le chemin du PC d'Alex).
+Sans argument : la variable d'environnement GODOT, sinon `godot_console` ou `godot` dans le PATH, sinon
+C:\Tools\Godot\Godot_v4.7.2-stable_win64_console.exe (le chemin du PC d'Alex).
 Prérequis : les modèles d'export de Godot (même version que l'éditeur) installés, voir « Exporter le jeu » dans
 CLAUDE.md. Le préréglage « Windows Desktop » vient de export_presets.cfg.
 Résultat dans build/ (ignoré par git) : windows/jackpot-donjon.exe et jackpot-donjon-<version>-windows.zip
 (l'exe, docs/LISEZMOI.txt et les crédits). Affiche aussi l'empreinte SHA-256 du .zip.
+Les champs « application/... » (icône, version, description) de export_presets.cfg ne servent à rien tant que
+`application/modify_resources` est à false (il faut l'outil rcedit pour les écrire dans le .exe).
 Pas de dépendance : la bibliothèque standard de Python suffit.
 """
 import hashlib
 import os
 import re
+import shutil
 import subprocess
 import sys
 import zipfile
@@ -26,8 +30,15 @@ def version_du_jeu():
     return trouve.group(1) if trouve else "inconnue"
 
 
+def trouver_godot():
+    """L'exécutable console de Godot : l'argument, GODOT, le PATH, puis le chemin par défaut."""
+    if len(sys.argv) > 1:
+        return sys.argv[1]
+    return os.environ.get("GODOT") or shutil.which("godot_console") or shutil.which("godot") or GODOT_PAR_DEFAUT
+
+
 def main():
-    godot = sys.argv[1] if len(sys.argv) > 1 else GODOT_PAR_DEFAUT
+    godot = trouver_godot()
     version = version_du_jeu()
     sortie = os.path.join(RACINE, "build", "windows")
     os.makedirs(sortie, exist_ok=True)

@@ -104,8 +104,7 @@ func _rafraichir() -> void:
 	var profil := GameState.profil
 	texte_jetons.text = tr("Jetons d'âme : %d     Parties : %d     Victoires : %d") % [
 		profil.jetons, profil.parties_jouees, profil.victoires]
-	texte_records.text = tr("Records : %d salles · %d dégâts · combo de %d · %d jackpots") % [
-		profil.record_salles, profil.record_degats, profil.record_combo, profil.record_jackpots]
+	texte_records.text = profil.texte_records()
 	for i in boutons_achats.size():
 		var achat: Comptoir.Achat = Comptoir.ORDRE[i]
 		var epuise := comptoir.est_epuise(achat)
@@ -159,7 +158,7 @@ func _construire_interface() -> void:
 	page.add_child(texte_jetons)
 	texte_records = Label.new()
 	texte_records.add_theme_font_size_override("font_size", 16)
-	texte_records.add_theme_color_override("font_color", Habillage.COULEUR_OR_SOMBRE.lightened(0.3))
+	texte_records.add_theme_color_override("font_color", Habillage.COULEUR_DISCRETE)
 	page.add_child(texte_records)
 
 	var corps := HBoxContainer.new()

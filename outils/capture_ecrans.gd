@@ -172,7 +172,7 @@ func _preparer(etape: int) -> void:
 			var profil := Profil.nouveau()
 			profil.maledictions.assign([&"sac_leste"] as Array[StringName])
 			GameState.profil = profil
-			profil.parties_jouees = 4  # des parties déjà jouées : un record battu est annoncé en or
+			# Des records déjà posés (au-dessus de 0) : un record battu est annoncé en or.
 			profil.record_degats = 150
 			profil.record_salles = 12
 			profil.record_combo = 4

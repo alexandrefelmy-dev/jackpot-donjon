@@ -7,7 +7,7 @@ extends RefCounted
 var degats_infliges: int = 0
 ## Tours joués (un tirage validé = un tour).
 var tours_joues: int = 0
-## Combos de 5 symboles (jackpots) tirés, et longueur du plus long combo (3, 4 ou 5 ; 0 = aucun).
+## Jackpots tirés (des combos de 5 symboles ou plus), et longueur du plus long combo (3 ou plus ; 0 = aucun).
 var jackpots: int = 0
 var plus_long_combo: int = 0
 ## Mises jouées, et mises gagnées parmi elles (or ou quitte ou double).
