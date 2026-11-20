@@ -64,7 +64,7 @@ func _construire_interface() -> void:
 	elif partie.est_combat_de_boss():
 		sous_titre.text = tr("Tu es tombé face au boss de l'étage %d. Le donjon recommence à zéro.") % partie.etage
 	else:
-		sous_titre.text = tr("Tu es tombé à l'étage %d, salle %d. Le donjon recommence à zéro.") % [partie.etage, partie.pas]
+		sous_titre.text = tr("Tu es tombé à l'étage %d, combat %d. Le donjon recommence à zéro.") % [partie.etage, partie.pas]
 	sous_titre.add_theme_font_size_override("font_size", 22)
 	sous_titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	colonne.add_child(sous_titre)

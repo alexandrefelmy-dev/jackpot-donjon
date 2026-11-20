@@ -9,12 +9,12 @@ nom = "Golem de jetons"
 images = "big_zombie_idle_anim"
 couleur = Color(0.8, 0.62, 0.2, 1)
 etage = 2
-pv_max = 36
+pv_max = 32
 or_victoire = 24
 intentions = Array[Dictionary]([{
 "type": "charge",
 "valeur": 0
 }, {
 "type": "attaque",
-"valeur": 16
+"valeur": 14
 }])

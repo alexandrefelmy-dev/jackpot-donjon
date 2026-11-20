@@ -164,7 +164,7 @@ func test_usurier() -> void:
 	jouer(pauvre, grille_calme(), Mise.en_or(5))
 	verifier(pauvre.bonus_attaque_ennemi == 0, "une mise annulée faute d'or ne renforce pas l'Usurier")
 	# Les .tres ne sont pas touchés.
-	verifier(charger("usurier").intentions[0].get("valeur") == 10, "le fichier de l'Usurier n'est pas modifié")
+	verifier(charger("usurier").intentions[0].get("valeur") == 9, "le fichier de l'Usurier n'est pas modifié")
 
 
 func test_pickpocket() -> void:
@@ -200,7 +200,7 @@ func test_golem() -> void:
 	var combat := combat_de(charger("golem_jetons"), 100)
 	# La grosse attaque se règle dans le .tres : on lit sa valeur.
 	var grosse: int = charger("golem_jetons").intentions[1]["valeur"]
-	verifier(grosse > 15, "la grosse attaque du Golem est grosse (%d)" % grosse)
+	verifier(grosse > 12, "la grosse attaque du Golem est grosse (%d)" % grosse)
 	var journal := jouer(combat, grille_calme())
 	verifier(combat.pv_joueur == 100, "tour 1 : il se charge, aucun dégât")
 	verifier(journal_contient(journal, "se prépare"), "le journal annonce la charge")

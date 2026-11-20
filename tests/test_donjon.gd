@@ -47,9 +47,10 @@ func test_structure() -> void:
 	var bien_forme := true
 	for etage in range(1, 4):
 		for pas in range(1, 6):
-			if donjon.portes(etage, pas).size() != 2:
+			var attendu := 2 if pas in Donjon.BONUS_APRES_PAS else 0
+			if donjon.portes(etage, pas).size() != attendu or donjon.combat(etage, pas).type != Salle.Type.COMBAT:
 				bien_forme = false
-	verifier(bien_forme, "chaque étage a 5 pas de 2 portes")
+	verifier(bien_forme, "chaque étage a 5 combats obligatoires, et 2 salles bonus après les pas 2 et 4 seulement")
 	verifier(donjon.boss_de(1).id == &"rat_croupier", "boss de l'étage 1 : Rat-Croupier")
 	verifier(donjon.boss_de(2).id == &"dame_de_pique", "boss de l'étage 2 : Dame de Pique")
 	verifier(donjon.boss_de(3).id == &"grand_croupier", "boss de l'étage 3 : Grand Croupier")
@@ -63,7 +64,7 @@ func test_contraintes_sur_beaucoup_de_graines() -> void:
 	var erreurs := 0
 	var echecs_generation := 0
 	var rejets := 0
-	var premiers_combats := true
+	var bonus_sans_combat := true
 	var types_vus := {}
 	for graine in NB_GRAINES:
 		var donjon := Donjon.creer(graine)
@@ -73,30 +74,27 @@ func test_contraintes_sur_beaucoup_de_graines() -> void:
 			if not Donjon.erreur_etage(donjon.etages[etage - 1]).is_empty():
 				erreurs += 1
 				print("    graine %d, étage %d : %s" % [graine, etage, Donjon.erreur_etage(donjon.etages[etage - 1])])
-			for salle_du_pas in donjon.portes(etage, 1):
-				if salle_du_pas.type != Salle.Type.COMBAT:
-					premiers_combats = false
 			for pas in range(1, 6):
 				for porte in donjon.portes(etage, pas):
 					types_vus[porte.type] = int(types_vus.get(porte.type, 0)) + 1
+					if porte.type == Salle.Type.COMBAT:
+						bonus_sans_combat = false
 	verifier(erreurs == 0, "aucun étage ne casse une contrainte (%d erreurs)" % erreurs)
 	verifier(echecs_generation == 0, "aucun étage n'a épuisé ses tentatives (%d)" % echecs_generation)
-	verifier(premiers_combats, "le pas 1 de chaque étage propose 2 combats")
+	verifier(bonus_sans_combat, "aucune porte bonus n'est un combat : les combats sont obligatoires, jamais au choix")
 	var total := NB_GRAINES * 3
 	print("    étages rejetés puis retirés : %d sur %d (%.1f %%)" % [rejets, total + rejets, 100.0 * rejets / (total + rejets)])
 	# Environ la moitié des étages tirés sont retirés (il manque souvent une boutique ou un repos) : sans danger, le plafond de 60 tentatives est loin.
 	verifier(float(rejets) / (total + rejets) < 0.7, "le taux de rejet reste raisonnable")
-	# Fréquence des types : le combat domine (poids 50 / 100, un peu plus à cause du pas 1 forcé).
+	# Fréquence des types parmi les salles bonus : coffre 20, boutique 15, repos 15 (poids).
 	var nb_portes: int = 0
 	for type: int in types_vus:
 		nb_portes += int(types_vus[type])
-	var part_combat: float = float(types_vus[Salle.Type.COMBAT]) / nb_portes
-	print("    part des portes : combat %.0f %%, coffre %.0f %%, boutique %.0f %%, repos %.0f %%" % [
-		100.0 * part_combat, 100.0 * types_vus[Salle.Type.COFFRE] / nb_portes,
+	print("    part des portes bonus : coffre %.0f %%, boutique %.0f %%, repos %.0f %%" % [
+		100.0 * types_vus[Salle.Type.COFFRE] / nb_portes,
 		100.0 * types_vus[Salle.Type.BOUTIQUE] / nb_portes, 100.0 * types_vus[Salle.Type.REPOS] / nb_portes])
-	verifier(part_combat > 0.4 and part_combat < 0.7, "le combat est le type le plus fréquent")
-	verifier(types_vus[Salle.Type.COMBAT] > types_vus[Salle.Type.COFFRE] and types_vus[Salle.Type.COFFRE] > types_vus[Salle.Type.REPOS],
-			"ordre de fréquence : combat > coffre > repos")
+	verifier(types_vus[Salle.Type.COFFRE] > types_vus[Salle.Type.REPOS] and types_vus[Salle.Type.COFFRE] > types_vus[Salle.Type.BOUTIQUE] * 0.9,
+			"le coffre est la salle bonus la plus fréquente")
 
 
 ## Même graine = même donjon, même après avoir consommé du hasard (le jeu ne change pas le donjon).
@@ -190,19 +188,20 @@ func test_repos_sans_issue() -> void:
 	for i in partie.sac.taille():
 		partie.sac.ameliorer(i)
 	verifier(partie.soin_du_repos() == 0 and not partie.peut_dorer(), "PV pleins et sac entièrement doré : plus d'action possible")
-	verifier(partie.quitter_repos() and partie.ecran == Partie.Ecran.PORTES and partie.pas == 2, "on peut partir : retour aux portes")
+	verifier(partie.quitter_repos() and partie.ecran == Partie.Ecran.COMBAT and partie.pas == 2, "on peut partir : le combat suivant commence")
 
 
 func test_erreur_etage() -> void:
 	print("Le contrôle d'un étage refuse ce qu'il doit refuser")
-	var combat_rat := salle(Salle.Type.COMBAT, "rat_egout")
-	var combat_squelette := salle(Salle.Type.COMBAT, "squelette")
+	var rat := salle(Salle.Type.COMBAT, "rat_egout")
+	var squelette := salle(Salle.Type.COMBAT, "squelette")
+	var gobelin := salle(Salle.Type.COMBAT, "gobelin_tricheur")
 	var bon: Array = [
-		[combat_rat, combat_squelette],
-		[salle(Salle.Type.COFFRE), salle(Salle.Type.BOUTIQUE)],
-		[salle(Salle.Type.REPOS), combat_rat],
-		[combat_rat, salle(Salle.Type.COFFRE)],
-		[combat_squelette, combat_rat],
+		{"combat": rat, "bonus": []},
+		{"combat": squelette, "bonus": [salle(Salle.Type.COFFRE), salle(Salle.Type.BOUTIQUE)]},
+		{"combat": gobelin, "bonus": []},
+		{"combat": rat, "bonus": [salle(Salle.Type.REPOS), salle(Salle.Type.COFFRE)]},
+		{"combat": squelette, "bonus": []},
 	]
 	verifier(Donjon.erreur_etage(bon).is_empty(), "un étage correct est accepté")
 
@@ -210,22 +209,26 @@ func test_erreur_etage() -> void:
 	trop_court.pop_back()
 	verifier(not Donjon.erreur_etage(trop_court).is_empty(), "un étage de 4 pas est refusé")
 
-	var portes_identiques := bon.duplicate(true)
-	portes_identiques[1] = [salle(Salle.Type.COFFRE), salle(Salle.Type.COFFRE)]
-	verifier(not Donjon.erreur_etage(portes_identiques).is_empty(), "deux coffres côte à côte sont refusés")
+	var bonus_identiques := bon.duplicate(true)
+	bonus_identiques[1] = {"combat": squelette, "bonus": [salle(Salle.Type.COFFRE), salle(Salle.Type.COFFRE)]}
+	verifier(not Donjon.erreur_etage(bonus_identiques).is_empty(), "deux coffres côte à côte sont refusés")
 
-	var deux_combats_pareils := bon.duplicate(true)
-	deux_combats_pareils[3] = [combat_rat, combat_rat]
-	verifier(not Donjon.erreur_etage(deux_combats_pareils).is_empty(), "deux combats contre le même ennemi sont refusés")
+	var meme_ennemi := bon.duplicate(true)
+	meme_ennemi[2] = {"combat": squelette, "bonus": []}
+	verifier(not Donjon.erreur_etage(meme_ennemi).is_empty(), "deux combats de suite contre le même ennemi sont refusés")
 
-	var deux_combats_differents := bon.duplicate(true)
-	deux_combats_differents[3] = [combat_rat, combat_squelette]
-	verifier(Donjon.erreur_etage(deux_combats_differents).is_empty(), "deux combats contre des ennemis différents sont permis")
+	var combat_au_choix := bon.duplicate(true)
+	combat_au_choix[1] = {"combat": squelette, "bonus": [rat, salle(Salle.Type.COFFRE)]}
+	verifier(not Donjon.erreur_etage(combat_au_choix).is_empty(), "un combat parmi les salles bonus est refusé (le combat est obligatoire, pas au choix)")
 
-	var pas_1_sans_combat := bon.duplicate(true)
-	pas_1_sans_combat[0] = [combat_rat, salle(Salle.Type.COFFRE)]
-	verifier(not Donjon.erreur_etage(pas_1_sans_combat).is_empty(), "le pas 1 doit proposer 2 combats")
+	var bonus_manquant := bon.duplicate(true)
+	bonus_manquant[3] = {"combat": rat, "bonus": []}
+	verifier(not Donjon.erreur_etage(bonus_manquant).is_empty(), "il faut 2 salles bonus après le pas 4")
+
+	var bonus_en_trop := bon.duplicate(true)
+	bonus_en_trop[0] = {"combat": rat, "bonus": [salle(Salle.Type.REPOS), salle(Salle.Type.BOUTIQUE)]}
+	verifier(not Donjon.erreur_etage(bonus_en_trop).is_empty(), "pas de salles bonus après le pas 1")
 
 	var sans_repos := bon.duplicate(true)
-	sans_repos[2] = [combat_squelette, combat_rat]
+	sans_repos[3] = {"combat": rat, "bonus": [salle(Salle.Type.COFFRE), salle(Salle.Type.BOUTIQUE)]}
 	verifier(not Donjon.erreur_etage(sans_repos).is_empty(), "un étage sans repos est refusé")

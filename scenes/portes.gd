@@ -79,7 +79,7 @@ func _construire_interface() -> void:
 	colonne.add_child(titre)
 
 	var avancee := Label.new()
-	avancee.text = tr("Salle %d / %d — choisis une porte") % [partie.pas, Donjon.NB_PAS]
+	avancee.text = tr("Combat %d / %d gagné — choisis une salle bonus") % [partie.pas, Donjon.NB_PAS]
 	avancee.add_theme_font_size_override("font_size", 22)
 	avancee.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	colonne.add_child(avancee)
@@ -103,7 +103,7 @@ func _construire_interface() -> void:
 		boutons_portes.append(porte)
 
 
-## Une rangée de cases : les salles faites (pleines), la salle à choisir, celles à venir, puis le boss.
+## Une rangée de jetons : les combats gagnés (verts), le prochain combat (doré), ceux à venir, puis le boss.
 func _creer_progression() -> Control:
 	var rangee := HBoxContainer.new()
 	rangee.add_theme_constant_override("separation", 10)
@@ -117,9 +117,9 @@ func _creer_progression() -> Control:
 		jeton.set_corner_radius_all(13)
 		jeton.set_border_width_all(3)
 		jeton.border_color = Habillage.COULEUR_OR_SOMBRE
-		if numero < partie.pas:
+		if numero <= partie.pas:
 			jeton.bg_color = Color("3fae5c")
-		elif numero == partie.pas:
+		elif numero == partie.pas + 1:
 			jeton.bg_color = Cartes.COULEUR_SURVOL
 			jeton.border_color = Color.WHITE
 		else:

@@ -1,13 +1,13 @@
 class_name Partie
 extends RefCounted
 ## Une partie : tout ce qui traverse les salles (PV, or, sac, reliques) et l'avancée dans le donjon :
-## 3 étages de 5 salles choisies entre 2 portes, chacun fini par un boss.
+## 3 étages de 5 combats obligatoires, avec 2 salles bonus au choix après les pas 2 et 4, chacun fini par un boss.
 ## Pas d'interface ici : les écrans lisent cet état et appellent ses méthodes. `ecran` dit quel
 ## écran doit être affiché maintenant (GameState le traduit en scène).
 
 enum Etat { EN_COURS, VICTOIRE, DEFAITE }
-## L'écran à afficher : le choix des portes, puis selon la salle (combat, boutique, repos),
-## la récompense d'un combat, le choix d'une relique (coffre, boss), ou la fin.
+## L'écran à afficher : le combat, le choix des 2 portes bonus (après certains combats), puis selon la salle
+## (boutique, repos), la récompense d'un combat, le choix d'une relique (coffre, boss), ou la fin.
 enum Ecran { PORTES, COMBAT, RECOMPENSE, RELIQUE, BOUTIQUE, REPOS, FIN }
 
 const PV_DEPART := 40
@@ -54,12 +54,14 @@ var pv: int = PV_DEPART
 var pv_max: int = PV_DEPART
 var or_total: int = 0
 var sac: Sac
-## Étage en cours (1 à 3) et pas dans l'étage (1 à 5 : le choix des portes ; 6 = le boss).
+## Étage en cours (1 à 3) et pas dans l'étage (1 à 5 : le combat obligatoire du pas ; 6 = le boss).
 var etage: int = 1
 var pas: int = 1
+## Vrai pendant une salle bonus (choisie derrière une porte), faux pendant le combat obligatoire du pas.
+var en_salle_bonus: bool = false
 ## L'écran à afficher maintenant.
 var ecran: Ecran = Ecran.PORTES
-## La porte franchie (null au choix des portes et au boss).
+## La salle en cours : le combat du pas, ou la salle bonus franchie (null au choix des portes et au boss).
 var salle_courante: Salle
 ## L'ennemi du combat en cours ou à venir (celui d'une porte de combat, une Mimique ou le boss).
 var ennemi_courant: EnemyData
@@ -88,6 +90,7 @@ static func creer(graine_voulue: int = -1, profil_du_joueur: Profil = null) -> P
 	partie.donjon = Donjon.creer(partie.graine)
 	if profil_du_joueur != null:
 		partie._appliquer_profil(profil_du_joueur)
+	partie._commencer_combat_du_pas()  # la partie s'ouvre sur le premier combat : il est obligatoire
 	return partie
 
 
@@ -134,7 +137,7 @@ func est_combat_de_boss() -> bool:
 	return ennemi_courant != null and ennemi_courant.est_boss
 
 
-## Les 2 portes à choisir maintenant (vide si on n'est pas au choix des portes).
+## Les 2 salles bonus à choisir maintenant (vide si on n'est pas au choix des portes).
 func portes() -> Array[Salle]:
 	if not _est_a(Ecran.PORTES):
 		return []
@@ -145,18 +148,15 @@ func nom_etage() -> String:
 	return Donjon.nom_etage(etage)
 
 
-## Le joueur franchit une porte (0 ou 1) : l'écran suivant dépend de la salle.
+## Le joueur franchit une porte bonus (0 ou 1) : l'écran suivant dépend de la salle.
 ## Renvoie faux si ce n'est pas le moment ou si la porte n'existe pas.
 func choisir_porte(index: int) -> bool:
 	var choix := portes()
 	if index < 0 or index >= choix.size():
 		return false
 	salle_courante = choix[index]
+	en_salle_bonus = true
 	match salle_courante.type:
-		Salle.Type.COMBAT:
-			ennemi_courant = salle_courante.ennemi
-			_preparer_renfort()
-			ecran = Ecran.COMBAT
 		Salle.Type.BOUTIQUE:
 			ecran = Ecran.BOUTIQUE
 		Salle.Type.REPOS:
@@ -172,29 +172,41 @@ func choisir_porte(index: int) -> bool:
 	return true
 
 
-## La salle qui vient d'être jouée est finie : pas suivant, ou le boss de l'étage après le 5e pas.
+## La salle qui vient d'être jouée est finie. Le combat d'un pas qui a des salles bonus mène au choix des portes ;
+## sinon (ou après une salle bonus) : le combat du pas suivant, ou le boss de l'étage après le 5e pas.
 func _salle_terminee() -> void:
 	salles_franchies += 1
 	salle_courante = null
 	ennemi_courant = null
+	if not en_salle_bonus and pas in Donjon.BONUS_APRES_PAS:
+		ecran = Ecran.PORTES
+		return
+	en_salle_bonus = false
 	pas += 1
 	if pas > Donjon.NB_PAS:
 		ennemi_courant = donjon.boss_de(etage)
 		_preparer_renfort()
 		ecran = Ecran.COMBAT
 	else:
-		ecran = Ecran.PORTES
+		_commencer_combat_du_pas()
+
+
+## Lance le combat obligatoire du pas en cours (celui que le donjon a prévu pour ce pas de cet étage).
+func _commencer_combat_du_pas() -> void:
+	en_salle_bonus = false
+	salle_courante = donjon.combat(etage, pas)
+	ennemi_courant = salle_courante.ennemi
+	_preparer_renfort()
+	ecran = Ecran.COMBAT
 
 
 ## Le boss est vaincu (et sa relique prise) : étage suivant, avec le soin d'équilibrage éventuel.
 func _etage_suivant() -> void:
 	etage += 1
 	pas = 1
-	salle_courante = null
-	ennemi_courant = null
 	var soin := _pourcentage_des_pv_max(SOIN_APRES_BOSS_POURCENT)
 	pv = mini(pv_max, pv + soin)
-	ecran = Ecran.PORTES
+	_commencer_combat_du_pas()
 
 
 ## Prépare le combat en cours avec les PV actuels du joueur.
@@ -457,6 +469,7 @@ func aller_au_boss() -> void:
 	if etat != Etat.EN_COURS:
 		return
 	pas = Donjon.NB_PAS + 1
+	en_salle_bonus = false
 	salle_courante = null
 	ennemi_courant = donjon.boss_de(etage)
 	_preparer_renfort()

@@ -56,22 +56,23 @@ func _process(_delta: float) -> bool:
 func _preparer(etape: int) -> void:
 	_debut_etape_ms = Time.get_ticks_msec()
 	match etape:
-		0:  # choix des portes, étage 1
+		0:  # les 2 salles bonus, après le combat du pas 2 de l'étage 1
 			GameState.nouvelle_partie()
+			GameState.partie.pas = 2
+			GameState.partie.ecran = Partie.Ecran.PORTES
 			GameState.aller_a_suivant()
-		1:  # choix des portes, étage 3 (avec l'avertissement sur les mimiques)
+		1:  # les 2 salles bonus de l'étage 3 (avec l'avertissement sur les mimiques)
 			GameState.nouvelle_partie()
 			GameState.partie.etage = 3
-			GameState.partie.pas = 3
+			GameState.partie.pas = 4
+			GameState.partie.ecran = Partie.Ecran.PORTES
 			GameState.aller_a_suivant()
-		2:  # combat au départ, sans relique
+		2:  # combat au départ (obligatoire : la partie s'ouvre dessus), sans relique
 			GameState.nouvelle_partie()
-			GameState.partie.choisir_porte(0)
 			GameState.aller_a_suivant()
 		3:  # combat avec les 9 reliques, tirage en attente de validation
 			_partie_avec_toutes_les_reliques()
 			GameState.partie.or_total = 50
-			GameState.partie.choisir_porte(0)
 			GameState.aller_a_suivant()
 		4:  # …choix du rouleau à garder (Cinquième as)
 			var combat: Control = current_scene
@@ -187,7 +188,6 @@ func _preparer(etape: int) -> void:
 			current_scene.bouton_credits.pressed.emit()
 		27:  # combat avant le levier
 			GameState.nouvelle_partie()
-			GameState.partie.choisir_porte(0)
 			GameState.aller_a_suivant()
 		28:  # …levier tiré : les 5 rouleaux tournent
 			var combat: Control = current_scene

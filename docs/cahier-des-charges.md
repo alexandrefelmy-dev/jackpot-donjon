@@ -21,35 +21,35 @@ Le cœur du plaisir : voir sa machine devenir de plus en plus « truquée » en 
 
 ## Boucle de jeu
 
-Une partie traverse 3 étages ; chaque étage enchaîne 5 salles choisies entre 2 portes, puis un boss. Perdre tous ses PV dans n'importe quel combat termine la partie.
+Une partie traverse 3 étages ; chaque étage enchaîne 5 combats obligatoires, avec 2 salles bonus au choix après les combats 2 et 4, puis un boss. Perdre tous ses PV dans n'importe quel combat termine la partie.
 
 ```
 Nouvelle partie (40 PV, sac de 15 symboles)
-  -> Choisir une porte (2 salles proposées)
-  -> Jouer la salle (combat, boutique, coffre ou repos)
-  -> 5 salles faites ?  non -> retour au choix de porte
+  -> Combat obligatoire du pas (un ennemi de l'étage) -> récompense (1 symbole parmi 3, ou passer)
+  -> Après le combat 2 ou 4 : choisir entre 2 salles bonus (coffre, boutique ou repos)
+  -> 5 combats faits ?  non -> combat suivant
 						oui -> Boss de l'étage (relique en récompense)
-  -> Étage 3 ?          non -> étage suivant, retour au choix de porte
+  -> Étage 3 ?          non -> étage suivant, premier combat
                         oui -> Victoire
 PV à 0 dans un combat -> Game over -> Rejouer (nouvelle partie)
 ```
 
-On n'avance que vers l'avant : la seule boucle est celle des portes, jusqu'au boss de l'étage.
+On n'avance que vers l'avant. Le combat n'est jamais au choix : on ne peut pas l'éviter, seules les salles bonus se choisissent.
 
 | Type de salle | Ce qui s'y passe |
 | --- | --- |
-| Combat | Un ennemi de l'étage ; le type de salle le plus fréquent |
+| Combat | Un ennemi de l'étage, obligatoire à chaque pas (jamais derrière une porte) |
 | Boutique | Acheter, retirer ou améliorer des symboles, acheter des reliques |
 | Coffre | Une relique gratuite ; à l'étage 3, parfois une mimique |
 | Repos | Soigner 30 % des PV max, ou rendre un symbole doré gratuitement |
 
 **Précisions de règles (v0.6)**
 
-- Structure : 3 étages (Les Cryptes, La Salle de jeu maudite, Le Coffre-fort) ; un étage = 5 salles, chacune choisie entre 2 portes, puis le boss de l'étage. Boss de l'étage 3 vaincu = victoire. On n'avance que vers l'avant.
-- Les portes montrent le type de salle (combat, boutique, coffre, repos), pas l'ennemi. Chaque porte tire son type avec ces poids : combat 50, coffre 20, boutique 15, repos 15. Contraintes du générateur (l'étage est retiré sinon) : les 2 portes d'un pas ne sont jamais identiques (deux combats sont permis contre des ennemis différents) ; la 1re salle d'un étage propose 2 combats ; un étage contient au moins un coffre, une boutique et un repos.
-- Après un combat normal gagné : récompense (1 symbole parmi 3, ou passer), puis les portes suivantes. Il n'y a plus de boutique automatique ni de relique offerte après le combat 3 : la boutique est une salle au choix, les coffres et les boss donnent les reliques.
+- Structure : 3 étages (Les Cryptes, La Salle de jeu maudite, Le Coffre-fort) ; un étage = 5 combats obligatoires, puis le boss de l'étage. Après les combats 2 et 4, on choisit entre 2 salles bonus. Boss de l'étage 3 vaincu = victoire. On n'avance que vers l'avant. (Changé après la v0.8 sur demande d'Alex : avant, chaque pas offrait 2 portes dont le combat, qu'on pouvait donc éviter.)
+- Les combats sont tirés par la graine : un ennemi de l'étage, jamais le même deux combats de suite. Les 2 portes bonus montrent le type de salle (coffre, boutique ou repos), tiré avec ces poids : coffre 20, boutique 15, repos 15. Contraintes du générateur (l'étage est retiré sinon) : les 2 salles bonus d'un pas ne sont jamais identiques ; il n'y a jamais de combat derrière une porte ; un étage contient au moins un coffre, une boutique et un repos parmi ses 4 salles bonus.
+- Après un combat normal gagné : récompense (1 symbole parmi 3, ou passer), puis les 2 salles bonus (après les combats 2 et 4) ou directement le combat suivant. La boutique est une salle bonus au choix ; les coffres et les boss donnent les reliques. Une salle bonus finie mène au combat suivant. La partie s'ouvre directement sur le premier combat.
 - Coffre : écran « Choisis 1 relique parmi 2 ». À l'étage 3, 1 coffre sur 3 est une Mimique (invisible sur la porte, mais l'écran des portes de l'étage 3 prévient que certains coffres sont des mimiques) : elle attaque par surprise avant le premier tirage (10 dégâts, jamais mortels : il reste au moins 1 PV) ; si on la bat, la relique est donnée quand même. La Mimique n'apparaît que dans les coffres.
-- Repos : soigner 30 % des PV max (arrondi au-dessus, sans dépasser le maximum), ou rendre un symbole doré gratuitement (choisi dans le sac). Une seule action, puis les portes.
+- Repos : soigner 30 % des PV max (arrondi au-dessus, sans dépasser le maximum), ou rendre un symbole doré gratuitement (choisi dans le sac). Une seule action, puis le combat suivant.
 - Boss : vaincu, il donne une relique (1 parmi 2) ; à l'étage 3, c'est la victoire. À l'arrivée d'un nouvel étage, les PV remontent de 50 % des PV max (constante `SOIN_APRES_BOSS_POURCENT`, ajoutée au cahier de départ : sans elle, un robot sans réflexion perdait presque toujours à l'étage 2).
 - Hasard : le donjon (portes, ennemis, mimiques) ne dépend que de la graine de la partie : un générateur par étage, séparé de celui du jeu (tirages, récompenses, blocages). Même graine = même donjon, quoi que le joueur ait fait avant.
 - Nouvelles intentions : « Se prépare à frapper » (le Golem ne fait rien ce tour-là, puis frappe fort) et « Va s'enfuir » (le Pickpocket quitte le combat : ni or de victoire ni récompense). Le Pickpocket : vole 4 or, attaque 9, vole 4 or, puis fuit.
@@ -311,7 +311,8 @@ La version 1.0 compte 3 étages, 9 ennemis normaux et 3 boss, dans un univers de
 - Écran de combat : une vraie machine à sous au centre en bas (meuble rouge à cadre doré, enseigne « JACKPOT DONJON » en néon entourée d'ampoules, une fenêtre par rouleau ombrée comme un cylindre, flèches rouges de la ligne de gain, mises sous la vitre). Les ampoules clignotent au repos, courent pendant que les rouleaux tournent et s'allument ensemble sur un jackpot. Le levier est à droite du meuble (un clic ou Espace ; il s'abaisse à chaque tirage). « Valider », les relances et « Continuer » prennent la place sous les mises. L'ennemi est en grand en arrière-plan, posé derrière le meuble (sprite recadré, hauteur voulue 190 px) : son nom, une fine jauge de vie et ses PV flottent au-dessus de lui, son intention (et son passif) est dans une bulle à côté, il n'y a plus de panneau. À gauche : le joueur (vie, armure, or, sac), ses reliques et le journal du dernier tour.
 - Plein écran : le bouton ⛶ (en haut à droite de tous les écrans) et Alt+Entrée le basculent ; le choix est enregistré avec les options et la case des Options suit. Le jeu reste en 1152 × 648 de base, mis à l'échelle sans flou. Lancé dans la fenêtre intégrée de l'éditeur Godot (qui n'accepte que le mode fenêtré), le plein écran est refusé et un message l'explique (désactiver « Embed Game on Next Play » dans l'onglet Jeu).
 - Décor et style (ambiance casino partout) : une moquette violette à losanges dorés (shader), des bords sombres, une frise d'ampoules en haut et en bas de chaque écran, des rideaux de velours rouge sur les côtés des écrans peu chargés (menu, portes, repos, récompense, relique, fin), des titres en néon doré. Les boutons sont des pastilles vin sombre à cadre doré et halo au survol ; les grandes cartes ont un cadre doré et un filet intérieur avec un losange à chaque coin (comme des cartes à jouer). Les portes sont cintrées, bordées d'ampoules qui courent quand on les survole ; la progression de l'étage est une rangée de jetons ronds. Le meuble, les ampoules, le levier, la moquette et les rideaux sont dessinés par le code (aucun fichier image, aucune licence externe).
-- Équilibrage : aucune valeur de jeu n'a changé.
+- Combats obligatoires (demandé par Alex) : voir « Précisions de règles (v0.6) » pour la nouvelle structure d'un étage (5 combats, 2 salles bonus après les combats 2 et 4). Un combat qui s'enfuit (Pickpocket) compte comme un combat fait ; la Mimique d'un coffre bonus est un combat en plus.
+- Équilibrage : il y a beaucoup plus de combats (5 par étage au lieu de 2 à 3 environ), donc les ennemis normaux ont été allégés : PV et attaque × 0,9 (arrondi), les boss et l'attaque surprise de la Mimique sont inchangés. Mesuré avec 400 parties par robot : « prudent » 48 % de victoires (42 % avant), « hasard » 14 % (16 %), « tout » 18 % (22 %), « prudent » avec un profil neuf 19 % (19 %), avec 3 malédictions 10 % (11 %), avec tous les avantages 31 % (42 %). Valeurs à régler dans les `.tres` après les essais d'Alex.
 
 ## Interface et contrôles
 
@@ -322,7 +323,7 @@ Le jeu se joue entièrement à la souris, avec la barre Espace comme raccourci p
 | Menu principal | Jouer, Comptoir du Croupier, Options, Quitter |
 | Options | Volume Musique et Effets, plein écran, réduire les tremblements et les flashs, crédits |
 | Comptoir du Croupier | Entre deux parties : jetons d'âme, avantages à débloquer, malédictions actives |
-| Choix de salle | 2 portes avec l'icône du type de salle, étage et salle en cours |
+| Choix de salle bonus | 2 portes cintrées avec l'icône du type de salle (coffre, boutique ou repos), étage et combats gagnés (après les combats 2 et 4) |
 | Combat | Ennemi en grand en arrière-plan (nom, jauge de vie, bulle d'intention), machine à sous (meuble, rouleaux, levier, mises), PV, armure, or, reliques, journal |
 | Récompense | 3 symboles au choix + bouton Passer, or gagné |
 | Boutique | Symboles, reliques, retrait, amélioration, soin, or restant |

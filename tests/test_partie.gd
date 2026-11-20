@@ -10,6 +10,7 @@ var machine := MachineASous.new(5, 1)
 func _init() -> void:
 	test_partie_neuve()
 	test_enchainement()
+	test_combats_obligatoires()
 	test_or_et_vol()
 	test_defaite()
 	test_victoire_du_boss()
@@ -24,16 +25,11 @@ func _init() -> void:
 
 # --- Outils -----------------------------------------------------------------
 
-## Entre dans un combat : franchit la première porte de combat du pas en cours.
+## Va jusqu'au prochain combat : si on est au choix des salles bonus, on prend la première porte (le combat,
+## lui, est déjà en cours dès le début d'un pas).
 func vers_un_combat(partie: Partie) -> void:
-	if partie.ecran != Partie.Ecran.PORTES:
-		return
-	var portes := partie.portes()
-	for i in portes.size():
-		if portes[i].type == Salle.Type.COMBAT:
-			partie.choisir_porte(i)
-			return
-	partie.choisir_porte(0)
+	if partie.ecran == Partie.Ecran.PORTES:
+		partie.choisir_porte(0)
 
 
 ## Fait gagner le combat en cours d'un coup (jackpot d'épées).
@@ -67,7 +63,10 @@ func test_partie_neuve() -> void:
 	verifier(partie.or_total == 0, "une partie commence à 0 or")
 	verifier(partie.sac.taille() == 15, "le sac de départ a 15 symboles")
 	verifier(partie.etage == 1 and partie.pas == 1, "on commence à l'étage 1, au pas 1")
-	verifier(partie.ecran == Partie.Ecran.PORTES, "on commence au choix des portes")
+	verifier(partie.ecran == Partie.Ecran.COMBAT and partie.ennemi_courant != null and not partie.en_salle_bonus,
+			"on commence par le premier combat : il est obligatoire, sans porte")
+	verifier(partie.portes().is_empty() and not partie.choisir_porte(0), "pendant un combat, aucune porte à choisir")
+	verifier(partie.ennemi_courant == partie.donjon.combat(1, 1).ennemi, "l'ennemi est celui que le donjon a prévu pour ce pas")
 	verifier(partie.etat == Partie.Etat.EN_COURS, "la partie est en cours")
 	verifier(partie.graine == 1, "la graine est gardée : %d" % partie.graine)
 	verifier(not partie.est_combat_de_boss(), "pas de boss au départ")
@@ -95,7 +94,8 @@ func test_enchainement() -> void:
 	verifier(partie.ecran == Partie.Ecran.RECOMPENSE, "après un combat gagné : la récompense")
 	verifier(partie.etat == Partie.Etat.EN_COURS, "la partie continue")
 	partie.terminer_recompense()
-	verifier(partie.ecran == Partie.Ecran.PORTES and partie.pas == 2, "puis les portes du pas 2")
+	verifier(partie.ecran == Partie.Ecran.COMBAT and partie.pas == 2 and partie.ennemi_courant == partie.donjon.combat(1, 2).ennemi,
+			"puis le combat du pas 2, tout de suite (pas de porte après le pas 1)")
 
 	# Combat suivant : démarre avec les PV restants.
 	vers_un_combat(partie)
@@ -103,6 +103,59 @@ func test_enchainement() -> void:
 	verifier(combat2.pv_joueur == 25, "le combat suivant démarre avec 25 PV : %d" % combat2.pv_joueur)
 	verifier(combat2.armure_joueur == 0, "l'armure ne se garde pas entre les combats")
 	verifier(combat2.pv_max_joueur == 40, "PV max conservés : %d" % combat2.pv_max_joueur)
+
+
+## Les combats sont obligatoires : après chaque victoire, le combat suivant (ou le boss) vient tout seul, et on ne
+## choisit entre 2 salles bonus qu'après les pas 2 et 4.
+func test_combats_obligatoires() -> void:
+	var partie := Partie.creer(21)
+	var ordre := ""
+	var combats := 0
+	while partie.etage == 1 and partie.etat == Partie.Etat.EN_COURS and combats < 30:
+		match partie.ecran:
+			Partie.Ecran.COMBAT:
+				var est_boss := partie.est_combat_de_boss()
+				ordre += "B" if est_boss else ("m" if partie.en_salle_bonus else "C")
+				var combat := partie.creer_combat()
+				combat.pv_ennemi = 0
+				combat.etat = Combat.Etat.VICTOIRE
+				partie.terminer_combat(combat)
+				combats += 1
+			Partie.Ecran.RECOMPENSE:
+				partie.terminer_recompense()
+			Partie.Ecran.PORTES:
+				ordre += "|"
+				verifier(partie.portes().size() == 2 and partie.pas in Donjon.BONUS_APRES_PAS, "deux salles bonus après le pas %d" % partie.pas)
+				# Boutique ou repos : on les quitte aussitôt.
+				partie.choisir_porte(0)
+				if partie.ecran == Partie.Ecran.BOUTIQUE:
+					partie.quitter_boutique()
+				elif partie.ecran == Partie.Ecran.REPOS:
+					partie.repos_soigner()
+					partie.quitter_repos()
+				elif partie.ecran == Partie.Ecran.RELIQUE:
+					partie.choisir_relique(partie.proposer_reliques(2)[0])
+			Partie.Ecran.RELIQUE:
+				partie.choisir_relique(partie.proposer_reliques(2)[0])
+			_:
+				break
+	verifier(ordre == "CC|CC|CB", "étage 1 : 2 combats, 2 salles bonus au choix, 2 combats, le boss de l'étage : %s" % ordre)
+	verifier(partie.etage == 2 and partie.pas == 1 and partie.ecran == Partie.Ecran.COMBAT, "le boss vaincu ouvre le premier combat de l'étage 2")
+
+	# Une salle bonus finie mène au combat suivant, pas aux portes.
+	var bonus := Partie.creer(22)
+	bonus.pas = 2
+	bonus.ecran = Partie.Ecran.PORTES
+	var boutique_ou_repos := 0
+	bonus.choisir_porte(0)
+	if bonus.ecran == Partie.Ecran.BOUTIQUE:
+		bonus.quitter_boutique()
+		boutique_ou_repos += 1
+	elif bonus.ecran == Partie.Ecran.REPOS:
+		bonus.repos_dorer(0)
+		boutique_ou_repos += 1
+	if boutique_ou_repos > 0:
+		verifier(bonus.ecran == Partie.Ecran.COMBAT and bonus.pas == 3 and not bonus.en_salle_bonus, "après la salle bonus, le combat du pas 3")
 
 
 func test_or_et_vol() -> void:

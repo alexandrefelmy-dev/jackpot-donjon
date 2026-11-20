@@ -9,11 +9,11 @@ nom = "Mimique"
 images = "chest_mimic_open_anim"
 couleur = Color(0.7, 0.45, 0.2, 1)
 etage = 3
-pv_max = 35
+pv_max = 32
 or_victoire = 19
 intentions = Array[Dictionary]([{
 "type": "attaque",
-"valeur": 11
+"valeur": 10
 }])
 ouverture = {
 "type": "attaque",

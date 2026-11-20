@@ -292,15 +292,15 @@ func _initialize() -> void:
 	verifier(current_scene.cartes_reliques.is_empty(), "plus de relique à vendre quand on les a toutes")
 	verifier_dans_la_fenetre(current_scene.bouton_quitter, "bouton Quitter (toutes les reliques possédées)")
 
-	# La récompense mène aux portes du pas suivant.
+	# La récompense mène au combat du pas suivant (le combat est obligatoire : pas de porte après le pas 1).
 	GameState.nouvelle_partie()
 	aller_a_ecran(Partie.Ecran.RECOMPENSE)
 	await _attendre()
 	current_scene._choisir(null)
 	await _attendre()
-	verifier(current_scene.name == "Portes" and GameState.partie.pas == 2, "la récompense mène aux portes du pas 2 : %s" % current_scene.name)
+	verifier(current_scene.name == "Combat" and GameState.partie.pas == 2, "la récompense mène au combat du pas 2 : %s" % current_scene.name)
 
-	# Boss de l'étage 1 vaincu : l'écran des reliques (2 cartes), puis les portes de l'étage 2.
+	# Boss de l'étage 1 vaincu : l'écran des reliques (2 cartes), puis le premier combat de l'étage 2.
 	GameState.nouvelle_partie()
 	GameState.partie.aller_au_boss()
 	var combat_boss := GameState.partie.creer_combat()
@@ -318,15 +318,17 @@ func _initialize() -> void:
 	offerte.boutons[1].pressed.emit()
 	await _attendre()
 	verifier(GameState.partie.a_relique(choisie.id), "la relique choisie est possédée")
-	verifier(current_scene.name == "Portes" and GameState.partie.etage == 2 and GameState.partie.pas == 1,
-			"après la relique du boss : les portes de l'étage 2 : %s" % current_scene.name)
+	verifier(current_scene.name == "Combat" and GameState.partie.etage == 2 and GameState.partie.pas == 1,
+			"après la relique du boss : le premier combat de l'étage 2 : %s" % current_scene.name)
 
-	# Écran des portes : à chaque pas des 3 étages, les 2 portes et les textes tiennent dans la fenêtre.
+	# Écran des portes : après chaque pas qui propose des salles bonus, des 3 étages, les 2 portes et les textes
+	# tiennent dans la fenêtre.
 	for etage in range(1, 4):
-		for pas in range(1, 6):
+		for pas in Donjon.BONUS_APRES_PAS:
 			GameState.nouvelle_partie()
 			GameState.partie.etage = etage
 			GameState.partie.pas = pas
+			GameState.partie.ecran = Partie.Ecran.PORTES
 			GameState.aller_a_suivant()
 			await _attendre()
 			var portes_ecran: Control = current_scene
@@ -342,6 +344,7 @@ func _initialize() -> void:
 			GameState.lancer(Partie.creer(graine))
 			GameState.partie.etage = 3
 			GameState.partie.pas = 2
+			GameState.partie.ecran = Partie.Ecran.PORTES
 			GameState.aller_a_suivant()
 			await _attendre()
 			for texte in current_scene.textes_portes:
@@ -350,12 +353,13 @@ func _initialize() -> void:
 			break
 	verifier(avertit, "à l'étage 3, les portes de coffre préviennent des mimiques")
 
-	# Un clic sur une porte mène à l'écran de la salle (combat, boutique, coffre = relique, repos).
-	var attendus := {Salle.Type.COMBAT: "Combat", Salle.Type.BOUTIQUE: "Boutique", Salle.Type.COFFRE: "Relique", Salle.Type.REPOS: "Repos"}
+	# Un clic sur une porte bonus mène à l'écran de la salle (boutique, coffre = relique, repos).
+	var attendus := {Salle.Type.BOUTIQUE: "Boutique", Salle.Type.COFFRE: "Relique", Salle.Type.REPOS: "Repos"}
 	var types_testes := {}
 	for graine in 80:
 		GameState.lancer(Partie.creer(graine))
-		GameState.partie.pas = 2 + graine % 4
+		GameState.partie.pas = 2 if graine % 4 < 2 else 4
+		GameState.partie.ecran = Partie.Ecran.PORTES
 		var salle: Salle = GameState.partie.portes()[graine % 2]
 		if int(types_testes.get(salle.type, 0)) >= 2:
 			continue
@@ -365,7 +369,7 @@ func _initialize() -> void:
 		current_scene.boutons_portes[graine % 2].pressed.emit()
 		await _attendre()
 		verifier(current_scene.name == attendus[salle.type], "porte %s : l'écran « %s » s'ouvre" % [salle.nom_type(), current_scene.name])
-	verifier(types_testes.size() == 4, "les 4 types de salle ont été franchis par un clic")
+	verifier(types_testes.size() == 3, "les 3 types de salle bonus ont été franchis par un clic")
 
 	# Un coffre-mimique mène au combat de la Mimique, avec la surprise dans le journal.
 	var graine_mimique := -1
@@ -375,7 +379,7 @@ func _initialize() -> void:
 		if graine_mimique >= 0:
 			break
 		var donjon_test := Donjon.creer(graine)
-		for pas in range(1, 6):
+		for pas in Donjon.BONUS_APRES_PAS:
 			for i in 2:
 				if donjon_test.portes(3, pas)[i].mimique and graine_mimique < 0:
 					graine_mimique = graine
@@ -385,6 +389,7 @@ func _initialize() -> void:
 	GameState.lancer(Partie.creer(graine_mimique))
 	GameState.partie.etage = 3
 	GameState.partie.pas = pas_mimique
+	GameState.partie.ecran = Partie.Ecran.PORTES
 	GameState.aller_a_suivant()
 	await _attendre()
 	current_scene.boutons_portes[index_mimique].pressed.emit()
@@ -415,15 +420,15 @@ func _initialize() -> void:
 	await _attendre()
 	repos.bouton_soin.pressed.emit()
 	await _attendre()
-	verifier(GameState.partie.pv == 22 and current_scene.name == "Portes" and GameState.partie.pas == 2,
-			"se reposer rend 12 PV et mène aux portes du pas 2 : PV %d, %s" % [GameState.partie.pv, current_scene.name])
+	verifier(GameState.partie.pv == 22 and current_scene.name == "Combat" and GameState.partie.pas == 2,
+			"se reposer rend 12 PV et mène au combat du pas 2 : PV %d, %s" % [GameState.partie.pv, current_scene.name])
 	GameState.nouvelle_partie()
 	aller_a_ecran(Partie.Ecran.REPOS)
 	await _attendre()
 	current_scene._choisir_symbole()
 	current_scene._dorer(0)
 	await _attendre()
-	verifier(GameState.partie.sac.symboles[0].doree and current_scene.name == "Portes", "doré gratuitement, retour aux portes")
+	verifier(GameState.partie.sac.symboles[0].doree and current_scene.name == "Combat", "doré gratuitement, le combat suivant commence")
 	GameState.nouvelle_partie()
 	aller_a_ecran(Partie.Ecran.REPOS)
 	await _attendre()
@@ -468,11 +473,12 @@ func _initialize() -> void:
 	verifier(current_scene.texte_passif.visible and current_scene.texte_passif.text.contains("Règle du tour"),
 			"le Grand Croupier annonce la règle du tour : %s" % current_scene.texte_passif.text)
 
-	# Une partie qui n'attend pas un combat : l'écran de combat (écran principal) redirige vers les portes...
+	# Une partie qui n'attend pas un combat : l'écran de combat (écran principal) redirige vers l'écran attendu...
 	GameState.nouvelle_partie()
+	GameState.partie.ecran = Partie.Ecran.PORTES
 	GameState.aller_a(GameState.SCENE_COMBAT)
 	await _attendre()
-	verifier(current_scene.name == "Portes", "en partie, l'écran principal redirige vers les portes : %s" % current_scene.name)
+	verifier(current_scene.name == "Portes", "en partie, l'écran principal redirige vers l'écran attendu (les portes) : %s" % current_scene.name)
 	# ... et au lancement du jeu (hors partie) vers le Comptoir.
 	GameState.en_partie = false
 	GameState.aller_a(GameState.SCENE_COMBAT)
@@ -551,7 +557,7 @@ func _initialize() -> void:
 	verifier(current_scene.name == "Menu", "Échap au Comptoir : retour au menu")
 	current_scene.bouton_jouer.pressed.emit()
 	await _attendre()
-	verifier(current_scene.name == "Portes" and GameState.en_partie, "« Jouer » lance une partie : %s" % current_scene.name)
+	verifier(current_scene.name == "Combat" and GameState.en_partie, "« Jouer » lance une partie, directement sur le premier combat (obligatoire) : %s" % current_scene.name)
 	# Espace (action « levier ») tire le levier. Contre le rat : la porte tirée au hasard pourrait mener à un
 	# Pickpocket (qui s'enfuit au premier tour) ou à une salle sans combat, et le test ne serait pas stable.
 	GameState.partie.choisir_porte(0)
@@ -653,7 +659,7 @@ func _initialize() -> void:
 	# « Jouer » : la partie démarre avec les avantages et les malédictions du profil.
 	comptoir_ecran.bouton_jouer.pressed.emit()
 	await _attendre()
-	verifier(current_scene.name == "Portes" and GameState.en_partie, "« Jouer » mène aux portes d'une nouvelle partie : %s" % current_scene.name)
+	verifier(current_scene.name == "Combat" and GameState.en_partie, "« Jouer » mène au premier combat d'une nouvelle partie : %s" % current_scene.name)
 	verifier(GameState.partie.profil == profil and GameState.partie.pv_max == 40 + 15 and GameState.partie.maledictions.size() == 3,
 			"la partie a les avantages (+15 PV) et les 3 malédictions du profil")
 	# Test du bouton de test et de la remise à zéro.

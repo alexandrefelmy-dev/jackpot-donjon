@@ -463,7 +463,8 @@ func _rafraichir() -> void:
 		texte_etage.text = tr("Étage %d — BOSS") % partie.etage
 		texte_etage.add_theme_color_override("font_color", COULEUR_BOSS)
 	else:
-		texte_etage.text = tr("Étage %d — Salle %d / %d") % [partie.etage, partie.pas, Donjon.NB_PAS]
+		texte_etage.text = tr("Étage %d — Combat %d / %d") % [partie.etage, partie.pas, Donjon.NB_PAS] if not partie.en_salle_bonus \
+				else tr("Étage %d — Salle bonus") % partie.etage
 
 	texte_nom_ennemi.text = tr(combat.ennemi.nom)
 	barre_pv_ennemi.value = combat.pv_ennemi

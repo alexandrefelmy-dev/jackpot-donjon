@@ -9,11 +9,11 @@ nom = "Fantôme de joueur"
 images = "ice_zombie_anim"
 couleur = Color(0.55, 0.6, 0.85, 1)
 etage = 2
-pv_max = 26
+pv_max = 23
 or_victoire = 16
 intentions = Array[Dictionary]([{
 "type": "attaque",
-"valeur": 7
+"valeur": 6
 }, {
 "type": "protection",
 "valeur": 6

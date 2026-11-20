@@ -85,11 +85,11 @@ func creer_ennemi(pv: int, intentions: Array[Dictionary]) -> EnemyData:
 
 func test_donnees_ennemis() -> void:
 	var rat := donnees("rat_egout")
-	verifier(rat != null and rat.pv_max == 12, "le rat d'égout a 12 PV")
+	verifier(rat != null and rat.pv_max == 11, "le rat d'égout a 11 PV")
 	verifier(rat.intentions.size() == 1 and rat.intentions[0]["type"] == "attaque",
 			"le rat attaque à chaque tour")
 	var squelette := donnees("squelette")
-	verifier(squelette != null and squelette.pv_max == 22, "le squelette a 22 PV")
+	verifier(squelette != null and squelette.pv_max == 20, "le squelette a 20 PV")
 	verifier(squelette.intentions.size() == 2 and squelette.intentions[0]["type"] == "protection"
 			and squelette.intentions[1]["type"] == "attaque", "le squelette se protège puis attaque")
 	var golem := donnees("golem_jetons")
@@ -256,8 +256,8 @@ func test_descriptions() -> void:
 
 func test_nouveaux_ennemis() -> void:
 	var gobelin := donnees("gobelin_tricheur")
-	verifier(gobelin != null and gobelin.pv_max == 18 and gobelin.etage == 1 and not gobelin.est_boss,
-			"le gobelin tricheur : 18 PV, étage 1, pas un boss")
+	verifier(gobelin != null and gobelin.pv_max == 16 and gobelin.etage == 1 and not gobelin.est_boss,
+			"le gobelin tricheur : 16 PV, étage 1, pas un boss")
 	verifier(gobelin.intentions[0]["type"] == "attaque" and gobelin.intentions[1]["type"] == "vol",
 			"le gobelin alterne attaque et vol d'or")
 	verifier(gobelin.intentions[1]["valeur"] == 3, "le gobelin vole 3 or")

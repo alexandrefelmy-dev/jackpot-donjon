@@ -9,12 +9,12 @@ nom = "Garde du coffre"
 images = "orc_warrior_idle_anim"
 couleur = Color(0.45, 0.5, 0.6, 1)
 etage = 3
-pv_max = 45
+pv_max = 41
 or_victoire = 24
 intentions = Array[Dictionary]([{
 "type": "protection",
 "valeur": 14
 }, {
 "type": "attaque",
-"valeur": 13
+"valeur": 12
 }])

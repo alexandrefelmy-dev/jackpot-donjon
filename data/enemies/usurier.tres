@@ -9,11 +9,11 @@ nom = "Usurier"
 images = "orc_shaman_idle_anim"
 couleur = Color(0.75, 0.65, 0.25, 1)
 etage = 3
-pv_max = 38
+pv_max = 34
 or_victoire = 24
 intentions = Array[Dictionary]([{
 "type": "attaque",
-"valeur": 10
+"valeur": 9
 }])
 passif = {
 "attaque_par_mise": 2

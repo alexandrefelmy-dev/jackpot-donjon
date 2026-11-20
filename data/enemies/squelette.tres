@@ -8,12 +8,12 @@ id = &"squelette"
 nom = "Squelette"
 images = "skelet_idle_anim"
 couleur = Color(0.85, 0.85, 0.78, 1)
-pv_max = 22
+pv_max = 20
 or_victoire = 13
 intentions = Array[Dictionary]([{
 "type": "protection",
 "valeur": 5
 }, {
 "type": "attaque",
-"valeur": 13
+"valeur": 12
 }])
