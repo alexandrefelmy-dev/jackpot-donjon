@@ -66,6 +66,8 @@ var salle_courante: Salle
 ## L'ennemi du combat en cours ou à venir (celui du pas, une Mimique ou le boss).
 var ennemi_courant: EnemyData
 var combats_gagnes: int = 0
+## Les statistiques de la partie (voir StatsPartie) : celles des combats finis, plus l'or dépensé en boutique.
+var stats := StatsPartie.new()
 ## Salles terminées (combats gagnés ou fuis, boutiques, coffres, repos) et boss vaincus.
 var salles_franchies: int = 0
 var boss_vaincus: int = 0
@@ -105,6 +107,12 @@ func _appliquer_profil(profil_du_joueur: Profil) -> void:
 	if profil_du_joueur.trefle_au_depart:
 		sac.ajouter(Sac.TREFLE)
 	relances_de_partie = 1 if profil_du_joueur.relance_de_partie else 0
+
+
+## Dépense de l'or en boutique (le prix est déjà vérifié par Boutique) : il est compté dans les statistiques.
+func depenser(prix: int) -> void:
+	or_total -= prix
+	stats.or_depense += prix
 
 
 ## Un prix de boutique, avec la Bourse trouée s'il y a lieu.
@@ -337,6 +345,7 @@ func terminer_combat(combat: Combat) -> void:
 		return
 	combat_courant = null
 	pv = combat.pv_joueur
+	stats.ajouter(combat.stats)
 	or_total += combat.or_gagne - combat.or_vole
 	relances_de_partie = combat.relances_de_partie
 

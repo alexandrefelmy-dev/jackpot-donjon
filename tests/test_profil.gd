@@ -18,6 +18,8 @@ func _init() -> void:
 	test_version_future()
 	test_migrations()
 	test_fixture_v1()
+	test_fixture_v2()
+	test_records()
 	test_validation()
 	test_donnees_simples()
 	test_maledictions()
@@ -167,10 +169,12 @@ func test_version_future() -> void:
 func test_migrations() -> void:
 	print("Chaîne de migrations")
 	# Une fausse migration 0 -> 1 : l'ancien format avait « or » au lieu de « jetons ».
+	# (Suivie de la vraie migration 1 -> 2 : la chaîne complète mène à la version actuelle.)
 	var migrations := {0: func(d: Dictionary) -> Dictionary:
 		d["jetons"] = d.get("or", 0)
 		d.erase("or")
-		return d}
+		return d,
+		1: ProfilFichier.migrations_reelles()[1]}
 	var ancien := Profil.nouveau().en_dictionnaire()
 	ancien["version"] = 0
 	ancien.erase("jetons")
@@ -196,6 +200,68 @@ func test_fixture_v1() -> void:
 	verifier(p.jetons == 37 and p.niveau_pv == 2 and p.niveau_or == 1 and p.relance_de_partie and not p.trefle_au_depart, "valeurs lues")
 	verifier(p.a_debloque_symbole(&"bombe") and p.a_debloque_relique(&"jackpot_maudit"), "déblocages lus")
 	verifier(p.maledictions == [&"fatigue", &"mauvais_oeil"] and p.parties_jouees == 9 and p.victoires == 1, "malédictions et statistiques lues")
+	verifier(p.record_salles == 0 and p.record_degats == 0 and p.record_combo == 0 and p.record_jackpots == 0,
+			"un profil de la version 1 arrive à la version 2 avec des records à 0")
+
+
+func test_fixture_v2() -> void:
+	print("Fichier réel de la version 2 (tests/fixtures/profil_v2.json)")
+	_effacer_tout()
+	_ecrire(CHEMIN, FileAccess.get_file_as_string("res://tests/fixtures/profil_v2.json"))
+	var charge := ProfilFichier.charger(CHEMIN)
+	var p := charge.profil
+	verifier(charge.message.is_empty() and p != null, "chargé sans message")
+	verifier(p.record_salles == 14 and p.record_degats == 230 and p.record_combo == 4 and p.record_jackpots == 2, "records lus")
+	verifier(p.jetons == 37 and p.parties_jouees == 9, "le reste du profil est lu aussi")
+
+
+func test_records() -> void:
+	print("Records : validation et mise à jour par le bilan")
+	var bon := Profil.nouveau().en_dictionnaire()
+	verifier(Profil.depuis_dictionnaire(bon) != null, "un profil neuf (records à 0) est valide")
+	for cle in ["record_salles", "record_degats", "record_combo", "record_jackpots"]:
+		var mauvais := bon.duplicate()
+		mauvais[cle] = -1
+		verifier(Profil.depuis_dictionnaire(mauvais) == null, "%s négatif refusé" % cle)
+		mauvais[cle] = "beaucoup"
+		verifier(Profil.depuis_dictionnaire(mauvais) == null, "%s en texte refusé" % cle)
+	var combo_trop_long := bon.duplicate()
+	combo_trop_long["record_combo"] = Profil.RECORD_COMBO_MAX + 1
+	verifier(Profil.depuis_dictionnaire(combo_trop_long) == null, "un plus long combo plus long que la machine est refusé")
+
+	var hasard := RandomNumberGenerator.new()
+	hasard.seed = 1
+	var profil := Profil.nouveau()
+	var partie := Partie.creer(1, profil)
+	partie.etat = Partie.Etat.DEFAITE
+	partie.salles_franchies = 6
+	partie.stats.degats_infliges = 80
+	partie.stats.plus_long_combo = 3
+	partie.stats.jackpots = 0
+	var bilan := Bilan.appliquer(partie, profil, hasard)
+	verifier(profil.record_salles == 6 and profil.record_degats == 80 and profil.record_combo == 3 and profil.record_jackpots == 0,
+			"la première partie fixe les records")
+	verifier((bilan["records_battus"] as Array).is_empty(), "…sans rien annoncer comme battu (tout serait un record)")
+
+	var seconde := Partie.creer(2, profil)
+	seconde.etat = Partie.Etat.DEFAITE
+	seconde.salles_franchies = 6
+	seconde.stats.degats_infliges = 120
+	seconde.stats.plus_long_combo = 5
+	seconde.stats.jackpots = 1
+	var bilan2 := Bilan.appliquer(seconde, profil, hasard)
+	var battus: Array = bilan2["records_battus"]
+	verifier(&"degats" in battus and &"combo" in battus and &"jackpots" in battus and not (&"salles" in battus),
+			"la seconde partie bat 3 records (dégâts, combo, jackpots), pas celui des salles (égalité) : %s" % str(battus))
+	verifier(profil.record_degats == 120 and profil.record_combo == 5 and profil.record_jackpots == 1, "les records sont mis à jour")
+
+	var moins_bien := Partie.creer(3, profil)
+	moins_bien.etat = Partie.Etat.DEFAITE
+	moins_bien.stats.degats_infliges = 10
+	Bilan.appliquer(moins_bien, profil, hasard)
+	verifier(profil.record_degats == 120, "une moins bonne partie ne baisse jamais un record")
+	verifier(Profil.depuis_dictionnaire(profil.en_dictionnaire()) != null and Profil.depuis_dictionnaire(profil.en_dictionnaire()).record_degats == 120,
+			"les records survivent à l'écriture et à la relecture")
 
 
 func test_validation() -> void:

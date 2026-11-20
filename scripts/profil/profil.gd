@@ -4,9 +4,12 @@ extends RefCounted
 ## permanents, malédictions). Que des données simples : il s'écrit tel quel dans un fichier JSON
 ## (voir ProfilFichier). Les règles d'achat sont dans Comptoir, le bilan d'une partie dans Bilan.
 
-## Le numéro de version du fichier : à augmenter à chaque changement de forme, avec une migration.
-const VERSION := 1
+## Le numéro de version du fichier : à augmenter à chaque changement de forme, avec une migration
+## (voir ProfilFichier.migrations_reelles). Version 2 : les records.
+const VERSION := 2
 
+## Le plus long combo possible : la machine a 6 rouleaux avec le Sixième rouleau.
+const RECORD_COMBO_MAX := 6
 const NIVEAU_MAX := 3
 const PV_PAR_NIVEAU := 5
 const OR_PAR_NIVEAU := 10
@@ -33,6 +36,11 @@ var trefle_au_depart: bool = false
 var maledictions: Array[StringName] = []
 var parties_jouees: int = 0
 var victoires: int = 0
+## Les records d'une partie (0 = aucun) : salles franchies, dégâts infligés, plus long combo, jackpots.
+var record_salles: int = 0
+var record_degats: int = 0
+var record_combo: int = 0
+var record_jackpots: int = 0
 
 
 ## Un profil neuf : rien d'acheté, les éléments de départ débloqués.
@@ -91,6 +99,10 @@ func en_dictionnaire() -> Dictionary:
 		"maledictions": _en_textes(maledictions),
 		"parties_jouees": parties_jouees,
 		"victoires": victoires,
+		"record_salles": record_salles,
+		"record_degats": record_degats,
+		"record_combo": record_combo,
+		"record_jackpots": record_jackpots,
 	}
 
 
@@ -105,12 +117,21 @@ static func depuis_dictionnaire(donnees: Dictionary) -> Profil:
 	var niveau_or_lu: Variant = entier_ou_null(donnees.get("niveau_or"))
 	var parties_lues: Variant = entier_ou_null(donnees.get("parties_jouees"))
 	var victoires_lues: Variant = entier_ou_null(donnees.get("victoires"))
+	var records_lus: Array = []
+	for cle in ["record_salles", "record_degats", "record_combo", "record_jackpots"]:
+		records_lus.append(entier_ou_null(donnees.get(cle)))
 	if jetons_lus == null or jetons_lus < 0 or niveau_pv_lu == null or niveau_pv_lu < 0 or niveau_pv_lu > NIVEAU_MAX \
 			or niveau_or_lu == null or niveau_or_lu < 0 or niveau_or_lu > NIVEAU_MAX \
 			or parties_lues == null or parties_lues < 0 or victoires_lues == null or victoires_lues < 0 \
 			or victoires_lues > parties_lues:
 		return null
 	if not (donnees.get("relance_de_partie") is bool) or not (donnees.get("trefle_au_depart") is bool):
+		return null
+	# Les records : des entiers positifs ou nuls (le plus long combo ne dépasse pas la largeur de la machine).
+	for record in records_lus:
+		if record == null or record < 0:
+			return null
+	if records_lus[2] > RECORD_COMBO_MAX:
 		return null
 	var symboles: Variant = _ids(donnees.get("symboles_debloques"), SYMBOLES_DE_DEPART + SYMBOLES_A_DEBLOQUER)
 	var reliques: Variant = _ids(donnees.get("reliques_debloquees"), RELIQUES_DE_DEPART + RELIQUES_A_DEBLOQUER)
@@ -124,6 +145,10 @@ static func depuis_dictionnaire(donnees: Dictionary) -> Profil:
 	profil.trefle_au_depart = donnees["trefle_au_depart"]
 	profil.parties_jouees = parties_lues
 	profil.victoires = victoires_lues
+	profil.record_salles = records_lus[0]
+	profil.record_degats = records_lus[1]
+	profil.record_combo = records_lus[2]
+	profil.record_jackpots = records_lus[3]
 	# Les éléments de départ restent toujours débloqués, même si le fichier ne les cite pas.
 	for id: StringName in symboles:
 		if not (id in profil.symboles_debloques):

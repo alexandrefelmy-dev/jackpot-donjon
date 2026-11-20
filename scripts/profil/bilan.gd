@@ -21,13 +21,17 @@ static func jetons_gagnes(partie: Partie) -> int:
 ## Malédictions : une victoire les efface toutes ; sinon chaque boss battu en efface une (la plus
 ## ancienne) ; puis une défaite en ajoute une tirée au hasard (3 au maximum).
 ## Renvoie le détail, aussi gardé dans partie.bilan, pour l'écran de fin :
-## { "jetons": int, "malediction_recue": StringName, "maledictions_effacees": Array[StringName] }.
+## { "jetons": int, "malediction_recue": StringName, "maledictions_effacees": Array[StringName],
+##   "records_battus": Array[StringName] }.
+## Les records (voir Profil) sont mis à jour ; un record n'est « battu » que s'il y en avait déjà un (pas à la
+## toute première partie, où tout serait un record).
 static func appliquer(partie: Partie, profil: Profil, hasard: RandomNumberGenerator) -> Dictionary:
 	if partie.bilan_applique or partie.etat == Partie.Etat.EN_COURS:
 		return partie.bilan
 	var jetons := jetons_gagnes(partie)
 	profil.jetons += jetons
 	profil.parties_jouees += 1
+	var records := _mettre_a_jour_records(partie, profil)
 
 	var effacees: Array[StringName] = []
 	if partie.etat == Partie.Etat.VICTOIRE:
@@ -45,5 +49,30 @@ static func appliquer(partie: Partie, profil: Profil, hasard: RandomNumberGenera
 			profil.maledictions.append(recue)
 
 	partie.bilan_applique = true
-	partie.bilan = {"jetons": jetons, "malediction_recue": recue, "maledictions_effacees": effacees}
+	partie.bilan = {"jetons": jetons, "malediction_recue": recue, "maledictions_effacees": effacees,
+			"records_battus": records}
 	return partie.bilan
+
+
+## Met les records du profil à jour d'après la partie finie ; renvoie ceux qui viennent d'être battus
+## (&"salles", &"degats", &"combo", &"jackpots").
+static func _mettre_a_jour_records(partie: Partie, profil: Profil) -> Array[StringName]:
+	var battus: Array[StringName] = []
+	var deja_joue := profil.parties_jouees > 1
+	if partie.salles_franchies > profil.record_salles:
+		profil.record_salles = partie.salles_franchies
+		if deja_joue:
+			battus.append(&"salles")
+	if partie.stats.degats_infliges > profil.record_degats:
+		profil.record_degats = partie.stats.degats_infliges
+		if deja_joue:
+			battus.append(&"degats")
+	if partie.stats.plus_long_combo > profil.record_combo:
+		profil.record_combo = partie.stats.plus_long_combo
+		if deja_joue:
+			battus.append(&"combo")
+	if partie.stats.jackpots > profil.record_jackpots:
+		profil.record_jackpots = partie.stats.jackpots
+		if deja_joue:
+			battus.append(&"jackpots")
+	return battus

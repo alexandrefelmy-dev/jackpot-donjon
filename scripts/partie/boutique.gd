@@ -53,7 +53,7 @@ func peut_acheter(index: int) -> bool:
 func acheter(index: int) -> bool:
 	if not peut_acheter(index):
 		return false
-	partie.or_total -= prix_offre(index)
+	partie.depenser(prix_offre(index))
 	partie.sac.ajouter(offres[index])
 	vendues[index] = true
 	return true
@@ -76,7 +76,7 @@ func peut_acheter_relique(index: int) -> bool:
 func acheter_relique(index: int) -> bool:
 	if not peut_acheter_relique(index):
 		return false
-	partie.or_total -= prix_relique(index)
+	partie.depenser(prix_relique(index))
 	partie.ajouter_relique(offres_reliques[index])
 	reliques_vendues[index] = true
 	return true
@@ -98,7 +98,7 @@ func peut_retirer(index_sac: int) -> bool:
 func retirer(index_sac: int) -> bool:
 	if not peut_retirer(index_sac):
 		return false
-	partie.or_total -= prix_retrait()
+	partie.depenser(prix_retrait())
 	partie.sac.retirer(index_sac)
 	partie.nb_retraits += 1
 	return true
@@ -119,7 +119,7 @@ func peut_ameliorer(index_sac: int) -> bool:
 func ameliorer(index_sac: int) -> bool:
 	if not peut_ameliorer(index_sac):
 		return false
-	partie.or_total -= prix_amelioration()
+	partie.depenser(prix_amelioration())
 	partie.sac.ameliorer(index_sac)
 	return true
 
@@ -138,6 +138,6 @@ func peut_soigner() -> bool:
 func soigner() -> bool:
 	if not peut_soigner():
 		return false
-	partie.or_total -= prix_soin()
+	partie.depenser(prix_soin())
 	partie.pv = mini(partie.pv_max, partie.pv + SOIN_PV)
 	return true
