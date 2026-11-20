@@ -1,7 +1,7 @@
 extends Control
-## Écran du choix des portes : à chaque pas de l'étage, 2 portes au choix. Chaque porte montre
-## le type de salle (combat, boutique, coffre ou repos), pas l'ennemi qui s'y cache.
-## Ensuite la partie dit quel écran afficher (combat, boutique, relique, repos).
+## Écran du choix des salles bonus : après les combats 2 et 4 de chaque étage, 2 portes au choix. Chaque porte
+## montre le type de salle (boutique, coffre ou repos). Le combat, lui, n'est jamais au choix.
+## Ensuite la partie dit quel écran afficher (boutique, relique, repos, ou le combat d'une mimique).
 
 const COULEUR_FOND := Color("1b1a24")
 const TAILLE_PORTE := Vector2(330, 340)
@@ -9,7 +9,6 @@ const COULEUR_BOSS := Color("ff9a5c")
 
 ## Couleur de chaque type de salle (en attendant les vrais graphismes).
 const COULEURS: Dictionary = {
-	Salle.Type.COMBAT: Color("8a3a3f"),
 	Salle.Type.BOUTIQUE: Color("9c7424"),
 	Salle.Type.COFFRE: Color("3b6f9c"),
 	Salle.Type.REPOS: Color("3f7d4f"),
@@ -45,8 +44,6 @@ func _choisir(index: int) -> void:
 ## Ce que le joueur sait d'une porte : ce qu'on y fait, jamais ce qui s'y cache.
 func _description(salle: Salle) -> String:
 	match salle.type:
-		Salle.Type.COMBAT:
-			return tr("Un ennemi t'attend.\nVictoire : de l'or et un nouveau symbole pour ton sac.")
 		Salle.Type.BOUTIQUE:
 			return tr("Achète, retire ou dore des symboles, achète des reliques, soigne-toi.")
 		Salle.Type.COFFRE:
@@ -136,7 +133,6 @@ func _creer_progression() -> Control:
 
 ## L'image de chaque type de salle (pack 0x72).
 const ICONES: Dictionary = {
-	Salle.Type.COMBAT: "weapon_knight_sword",
 	Salle.Type.BOUTIQUE: "coin_anim_f0",
 	Salle.Type.COFFRE: "chest_full_open_anim_f0",
 	Salle.Type.REPOS: "flask_big_green",
@@ -149,7 +145,7 @@ func _creer_porte(salle: Salle, index: int) -> Button:
 	var porte := Cartes.creer_carte(COULEURS[salle.type], salle.nom_type().to_upper(), description, TAILLE_PORTE,
 			40, 19, Images.icone(ICONES[salle.type], 64), true)
 	textes_portes.append(Cartes.texte_carte(porte))
-	Cartes.neon(porte.get_meta("titre") as Label, Color("ffd34d"))
+	Cartes.neon(porte.get_meta("titre") as Label)
 	porte.tooltip_text = tr("Franchir cette porte : %s") % salle.nom_type()
 	porte.pressed.connect(_choisir.bind(index))
 	return porte

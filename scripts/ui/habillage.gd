@@ -52,9 +52,14 @@ static func theme() -> Theme:
 ## Donne à un titre l'allure d'une enseigne : or, contour sombre et lumière de néon pulsante.
 static func titre(etiquette: Label, couleur: Color = COULEUR_OR) -> void:
 	etiquette.add_theme_color_override("font_color", couleur)
-	etiquette.add_theme_color_override("font_outline_color", couleur.darkened(0.7))
-	etiquette.add_theme_constant_override("outline_size", 5)
+	contour(etiquette, couleur.darkened(0.7), 5)
 	Cartes.neon(etiquette, couleur)
+
+
+## Un contour (couleur et épaisseur) autour d'un texte : il reste lisible sur n'importe quel fond.
+static func contour(etiquette: Label, couleur: Color = Color(0, 0, 0, 0.9), epaisseur: int = 5) -> void:
+	etiquette.add_theme_color_override("font_outline_color", couleur)
+	etiquette.add_theme_constant_override("outline_size", epaisseur)
 
 
 static func _boite(fond: Color, bordure: Color, epaisseur: int) -> StyleBoxFlat:

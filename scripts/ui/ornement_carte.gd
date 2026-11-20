@@ -3,7 +3,7 @@ extends Control
 ## L'ornement d'une grande carte, façon carte à jouer : un fin filet doré à l'intérieur du cadre et un petit losange
 ## à chacun des quatre coins. À poser par-dessus un bouton ; le clic passe à travers. Pur affichage.
 
-const COULEUR := Color("ffd34d")
+const COULEUR := Habillage.COULEUR_OR
 const INSET := 7.0
 const DEMI_LOSANGE := 5.0
 

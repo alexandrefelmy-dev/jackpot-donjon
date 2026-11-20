@@ -6,7 +6,7 @@ extends Control
 
 enum Mode { REPOS, COURSE, JACKPOT }
 
-const COULEUR_ALLUMEE := Color("ffd34d")
+const COULEUR_ALLUMEE := Habillage.COULEUR_OR
 const COULEUR_ALLUMEE_ROUGE := Color("ff6b4a")
 const COULEUR_ETEINTE := Color("5a4a22")
 const RAYON := 5.0
@@ -50,11 +50,16 @@ func _draw() -> void:
 				allumee = _etat % 2 == 0
 		if fixe:
 			allumee = i % 2 == 0
-		var centre := Vector2(marge + i * ECART, size.y / 2.0)
-		var couleur := COULEUR_ALLUMEE if i % 2 == 0 else COULEUR_ALLUMEE_ROUGE
-		if allumee:
-			draw_circle(centre, RAYON + 3.0, Color(couleur, 0.25))  # le halo
-			draw_circle(centre, RAYON, couleur)
-			draw_circle(centre - Vector2(1.5, 1.5), RAYON * 0.35, Color(1, 1, 1, 0.8))  # le reflet
-		else:
-			draw_circle(centre, RAYON, COULEUR_ETEINTE)
+		dessiner_ampoule(self, Vector2(marge + i * ECART, size.y / 2.0), RAYON, i, allumee)
+
+
+## Dessine une ampoule sur `sur` (à appeler depuis son _draw) : allumée (halo, bulbe, reflet) ou éteinte. Les
+## ampoules alternent or et rouge selon leur numéro `indice`.
+static func dessiner_ampoule(sur: CanvasItem, centre: Vector2, rayon: float, indice: int, allumee: bool) -> void:
+	if not allumee:
+		sur.draw_circle(centre, rayon, COULEUR_ETEINTE)
+		return
+	var couleur := COULEUR_ALLUMEE if indice % 2 == 0 else COULEUR_ALLUMEE_ROUGE
+	sur.draw_circle(centre, rayon + 2.5, Color(couleur, 0.28))  # le halo
+	sur.draw_circle(centre, rayon, couleur)
+	sur.draw_circle(centre - Vector2(rayon * 0.3, rayon * 0.3), rayon * 0.35, Color(1, 1, 1, 0.8))  # le reflet

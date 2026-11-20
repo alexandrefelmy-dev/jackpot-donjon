@@ -14,6 +14,7 @@ const NOIRCEUR_BORDS := 0.7
 
 static var _shader_moquette: Shader
 static var _shader_rideau: Shader
+static var _vignette: GradientTexture2D
 
 
 ## Ajoute à `parent` (en plein écran, sous tout le reste) l'aplat `couleur`, la moquette, les rideaux si
@@ -61,19 +62,9 @@ static func ajouter(parent: Control, couleur: Color, rideaux: bool = false) -> v
 
 ## Un halo de lumière doux (dégradé radial, transparent sur les bords) à poser derrière un personnage.
 static func halo(couleur: Color) -> TextureRect:
-	var texture := GradientTexture2D.new()
-	texture.width = 256
-	texture.height = 256
-	texture.fill = GradientTexture2D.FILL_RADIAL
-	texture.fill_from = Vector2(0.5, 0.5)
-	texture.fill_to = Vector2(1.0, 0.5)
-	var degrade := Gradient.new()
-	degrade.offsets = PackedFloat32Array([0.0, 1.0])
-	degrade.colors = PackedColorArray([couleur, Color(couleur, 0.0)])
-	texture.gradient = degrade
 	var image := TextureRect.new()
 	image.name = "Halo"
-	image.texture = texture
+	image.texture = _degrade_radial(PackedFloat32Array([0.0, 1.0]), PackedColorArray([couleur, Color(couleur, 0.0)]))
 	image.stretch_mode = TextureRect.STRETCH_SCALE
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -105,7 +96,16 @@ static func _rideau(a_gauche: bool) -> ColorRect:
 	return rideau
 
 
+## La vignette : clair au centre, de plus en plus sombre vers les coins (le rayon 1.0 est atteint au milieu des
+## bords). Une seule texture pour tous les écrans.
 static func _texture_vignette() -> GradientTexture2D:
+	if _vignette == null:
+		_vignette = _degrade_radial(PackedFloat32Array([0.45, 1.0]), PackedColorArray([Color(0, 0, 0, 0), Color(0, 0, 0, NOIRCEUR_BORDS)]))
+	return _vignette
+
+
+## Un dégradé radial (du centre vers les bords) de 256 × 256 pixels, étiré ensuite à la taille voulue.
+static func _degrade_radial(positions: PackedFloat32Array, couleurs: PackedColorArray) -> GradientTexture2D:
 	var texture := GradientTexture2D.new()
 	texture.width = 256
 	texture.height = 256
@@ -113,9 +113,8 @@ static func _texture_vignette() -> GradientTexture2D:
 	texture.fill_from = Vector2(0.5, 0.5)
 	texture.fill_to = Vector2(1.0, 0.5)
 	var degrade := Gradient.new()
-	# Clair au centre, de plus en plus sombre vers les coins (le rayon 1.0 est atteint au milieu des bords).
-	degrade.offsets = PackedFloat32Array([0.45, 1.0])
-	degrade.colors = PackedColorArray([Color(0, 0, 0, 0), Color(0, 0, 0, NOIRCEUR_BORDS)])
+	degrade.offsets = positions
+	degrade.colors = couleurs
 	texture.gradient = degrade
 	return texture
 

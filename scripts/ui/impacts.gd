@@ -11,7 +11,7 @@ const COULEUR_DEGATS := Color("ff9a5c")
 const COULEUR_SUBIS := Color("ff5a5a")
 const COULEUR_SOIN := Color("7ddc7d")
 const COULEUR_ARMURE := Color("7fb8ff")
-const COULEUR_OR := Color("ffd34d")
+const COULEUR_OR := Habillage.COULEUR_OR
 
 static var _id_arret: int = 0
 static var _flashs_recents: Array[int] = []

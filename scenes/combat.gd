@@ -8,14 +8,16 @@ extends Control
 ## relancer avant de « Valider ». En fin de combat, « Continuer » mène à l'écran que la partie demande
 ## (récompense, relique, portes ou fin).
 ## C'est aussi l'écran principal du projet (project.godot ne se modifie pas à la main) : si la partie
-## n'attend pas un combat (au lancement : le choix des portes), il envoie vers le bon écran.
+## n'attend pas un combat (par exemple le choix des salles bonus), il envoie vers le bon écran.
 ## L'interface est construite en code : l'ennemi en grand en arrière-plan, la machine à sous (MeubleMachine) devant.
 
 ## La fenêtre fait 648 px de haut : le meuble et la colonne de gauche doivent tenir dedans.
 ## tests/test_interface.gd vérifie la position des boutons.
 ## Largeur de la colonne de gauche (joueur et journal), et début de la scène de l'ennemi (à droite de cette colonne).
+const MARGE_ECRAN := 24
+const SEPARATION_CORPS := 16
 const LARGEUR_COLONNE_GAUCHE := 290
-const DECALAGE_SCENE_ENNEMI := 330
+const DECALAGE_SCENE_ENNEMI := MARGE_ECRAN + LARGEUR_COLONNE_GAUCHE + SEPARATION_CORPS
 ## Hauteur voulue (en pixels) du sprite de l'ennemi, et ligne de sol : le bas du sprite est posé à cette hauteur
 ## de la scène, juste derrière le haut du meuble (les pieds disparaissent derrière la machine).
 const HAUTEUR_ENNEMI := 190
@@ -23,7 +25,7 @@ const SOL_ENNEMI := 330
 const COULEUR_FOND := Color("1b1a24")
 const COULEUR_CASE_VIDE := Color("2c2a38")
 const COULEUR_CASE_BLOQUEE := Color("5a2430")
-const COULEUR_COMBO := Color("ffd34d")
+const COULEUR_COMBO := Habillage.COULEUR_OR
 const COULEUR_CHOIX := Color("7fd7ff")
 const COULEUR_VICTOIRE := Color("7ddc7d")
 const COULEUR_DEFAITE := Color("ff6b6b")
@@ -37,9 +39,7 @@ var cases: Array[PanelContainer] = []
 var etiquettes: Array[Label] = []
 
 var texte_etage: Label
-## L'ennemi en grand derrière la machine, et ce qui flotte autour de lui (nom, jauge de vie, PV).
-var scene_ennemi: Control
-var panneau_ennemi: VBoxContainer
+## La machine à sous (meuble, rouleaux, mises).
 var meuble: MeubleMachine
 ## La bulle qui dit ce que l'ennemi va faire (cachée une fois le combat fini).
 var bulle_intention: PanelContainer
@@ -88,7 +88,6 @@ var bouton_debug_etage: Button
 var animation_en_cours: bool = false
 ## Rouleaux qui défilent : par case, une fenêtre qui masque ce qui dépasse et une bande d'icônes qui glisse vers le bas.
 var _fenetres: Array[Control] = []
-var _bandes: Array[Array] = []
 var _decalages: Array[float] = []
 var _en_rotation: Array[bool] = []
 ## Le rebond de chaque rouleau à son arrêt (un seul à la fois par rouleau).
@@ -110,7 +109,9 @@ var forcer_animation: bool = false
 
 func _ready() -> void:
 	partie = GameState.partie
-	if partie.ecran != Partie.Ecran.COMBAT:
+	# Écran principal du projet : au lancement du jeu, aucune partie n'est en cours (la partie qui existe déjà
+	# commence sur un combat, mais ce n'est pas encore une vraie partie) : on va au menu.
+	if partie.ecran != Partie.Ecran.COMBAT or not GameState.en_partie:
 		GameState.rediriger()
 		return
 	GameState.demarrer()
@@ -163,10 +164,8 @@ func _tirer() -> void:
 	var mise := mises[mise_choisie]
 	if not combat.tirer(mise):
 		return
-	Son.jouer(&"rouleaux")
 	bouton_levier.animer()
-	_dessiner_grille()
-	_animer_rouleaux()
+	_lancer_rouleaux()
 	if combat.peut_relancer():
 		_attendre_validation()
 	else:
@@ -252,7 +251,7 @@ func _animer_rouleaux() -> void:
 			cases[i].add_theme_stylebox_override("panel", MeubleMachine.style_papier())
 			etiquettes[i].text = ""
 			_decalages[i] = randf() * PAS_BANDE
-			for icone_bande: TextureRect in _bandes[i]:
+			for icone_bande: TextureRect in meuble.bandes[i]:
 				icone_bande.texture = _icone_au_hasard()
 			_placer_bande(i)
 	meuble.definir_ampoules(Ampoules.Mode.COURSE)
@@ -305,7 +304,7 @@ func _process(delta: float) -> void:
 
 ## Place les icônes de la bande du rouleau `index` ; une icône qui ressort en haut change de symbole.
 func _placer_bande(index: int) -> void:
-	var bande := _bandes[index]
+	var bande := meuble.bandes[index]
 	var longueur := PAS_BANDE * bande.size()
 	for j in bande.size():
 		var icone_bande: TextureRect = bande[j]
@@ -347,7 +346,7 @@ func _terminer_animation(couper_les_rebonds: bool = true) -> void:
 		for rebond: Tween in _rebonds.values():
 			rebond.kill()
 		_rebonds.clear()
-	meuble.definir_ampoules(Ampoules.Mode.REPOS)
+	_ampoules_au_repos()
 	for i in cases.size():
 		_en_rotation[i] = false
 		_fenetres[i].visible = false
@@ -357,6 +356,13 @@ func _terminer_animation(couper_les_rebonds: bool = true) -> void:
 		var presentation := _presentation
 		_presentation = Callable()
 		presentation.call()
+
+
+## Un tirage (ou une relance) commence : le bruit des rouleaux, la grille, puis les rouleaux qui défilent.
+func _lancer_rouleaux() -> void:
+	Son.jouer(&"rouleaux")
+	_dessiner_grille()
+	_animer_rouleaux()
 
 
 ## Les rouleaux sont affichés mais pas encore appliqués : on peut relancer ou valider. Pendant qu'ils s'arrêtent,
@@ -374,9 +380,7 @@ func _relancer_tout() -> void:
 	_terminer_animation()
 	if combat.relancer_tout():
 		choix_du_rouleau = false
-		Son.jouer(&"rouleaux")
-		_dessiner_grille()
-		_animer_rouleaux()
+		_lancer_rouleaux()
 		_attendre_validation()
 
 
@@ -402,9 +406,7 @@ func _garder_rouleau(index: int) -> void:
 	_terminer_animation()
 	if combat.relancer_en_gardant(index):
 		choix_du_rouleau = false
-		Son.jouer(&"rouleaux")
-		_dessiner_grille()
-		_animer_rouleaux()
+		_lancer_rouleaux()
 		_attendre_validation()
 
 
@@ -452,10 +454,6 @@ func _donner_relique_debug() -> void:
 
 
 # --- Affichage -------------------------------------------------------------
-
-func _couleur_texte(fond: Color) -> Color:
-	return Color.BLACK if fond.get_luminance() > 0.5 else Color.WHITE
-
 
 ## Met à jour tout ce qui dépend de l'état du combat.
 func _rafraichir() -> void:
@@ -580,7 +578,7 @@ func _dessiner_case(index: int, symbole: SymbolData, en_combo: bool, bloquee: bo
 	else:
 		style.bg_color = symbole.couleur
 		etiquette.text = symbole.nom_affiche()
-		etiquette.add_theme_color_override("font_color", _couleur_texte(symbole.couleur))
+		etiquette.add_theme_color_override("font_color", Cartes.couleur_texte(symbole.couleur))
 		cases[index].tooltip_text = "%s\n%s\n%s" % [
 			symbole.nom_affiche(),
 			symbole.decrire_base(),
@@ -603,15 +601,8 @@ func _afficher_apercu() -> void:
 	var resultat := combat.resultat_courant
 	var texte := PackedStringArray()
 	texte.append("[b]%s[/b]" % tr("Tirage affiché, pas encore appliqué"))
-	for combo in resultat.combos:
-		var titre := tr("JACKPOT !!!") if combo.est_jackpot() else tr("COMBO !")
-		texte.append("[color=#ffd34d][b]%s[/b] %s[/color]" % [
-			titre, tr("%d × %s, effet ×%d") % [
-				combo.longueur, tr(combo.symbole.nom), combo.multiplicateur]])
-	if resultat.totaux.is_empty():
-		texte.append(tr("aucun effet"))
-	else:
-		texte.append(Effets.decrire(resultat.totaux, "\n"))
+	texte.append_array(_lignes_combos(resultat))
+	texte.append(_texte_des_totaux(resultat))
 	texte.append("")
 	if choix_du_rouleau:
 		texte.append("[b]%s[/b]" % tr("Clique sur le rouleau à garder : les autres seront relancés."))
@@ -620,23 +611,31 @@ func _afficher_apercu() -> void:
 	texte_journal.text = "\n".join(texte)
 
 
+## Les lignes « COMBO ! » / « JACKPOT !!! » d'un tirage, en or : une par combo.
+func _lignes_combos(resultat: ResultatTirage) -> PackedStringArray:
+	var lignes := PackedStringArray()
+	for combo in resultat.combos:
+		var titre := tr("JACKPOT !!!") if combo.est_jackpot() else tr("COMBO !")
+		lignes.append("[color=#%s][b]%s[/b] %s[/color]" % [COULEUR_COMBO.to_html(false), titre,
+				tr("%d × %s, effet ×%d") % [combo.longueur, tr(combo.symbole.nom), combo.multiplicateur]])
+	return lignes
+
+
+## Les effets du tirage, ligne par ligne, ou « aucun effet ».
+func _texte_des_totaux(resultat: ResultatTirage) -> String:
+	return tr("aucun effet") if resultat.totaux.is_empty() else Effets.decrire(resultat.totaux, "\n")
+
+
 ## Écrit ce qui s'est passé pendant le tour : combos, effets du tirage, puis le combat.
 func _afficher_tour(numero_tour: int, resultat: ResultatTirage, journal_combat: Array[String]) -> void:
 	var texte := PackedStringArray()
 	texte.append("[b]%s[/b]" % (tr("Tour %d") % numero_tour))
 
-	for combo in resultat.combos:
-		var titre := tr("JACKPOT !!!") if combo.est_jackpot() else tr("COMBO !")
-		texte.append("[color=#ffd34d][b]%s[/b] %s[/color]" % [
-			titre, tr("%d × %s, effet ×%d") % [
-				combo.longueur, tr(combo.symbole.nom), combo.multiplicateur]])
+	texte.append_array(_lignes_combos(resultat))
 
 	texte.append("")
 	texte.append("[b]%s[/b]" % tr("Tirage"))
-	if resultat.totaux.is_empty():
-		texte.append(tr("aucun effet"))
-	else:
-		texte.append(Effets.decrire(resultat.totaux, "\n"))
+	texte.append(_texte_des_totaux(resultat))
 
 	texte.append("")
 	texte.append("[b]%s[/b]" % tr("Combat"))
@@ -658,8 +657,8 @@ func _construire_interface() -> void:
 	var marge := MarginContainer.new()
 	marge.set_anchors_preset(Control.PRESET_FULL_RECT)
 	marge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	marge.add_theme_constant_override("margin_left", 24)
-	marge.add_theme_constant_override("margin_right", 24)
+	marge.add_theme_constant_override("margin_left", MARGE_ECRAN)
+	marge.add_theme_constant_override("margin_right", MARGE_ECRAN)
 	marge.add_theme_constant_override("margin_top", 14)
 	marge.add_theme_constant_override("margin_bottom", 18)
 	add_child(marge)
@@ -673,7 +672,7 @@ func _construire_interface() -> void:
 	var corps := HBoxContainer.new()
 	corps.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	corps.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	corps.add_theme_constant_override("separation", 16)
+	corps.add_theme_constant_override("separation", SEPARATION_CORPS)
 	pile.add_child(corps)
 	_construire_colonne_gauche(corps)
 	_construire_colonne_machine(corps)
@@ -682,7 +681,7 @@ func _construire_interface() -> void:
 ## L'ennemi, en grand derrière la machine : un halo de lumière, son nom et sa vie au-dessus, son intention dans une
 ## bulle à côté, le texte de fin de combat par-dessus.
 func _construire_scene_ennemi() -> void:
-	scene_ennemi = Control.new()
+	var scene_ennemi := Control.new()
 	scene_ennemi.name = "SceneEnnemi"
 	scene_ennemi.set_anchors_preset(Control.PRESET_FULL_RECT)
 	scene_ennemi.offset_left = DECALAGE_SCENE_ENNEMI
@@ -697,7 +696,7 @@ func _construire_scene_ennemi() -> void:
 	halo.offset_bottom = 430
 	scene_ennemi.add_child(halo)
 
-	panneau_ennemi = VBoxContainer.new()
+	var panneau_ennemi := VBoxContainer.new()
 	panneau_ennemi.name = "Ennemi"
 	panneau_ennemi.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	panneau_ennemi.offset_left = -170
@@ -714,23 +713,22 @@ func _construire_scene_ennemi() -> void:
 	scene_ennemi.add_child(image_ennemi)
 
 	# La bulle d'intention, à droite de l'ennemi.
-	var bulle := PanelContainer.new()
-	bulle.name = "BulleIntention"
-	bulle.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	bulle.offset_left = 110
-	bulle.offset_right = 350
-	bulle.offset_top = 140
-	bulle.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bulle.add_theme_stylebox_override("panel", _style_bulle())
-	scene_ennemi.add_child(bulle)
-	bulle_intention = bulle
+	bulle_intention = PanelContainer.new()
+	bulle_intention.name = "BulleIntention"
+	bulle_intention.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	bulle_intention.offset_left = 110
+	bulle_intention.offset_right = 350
+	bulle_intention.offset_top = 140
+	bulle_intention.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bulle_intention.add_theme_stylebox_override("panel", _style_bulle())
+	scene_ennemi.add_child(bulle_intention)
 	var texte_bulle := VBoxContainer.new()
 	texte_bulle.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texte_bulle.add_theme_constant_override("separation", 2)
-	bulle.add_child(texte_bulle)
+	bulle_intention.add_child(texte_bulle)
 	var titre_intention := _etiquette_ennemi(texte_bulle, 14, false)
 	titre_intention.text = tr("Intention")
-	titre_intention.add_theme_color_override("font_color", MeubleMachine.COULEUR_OR)
+	titre_intention.add_theme_color_override("font_color", Habillage.COULEUR_OR)
 	texte_intention = _etiquette_ennemi(texte_bulle, 22, false)
 	texte_intention.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	texte_passif = _etiquette_ennemi(texte_bulle, 15, false)
@@ -743,8 +741,7 @@ func _construire_scene_ennemi() -> void:
 	texte_fin.offset_top = 190
 	texte_fin.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	texte_fin.add_theme_font_size_override("font_size", 38)
-	texte_fin.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
-	texte_fin.add_theme_constant_override("outline_size", 8)
+	Habillage.contour(texte_fin, Color(0, 0, 0, 0.9), 8)
 	texte_fin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	scene_ennemi.add_child(texte_fin)
 
@@ -768,8 +765,7 @@ func _construire_bandeau(parent: Control) -> void:
 
 	texte_etage = Label.new()
 	texte_etage.add_theme_font_size_override("font_size", 26)
-	texte_etage.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
-	texte_etage.add_theme_constant_override("outline_size", 5)
+	Habillage.contour(texte_etage, Color(0, 0, 0, 0.8), 5)
 	bandeau.add_child(texte_etage)
 
 	var place_plein_ecran := Control.new()
@@ -862,7 +858,6 @@ func _construire_colonne_machine(parent: Control) -> void:
 	etiquettes = meuble.etiquettes
 	icones = meuble.icones
 	_fenetres = meuble.fenetres
-	_bandes = meuble.bandes
 	_decalages.resize(machine.nb_cases())
 	_en_rotation.resize(machine.nb_cases())
 
@@ -895,7 +890,7 @@ func _construire_actions(parent: Control) -> void:
 	texte_aide.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	texte_aide.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	texte_aide.add_theme_font_size_override("font_size", 16)
-	texte_aide.add_theme_color_override("font_color", Color(MeubleMachine.COULEUR_OR, 0.75))
+	texte_aide.add_theme_color_override("font_color", Color(Habillage.COULEUR_OR, 0.75))
 	parent.add_child(texte_aide)
 
 	bouton_continuer = Button.new()
@@ -969,7 +964,7 @@ func _construire_panneau_mise(parent: Control) -> void:
 	var titre := Label.new()
 	titre.text = tr("Mise")
 	titre.add_theme_font_size_override("font_size", 17)
-	titre.add_theme_color_override("font_color", MeubleMachine.COULEUR_OR)
+	titre.add_theme_color_override("font_color", Habillage.COULEUR_OR)
 	parent.add_child(titre)
 
 	mises.append(Mise.aucune())
@@ -1020,7 +1015,7 @@ func _construire_rangee_reliques(parent: Control) -> void:
 		var nom := Label.new()
 		nom.text = tr(relique.nom)
 		nom.add_theme_font_size_override("font_size", 14)
-		nom.add_theme_color_override("font_color", _couleur_texte(relique.couleur))
+		nom.add_theme_color_override("font_color", Cartes.couleur_texte(relique.couleur))
 		puce.add_child(nom)
 		rangee_reliques.add_child(puce)
 
@@ -1055,8 +1050,7 @@ func _creer_barre_ennemi() -> ProgressBar:
 func _etiquette_ennemi(parent: Control, taille: int, centree: bool = true) -> Label:
 	var etiquette := Label.new()
 	etiquette.add_theme_font_size_override("font_size", taille)
-	etiquette.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
-	etiquette.add_theme_constant_override("outline_size", maxi(3, taille / 6))
+	Habillage.contour(etiquette, Color(0, 0, 0, 0.9), maxi(3, taille / 6))
 	etiquette.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if centree:
 		etiquette.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1068,7 +1062,7 @@ func _etiquette_ennemi(parent: Control, taille: int, centree: bool = true) -> La
 func _style_panneau() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.05, 0.04, 0.08, 0.82)
-	style.border_color = MeubleMachine.COULEUR_OR_SOMBRE
+	style.border_color = Habillage.COULEUR_OR_SOMBRE
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(12)
 	style.set_content_margin_all(10)
@@ -1078,7 +1072,7 @@ func _style_panneau() -> StyleBoxFlat:
 func _style_bulle() -> StyleBoxFlat:
 	var style := _style_panneau()
 	style.bg_color = Color(0.08, 0.05, 0.08, 0.88)
-	style.border_color = MeubleMachine.COULEUR_OR
+	style.border_color = Habillage.COULEUR_OR
 	style.set_border_width_all(3)
 	style.set_corner_radius_all(16)
 	return style

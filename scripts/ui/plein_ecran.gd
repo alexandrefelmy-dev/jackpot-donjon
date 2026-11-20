@@ -81,7 +81,7 @@ func _ready() -> void:
 	message.add_theme_font_size_override("font_size", 18)
 	var fond := StyleBoxFlat.new()
 	fond.bg_color = Color(0.06, 0.04, 0.08, 0.95)
-	fond.border_color = Color("ffd34d")
+	fond.border_color = Habillage.COULEUR_OR
 	fond.set_border_width_all(2)
 	fond.set_corner_radius_all(10)
 	fond.set_content_margin_all(12)

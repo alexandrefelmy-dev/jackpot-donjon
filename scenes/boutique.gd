@@ -4,7 +4,7 @@ extends Control
 ## Il doit tenir dans la fenêtre 1152 × 648 : tests/test_interface.gd le vérifie.
 
 const COULEUR_FOND := Color("1b1a24")
-const COULEUR_MESSAGE := Color("ffd34d")
+const COULEUR_MESSAGE := Habillage.COULEUR_OR
 
 ## Ce que fait un clic sur un symbole du sac.
 enum Mode { NORMAL, RETRAIT, AMELIORATION }

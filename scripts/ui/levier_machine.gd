@@ -7,7 +7,7 @@ extends Button
 const COULEUR_BRAS := Color("b8b8c8")
 const COULEUR_BOULE := Color("e0352b")
 const COULEUR_PLAQUE := Color("3a2a1c")
-const COULEUR_OR := Color("ffd34d")
+const COULEUR_OR := Habillage.COULEUR_OR
 ## Course du levier (pixels) et durée d'un aller-retour.
 const COURSE := 70.0
 const DUREE := 0.3

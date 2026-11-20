@@ -1,6 +1,6 @@
 extends SceneTree
 ## OUTIL : joue des parties ENTIÈRES à travers les vraies scènes (Comptoir, portes, combat, récompense,
-## relique, boutique, repos, fin), en cliquant comme un joueur : portes au hasard, mises, relances,
+## relique, boutique, repos, fin), en cliquant comme un joueur : portes bonus au hasard, mises, relances,
 ## achats, soins, dorures. Vérifie qu'aucun écran ne bloque ni ne plante.
 ## Trois passes : sans relique, avec les 9 reliques, puis « increvable » (beaucoup de PV, pour
 ## aller jusqu'aux étages 2 et 3 : Dame de Pique, mimiques, Grand Croupier, victoire).

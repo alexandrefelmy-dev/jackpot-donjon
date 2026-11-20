@@ -7,9 +7,6 @@ extends Control
 const ECART := 22.0
 const RAYON := 4.5
 const MARGE := 9.0
-const COULEUR_OR := Color("ffd34d")
-const COULEUR_ROUGE := Color("ff6b4a")
-const COULEUR_ETEINTE := Color("5a4a22")
 
 ## Rayon de l'arc du haut (une demi-largeur : une arche complète) et des angles du bas.
 var rayon_haut: float = 160.0
@@ -52,13 +49,7 @@ func _draw() -> void:
 		var allumee := (i + _etat) % 3 == 0 if _course else (i + _etat) % 2 == 0
 		if fixe:
 			allumee = i % 2 == 0
-		var couleur := COULEUR_OR if i % 2 == 0 else COULEUR_ROUGE
-		if allumee:
-			draw_circle(_ampoules[i], RAYON + 2.5, Color(couleur, 0.28))
-			draw_circle(_ampoules[i], RAYON, couleur)
-			draw_circle(_ampoules[i] - Vector2(1.2, 1.2), RAYON * 0.35, Color(1, 1, 1, 0.8))
-		else:
-			draw_circle(_ampoules[i], RAYON, COULEUR_ETEINTE)
+		Ampoules.dessiner_ampoule(self, _ampoules[i], RAYON, i, allumee)
 
 
 ## Les positions des ampoules, régulièrement espacées (`ecart` pixels) le long du contour d'un rectangle de

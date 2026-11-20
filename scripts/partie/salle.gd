@@ -1,6 +1,7 @@
 class_name Salle
 extends RefCounted
-## Une salle du donjon, derrière une porte : un combat, une boutique, un coffre ou un repos.
+## Une salle du donjon : le combat obligatoire d'un pas, ou une salle bonus derrière une porte (boutique, coffre
+## ou repos).
 ## Données pures : la disposition du donjon est décidée par Donjon, jouée par Partie.
 
 enum Type { COMBAT, BOUTIQUE, COFFRE, REPOS }

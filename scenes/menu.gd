@@ -3,7 +3,7 @@ extends Control
 ## profil du joueur ; le Comptoir du Croupier et les Options s'ouvrent depuis ici ; Quitter ferme le jeu.
 
 const COULEUR_FOND := Color("1b1a24")
-const COULEUR_OR := Color("ffd34d")
+const COULEUR_OR := Habillage.COULEUR_OR
 const COULEUR_ROUGE := Color("ff5a5a")
 
 var bouton_jouer: Button

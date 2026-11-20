@@ -7,15 +7,21 @@ extends PanelContainer
 ## pilote les rouleaux qui défilent (`fenetres`, `bandes`).
 
 const HAUTEUR_CASE := 104
+## Largeur d'un rouleau : 5 rouleaux, ou 6 avec le Sixième rouleau (un peu plus étroits).
+const LARGEUR_CASE := 104
+const LARGEUR_CASE_ETROITE := 88
 ## Côté (en pixels) de l'icône d'un rouleau, et nombre d'icônes dans la bande qui défile.
 const ICONE_ROULEAU := 48
 const NB_ICONES_BANDE := 4
 const COULEUR_CORPS := Color("5b1220")
-const COULEUR_OR := Color("ffd34d")
-const COULEUR_OR_SOMBRE := Color("a8801f")
+const COULEUR_OR := Habillage.COULEUR_OR
+const COULEUR_OR_SOMBRE := Habillage.COULEUR_OR_SOMBRE
 const COULEUR_VITRE := Color("0c0a10")
 const COULEUR_PAPIER := Color("e8e0cc")
 const COULEUR_ENSEIGNE := Color("ff4a3a")
+
+## Le même fond pour tous les rouleaux qui tournent : un seul exemplaire.
+static var _style_papier: StyleBoxFlat
 
 var cases: Array[PanelContainer] = []
 var etiquettes: Array[Label] = []
@@ -23,7 +29,7 @@ var icones: Array[TextureRect] = []
 ## Un rouleau qui tourne : sa fenêtre (masque ce qui dépasse) et les icônes de sa bande.
 var fenetres: Array[Control] = []
 var bandes: Array[Array] = []
-var titre: Label
+## Les deux rangées d'ampoules de l'enseigne (au-dessus et au-dessous du titre).
 var ampoules: Array[Ampoules] = []
 ## Les boutons de mise, centrés sous la vitre.
 var zone_mises: HFlowContainer
@@ -57,7 +63,7 @@ func construire(colonnes: int, nb_cases: int, sur_case: Callable) -> void:
 	grille.add_theme_constant_override("h_separation", 6)
 	grille.add_theme_constant_override("v_separation", 6)
 	vitre.add_child(grille)
-	var largeur_case := 104 if colonnes <= 5 else 88
+	var largeur_case := LARGEUR_CASE if colonnes <= 5 else LARGEUR_CASE_ETROITE
 	var ombre := _texture_cylindre()
 	for i in nb_cases:
 		grille.add_child(_construire_case(i, largeur_case, colonnes, ombre, sur_case))
@@ -85,19 +91,19 @@ func _construire_enseigne() -> PanelContainer:
 	var colonne := VBoxContainer.new()
 	colonne.add_theme_constant_override("separation", 0)
 	enseigne.add_child(colonne)
-	ampoules.append(Ampoules.new())
-	ampoules.append(Ampoules.new())
-	colonne.add_child(ampoules[0])
-	titre = Label.new()
+	var ampoules_haut := Ampoules.new()
+	var ampoules_bas := Ampoules.new()
+	ampoules.assign([ampoules_haut, ampoules_bas])
+	var titre := Label.new()
 	titre.text = tr("JACKPOT DONJON")
 	titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	titre.add_theme_font_size_override("font_size", 28)
 	titre.add_theme_color_override("font_color", COULEUR_OR)
-	titre.add_theme_color_override("font_outline_color", COULEUR_ENSEIGNE.darkened(0.4))
-	titre.add_theme_constant_override("outline_size", 4)
+	Habillage.contour(titre, COULEUR_ENSEIGNE.darkened(0.4), 4)
 	Cartes.neon(titre, COULEUR_ENSEIGNE)
+	colonne.add_child(ampoules_haut)
 	colonne.add_child(titre)
-	colonne.add_child(ampoules[1])
+	colonne.add_child(ampoules_bas)
 	return enseigne
 
 
@@ -161,10 +167,11 @@ func _construire_case(index: int, largeur: int, colonnes: int, ombre: Texture2D,
 
 ## Le fond d'un rouleau qui tourne : du papier crème, comme les bandes d'un vrai rouleau.
 static func style_papier() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.set_corner_radius_all(6)
-	style.bg_color = COULEUR_PAPIER
-	return style
+	if _style_papier == null:
+		_style_papier = StyleBoxFlat.new()
+		_style_papier.set_corner_radius_all(6)
+		_style_papier.bg_color = COULEUR_PAPIER
+	return _style_papier
 
 
 static func _style(fond: Color, bordure: Color, epaisseur: int, rayon: int, marge: int) -> StyleBoxFlat:
@@ -196,18 +203,18 @@ static func _texture_cylindre() -> GradientTexture2D:
 
 ## Une flèche rouge qui marque la ligne de gain, de chaque côté de la vitre.
 class _Fleche extends Control:
-	var vers_la_gauche: bool
+	var pointe_a_gauche: bool
 
-	func _init(a_droite: bool) -> void:
-		vers_la_gauche = a_droite
+	func _init(vers_la_gauche: bool) -> void:
+		pointe_a_gauche = vers_la_gauche
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 		custom_minimum_size = Vector2(16, 28)
 		size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
 	func _draw() -> void:
 		var milieu := size.y / 2.0
-		var pointe := Vector2(size.x - 1, milieu) if not vers_la_gauche else Vector2(1, milieu)
-		var base_x := 1.0 if not vers_la_gauche else size.x - 1
+		var pointe := Vector2(1, milieu) if pointe_a_gauche else Vector2(size.x - 1, milieu)
+		var base_x := size.x - 1 if pointe_a_gauche else 1.0
 		var triangle := PackedVector2Array([Vector2(base_x, milieu - 11), pointe, Vector2(base_x, milieu + 11)])
 		draw_colored_polygon(triangle, Color("e0352b"))
-		draw_polyline(PackedVector2Array([triangle[0], triangle[1], triangle[2], triangle[0]]), Color("ffd34d"), 2.0)
+		draw_polyline(PackedVector2Array([triangle[0], triangle[1], triangle[2], triangle[0]]), Habillage.COULEUR_OR, 2.0)

@@ -60,10 +60,10 @@ var pas: int = 1
 ## Vrai pendant une salle bonus (choisie derrière une porte), faux pendant le combat obligatoire du pas.
 var en_salle_bonus: bool = false
 ## L'écran à afficher maintenant.
-var ecran: Ecran = Ecran.PORTES
+var ecran: Ecran = Ecran.COMBAT
 ## La salle en cours : le combat du pas, ou la salle bonus franchie (null au choix des portes et au boss).
 var salle_courante: Salle
-## L'ennemi du combat en cours ou à venir (celui d'une porte de combat, une Mimique ou le boss).
+## L'ennemi du combat en cours ou à venir (celui du pas, une Mimique ou le boss).
 var ennemi_courant: EnemyData
 var combats_gagnes: int = 0
 ## Salles terminées (combats gagnés ou fuis, boutiques, coffres, repos) et boss vaincus.

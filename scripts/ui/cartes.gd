@@ -3,7 +3,7 @@ extends RefCounted
 ## Petits outils d'affichage partagés par les écrans (récompense, boutique) :
 ## boutons colorés façon « carte » en attendant les vrais graphismes.
 
-const COULEUR_SURVOL := Color("ffd34d")
+const COULEUR_SURVOL := Habillage.COULEUR_OR
 ## Jetons d'âme et malédictions (Comptoir, écran de fin).
 const COULEUR_JETONS := Color("b9a4ff")
 const COULEUR_MALEDICTION := Color("ff8a8a")
@@ -77,11 +77,12 @@ static func habiller_bouton(bouton: Button, couleur: Color, porte: bool = false)
 	var texte := couleur_texte(couleur)
 	for etat in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_disabled_color"]:
 		bouton.add_theme_color_override(etat, texte)
-	bouton.add_theme_stylebox_override("normal", style(couleur, false, porte))
+	var normal := style(couleur, false, porte)
+	bouton.add_theme_stylebox_override("normal", normal)
 	bouton.add_theme_stylebox_override("hover", style(couleur.lightened(0.15), true, porte))
 	bouton.add_theme_stylebox_override("pressed", style(couleur.darkened(0.15), true, porte))
 	bouton.add_theme_stylebox_override("disabled", style(couleur.darkened(0.45), false, porte))
-	bouton.add_theme_stylebox_override("focus", style(couleur, false, porte))
+	bouton.add_theme_stylebox_override("focus", normal)
 
 
 ## Une grosse carte cliquable : un titre en grand et un texte dessous, sur un fond coloré.
@@ -180,7 +181,7 @@ static func creer_bouton(texte: String, taille: Vector2, action: Callable, taill
 
 ## Donne à un contrôle (titre, étiquette) la lumière pulsante d'un néon. Le pulsement est coupé si le joueur
 ## a demandé de réduire les flashs. Le shader est chargé une fois ; chaque contrôle a son propre matériau.
-static func neon(controle: CanvasItem, couleur_halo: Color = Color("ffd34d")) -> void:
+static func neon(controle: CanvasItem, couleur_halo: Color = Habillage.COULEUR_OR) -> void:
 	if _shader_neon == null:
 		_shader_neon = load(SHADER_NEON) as Shader
 	var materiau := ShaderMaterial.new()

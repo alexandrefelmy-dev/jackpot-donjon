@@ -30,7 +30,7 @@ Nouvelle partie (40 PV, sac de 15 symboles)
   -> 5 combats faits ?  non -> combat suivant
 						oui -> Boss de l'étage (relique en récompense)
   -> Étage 3 ?          non -> étage suivant, premier combat
-                        oui -> Victoire
+						oui -> Victoire
 PV à 0 dans un combat -> Game over -> Rejouer (nouvelle partie)
 ```
 

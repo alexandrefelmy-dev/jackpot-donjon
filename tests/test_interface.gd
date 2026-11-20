@@ -479,7 +479,9 @@ func _initialize() -> void:
 	GameState.aller_a(GameState.SCENE_COMBAT)
 	await _attendre()
 	verifier(current_scene.name == "Portes", "en partie, l'écran principal redirige vers l'écran attendu (les portes) : %s" % current_scene.name)
-	# ... et au lancement du jeu (hors partie) vers le Comptoir.
+	# ... et au lancement du jeu (hors partie, alors que la partie déjà créée commence sur un combat) vers le menu.
+	GameState.nouvelle_partie()
+	GameState.partie.ecran = Partie.Ecran.COMBAT
 	GameState.en_partie = false
 	GameState.aller_a(GameState.SCENE_COMBAT)
 	await _attendre()
