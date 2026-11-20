@@ -485,6 +485,26 @@ func _initialize() -> void:
 	reglages.bouton_credits.pressed.emit()
 	verifier(reglages.texte_credits.visible, "« Crédits » affiche les crédits")
 	verifier_dans_la_fenetre(reglages.texte_credits, "texte des crédits")
+	# --- Plein écran : bouton en haut à droite et Alt+Entrée, sur tous les écrans ---
+	var plein := PleinEcran.instance
+	verifier(is_instance_valid(plein) and plein.is_inside_tree() and plein.bouton != null, "le bouton plein écran est installé à la racine du jeu")
+	verifier_dans_la_fenetre(plein.bouton, "bouton plein écran")
+	verifier(plein.bouton.focus_mode == Control.FOCUS_NONE, "…sans focus (Espace et Entrée ne le déclenchent pas)")
+	var etat_avant := GameState.options.plein_ecran
+	plein.bouton.pressed.emit()
+	verifier(GameState.options.plein_ecran != etat_avant, "le bouton bascule l'option plein écran")
+	verifier(reglages.case_plein_ecran.button_pressed == GameState.options.plein_ecran, "…et la case des Options suit")
+	var entree_seule := InputEventKey.new()
+	entree_seule.keycode = KEY_ENTER
+	entree_seule.pressed = true
+	plein._input(entree_seule)
+	verifier(GameState.options.plein_ecran != etat_avant, "Entrée seule ne bascule pas le plein écran")
+	var alt_entree := InputEventKey.new()
+	alt_entree.keycode = KEY_ENTER
+	alt_entree.alt_pressed = true
+	alt_entree.pressed = true
+	plein._input(alt_entree)
+	verifier(GameState.options.plein_ecran == etat_avant, "Alt+Entrée bascule le plein écran")
 	GameState.options = Options.new()
 	GameState.appliquer_options()
 	var echap := InputEventKey.new()

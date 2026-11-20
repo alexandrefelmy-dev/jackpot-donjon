@@ -54,6 +54,7 @@ static func demarrer() -> void:
 	Entrees.enregistrer()
 	charger_options()
 	appliquer_options()
+	PleinEcran.installer()
 
 
 ## Charge les options (une seule fois). Sans sauvegarde possible (mode sans fenêtre), les options par défaut.

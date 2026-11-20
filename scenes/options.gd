@@ -33,6 +33,14 @@ func _ready() -> void:
 	Musique.jouer_menu()
 	_construire_interface()
 	_rafraichir()
+	# Alt+Entrée ou le bouton ⛶ peuvent changer le plein écran pendant qu'on est ici : la case suit.
+	if is_instance_valid(PleinEcran.instance):
+		PleinEcran.instance.change.connect(_plein_ecran_change)
+
+
+func _plein_ecran_change(plein_ecran: bool) -> void:
+	case_plein_ecran.set_pressed_no_signal(plein_ecran)
+	_rafraichir()
 
 
 func _unhandled_input(evenement: InputEvent) -> void:
